@@ -448,6 +448,10 @@
                         <p class="text-xs text-slate-400">Dashboard de inversiones · Mercado en tiempo real · Fiscalidad FIFO</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span id="cloud-sync-badge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-slate-800 text-slate-400 border-slate-700"><i class="fa-solid fa-cloud mr-1"></i>Nube</span>
+                    <button type="button" onclick="logoutFirebase()" class="text-xs bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
             </div>
             <nav id="mainMenu" class="r31-horizontal-menu" aria-label="Menú principal">
                 <div class="r31-nav-group">
@@ -1099,164 +1103,7 @@
 
     <script>
         // Initial Portfolio Assets Data mapped precisely by ISIN codes, tickers and WKNs
-        const rawInitialAssets = [
-            {
-                name: "SIVERS",
-                isin: "SE0003917798",
-                ticker: "SIVE.ST",
-                wkn: "",
-                category: "Acciones Tech",
-                assetType: "SMALLCAP",
-                currentPrice: 1.45,
-                color: "#2563eb",
-                history: [
-                    { date: "2026-05-06", type: "Compra", qty: 22, price: 4.51, comm: 1.00 },
-                    { date: "2026-05-18", type: "Compra", qty: 7.83, price: 4.56, comm: 1.00 },
-                    { date: "2026-05-29", type: "Compra", qty: 10, price: 6.34, comm: 1.00 },
-                    { date: "2026-06-02", type: "Venta", qty: 10, price: 9.20, comm: 1.00 },
-                    { date: "2026-06-17", type: "Venta", qty: 15, price: 9.43, comm: 1.00 },
-                    { date: "2026-07-02", type: "Compra", qty: 13.5, price: 5.26, comm: 1.00 },
-                    { date: "2026-07-07", type: "Compra", qty: 22, price: 4.086, comm: 1.00 },
-                    { date: "2026-09-01", type: "Compra", qty: 14.61, price: 2.05, comm: 0.00 },
-                    { date: "2026-10-01", type: "Compra", qty: 9.88, price: 3.04, comm: 0.00 },
-                    { date: "2026-10-16", type: "Compra", qty: 13.55, price: 2.21, comm: 0.00 },
-                    { date: "2026-11-02", type: "Compra", qty: 13.789, price: 1.81, comm: 0.00 }
-                ]
-            },
-            {
-                name: "ONDAS",
-                isin: "US68236H2040",
-                ticker: "ONDS",
-                wkn: "",
-                category: "Acciones Tech",
-                assetType: "SMALLCAP",
-                currentPrice: 4.54,
-                color: "#0284c7",
-                history: [
-                    { date: "2026-04-10", type: "Compra", qty: 20, price: 8.10, comm: 1.00 },
-                    { date: "2026-04-22", type: "Compra", qty: 15, price: 7.90, comm: 1.00 },
-                    { date: "2026-05-15", type: "Compra", qty: 15, price: 7.33, comm: 2.00 }
-                ]
-            },
-            {
-                name: "OUTLOOK",
-                isin: "US69012T3059",
-                ticker: "OTLK",
-                wkn: "",
-                category: "Acciones Biotech",
-                assetType: "SMALLCAP",
-                currentPrice: 0.38,
-                color: "#10b981",
-                history: [
-                    { date: "2026-03-12", type: "Compra", qty: 100, price: 0.95, comm: 2.00 },
-                    { date: "2026-04-05", type: "Compra", qty: 70, price: 0.80, comm: 2.00 }
-                ]
-            },
-            {
-                name: "INDRA",
-                isin: "ES0118594417",
-                ticker: "IDR.MC",
-                wkn: "",
-                category: "Acciones Defensa",
-                assetType: "EMERGENTES",
-                currentPrice: 56.76,
-                color: "#f59e0b",
-                history: [
-                    { date: "2026-06-18", type: "Compra", qty: 2, price: 48.12, comm: 1.00 }
-                ]
-            },
-            {
-                name: "ELICIO",
-                isin: "US28657F1030",
-                ticker: "ELTX",
-                wkn: "A3CY4J",
-                category: "Acciones Biotech",
-                assetType: "SMALLCAP",
-                currentPrice: 4.10,
-                color: "#059669",
-                history: [
-                    { date: "2026-05-04", type: "Compra", qty: 10, price: 3.94, comm: 1.00 }
-                ]
-            },
-            {
-                name: "S&P 500",
-                isin: "IE00BFMXXD54",
-                ticker: "VUAA.MI",
-                wkn: "A2PFN2",
-                category: "ETF Índice",
-                assetType: "ETFS",
-                currentPrice: 132.50,
-                color: "#8b5cf6",
-                history: [
-                    { date: "2026-01-15", type: "Compra", qty: 1.183, price: 126.60, comm: 1.00 }
-                ]
-            },
-            {
-                name: "DIGITAL SECURITY",
-                isin: "IE00BG0J4C88",
-                ticker: "L0CK.DE",
-                wkn: "A2JMGE",
-                category: "ETF Índice",
-                assetType: "ETFS",
-                currentPrice: 11.20,
-                color: "#6366f1",
-                history: [
-                    { date: "2026-02-01", type: "Compra", qty: 5.823, price: 10.52, comm: 1.00 }
-                ]
-            },
-            {
-                name: "NASDAQ 100",
-                isin: "IE00BMFKG444",
-                ticker: "XNAS.MI",
-                wkn: "A2QJU3",
-                category: "ETF Índice",
-                assetType: "ETFS",
-                currentPrice: 61.40,
-                color: "#a855f7",
-                history: [
-                    { date: "2026-02-10", type: "Compra", qty: 1.016, price: 59.00, comm: 0.00 }
-                ]
-            },
-            {
-                name: "ORO (ETC)",
-                isin: "IE00B4ND3602",
-                ticker: "SGLN.L",
-                wkn: "A1KWPQ",
-                category: "Materias Primas / Cobertura",
-                assetType: "METALES",
-                currentPrice: 82.50,
-                color: "#eab308",
-                history: [
-                    { date: "2026-02-20", type: "Compra", qty: 0.5356, price: 74.66, comm: 1.00 }
-                ]
-            },
-            {
-                name: "PLATA (ETC)",
-                isin: "IE00B4NCWG09",
-                ticker: "SSLN.MI",
-                wkn: "A1KWPR",
-                category: "Materias Primas / Cobertura",
-                assetType: "METALES",
-                currentPrice: 81.10,
-                color: "#94a3b8",
-                history: [
-                    { date: "2026-02-25", type: "Compra", qty: 0.4910, price: 74.66, comm: 1.00 }
-                ]
-            },
-            {
-                name: "ACTUACION",
-                isin: "-",
-                ticker: "VAR:ACT",
-                wkn: "",
-                category: "Otras Actuaciones",
-                assetType: "OTROS",
-                currentPrice: 50.00,
-                color: "#ec4899",
-                history: [
-                    { date: "2026-05-10", type: "Compra", qty: 1, price: 50.00, comm: 1.00 }
-                ]
-            }
-        ];
+        const rawInitialAssets = [];
 
         let assetsData = [];
         let currentCategory = 'ALL';
@@ -2733,5 +2580,193 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             }, 3000);
         }
     </script>
+
+    <!-- Modal de Inicio de Sesión Firebase -->
+    <div id="firebaseLoginModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-[200]">
+        <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-white space-y-5">
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 mx-auto flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3">
+                    <i class="fa-solid fa-cloud-arrow-up text-xl text-white"></i>
+                </div>
+                <h2 class="text-xl font-bold">MiCartera <span class="text-cyan-400">R31k0</span></h2>
+                <p class="text-xs text-slate-400">Inicia sesión para sincronizar tus datos en la nube</p>
+            </div>
+            <form onsubmit="handleFirebaseLogin(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 block mb-1">Correo electrónico</label>
+                    <input type="email" id="fb-email" required placeholder="tu@correo.com" class="w-full text-sm p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 block mb-1">Contraseña</label>
+                    <input type="password" id="fb-password" required placeholder="••••••••" class="w-full text-sm p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <p id="fb-login-error" class="text-xs text-rose-400 hidden"></p>
+                <button type="submit" id="fb-login-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white py-2.5 rounded-xl text-sm font-bold transition shadow-lg">
+                    Entrar y sincronizar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Compat SDKs (App, Auth, Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZNL1r2EUYW6yiqzxtnc4-JdPfHlg7SYw",
+            authDomain: "micartera-r31k0.firebaseapp.com",
+            projectId: "micartera-r31k0",
+            storageBucket: "micartera-r31k0.firebasestorage.app",
+            messagingSenderId: "867259925491",
+            appId: "1:867259925491:web:a36ef92eced3cfcd3a0886"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const fbAuth = firebase.auth();
+        const fbDb = firebase.firestore();
+        let fbUser = null;
+        let fbUnsubscribe = null;
+        let isApplyingRemoteSync = false;
+
+        function setCloudStatus(text, colorClass) {
+            const el = document.getElementById('cloud-sync-badge');
+            if (!el) return;
+            el.className = `text-[11px] font-semibold px-2.5 py-1 rounded-full border ${colorClass}`;
+            el.innerHTML = text;
+        }
+
+        async function handleFirebaseLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('fb-login-btn');
+            const errEl = document.getElementById('fb-login-error');
+            const email = document.getElementById('fb-email').value.trim();
+            const password = document.getElementById('fb-password').value;
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.textContent = 'Conectando...';
+            try {
+                await fbAuth.signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                errEl.textContent = 'Error al iniciar sesión: ' + (err.message || 'Verifica correo y contraseña.');
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar y sincronizar';
+            }
+        }
+
+        function logoutFirebase() {
+            if (confirm('¿Cerrar sesión en este dispositivo?')) {
+                fbAuth.signOut();
+            }
+        }
+
+        async function pushToCloud() {
+            if (!fbUser || isApplyingRemoteSync) return;
+            setCloudStatus('<i class="fa-solid fa-arrows-rotate fa-spin mr-1"></i>Guardando...', 'bg-amber-500/20 text-amber-200 border-amber-400/30');
+            try {
+                await fbDb.collection('carteras').doc(fbUser.uid).set({
+                    assets: assetsData,
+                    strategies: Array.isArray(strategiesData) ? strategiesData : [],
+                    watchlist: Array.isArray(watchlistData) ? watchlistData : [],
+                    taxonomy: { sectors, assetTypes },
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                setCloudStatus('<i class="fa-solid fa-cloud-check mr-1"></i>Sincronizado', 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30');
+            } catch (err) {
+                console.error('Error subiendo a Firestore:', err);
+                setCloudStatus('<i class="fa-solid fa-triangle-exclamation mr-1"></i>Error nube', 'bg-rose-500/20 text-rose-200 border-rose-400/30');
+            }
+        }
+
+        // Envolver funciones locales de guardado para sincronizar automáticamente
+        const _origSavePortfolioData = savePortfolioData;
+        savePortfolioData = function() {
+            _origSavePortfolioData();
+            pushToCloud();
+        };
+
+        const _origPersistStrategies = persistStrategies;
+        persistStrategies = function() {
+            _origPersistStrategies();
+            pushToCloud();
+        };
+
+        const _origPersistWatchlist = persistWatchlist;
+        persistWatchlist = function() {
+            _origPersistWatchlist();
+            pushToCloud();
+        };
+
+        const _origSaveTaxonomy = saveTaxonomy;
+        saveTaxonomy = function() {
+            _origSaveTaxonomy();
+            pushToCloud();
+        };
+
+        fbAuth.onAuthStateChanged(user => {
+            fbUser = user;
+            const modal = document.getElementById('firebaseLoginModal');
+            if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
+
+            if (!user) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setCloudStatus('<i class="fa-solid fa-lock mr-1"></i>Sin sesión', 'bg-slate-800 text-slate-400 border-slate-700');
+                return;
+            }
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            setCloudStatus('<i class="fa-solid fa-arrows-rotate fa-spin mr-1"></i>Sincronizando...', 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30');
+
+            fbUnsubscribe = fbDb.collection('carteras').doc(user.uid).onSnapshot(doc => {
+                if (!doc.exists) {
+                    // Si la nube aún está vacía pero hay datos locales (ej. recién importados de JSON), los sube
+                    if (assetsData.length > 0 || strategiesData.length > 0 || watchlistData.length > 0) {
+                        pushToCloud();
+                    } else {
+                        setCloudStatus('<i class="fa-solid fa-cloud mr-1"></i>Nube lista (vacía)', 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30');
+                    }
+                    return;
+                }
+                const data = doc.data();
+                isApplyingRemoteSync = true;
+                try {
+                    if (Array.isArray(data.assets)) {
+                        assetsData = data.assets;
+                        _origSavePortfolioData();
+                    }
+                    if (Array.isArray(data.strategies)) {
+                        strategiesData = data.strategies;
+                        _origPersistStrategies();
+                    }
+                    if (Array.isArray(data.watchlist)) {
+                        watchlistData = data.watchlist;
+                        _origPersistWatchlist();
+                    }
+                    if (data.taxonomy && Array.isArray(data.taxonomy.sectors) && Array.isArray(data.taxonomy.assetTypes)) {
+                        sectors = data.taxonomy.sectors;
+                        assetTypes = data.taxonomy.assetTypes;
+                        _origSaveTaxonomy();
+                    }
+                    recalculatePortfolioCalculations();
+                    renderTaxonomySelects();
+                    renderDashboard();
+                    if (!document.getElementById('strategies-view').classList.contains('hidden')) renderStrategies();
+                    if (!document.getElementById('watchlist-view').classList.contains('hidden')) renderWatchlist();
+                    if (!document.getElementById('daily-summary-view').classList.contains('hidden')) renderDailySummary();
+                    setCloudStatus('<i class="fa-solid fa-cloud-check mr-1"></i>Sincronizado', 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30');
+                } finally {
+                    isApplyingRemoteSync = false;
+                }
+            }, err => {
+                console.error('Error escuchando Firestore:', err);
+                setCloudStatus('<i class="fa-solid fa-triangle-exclamation mr-1"></i>Sin permisos/red', 'bg-rose-500/20 text-rose-200 border-rose-400/30');
+            });
+        });
+    </script>
+
 </body>
 </html>
