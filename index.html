@@ -2422,7 +2422,8 @@
                 const rates=await getExchangeRates();
                 if(requestId!==watchFundamentalsRequestId||watchlistData[watchDetailIndex]?.symbol!==symbol)return;
                 const currency=result.price?.currency||result.summaryDetail?.currency||item.currency||"EUR";
-                recordAnalystTargetSnapshot(item,result,currency);\n                renderWatchFundamentals(result,currency,rates);
+                recordAnalystTargetSnapshot(item,result,currency);
+                renderWatchFundamentals(result,currency,rates);
                 const profile=result.price?.shortName||result.price?.longName||item.name||symbol;
                 if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · Yahoo Finance mediante servicio seguro · consulta: "+new Date().toLocaleString("es-ES")+".";
             }catch(error){
