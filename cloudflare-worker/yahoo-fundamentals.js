@@ -55,11 +55,11 @@ function cookieHeaderFrom(response) {
 
 function mergeCookies(existing, response) {
   const map = new Map();
-  for (const part of (existing || "").split(/;\\s*/)) {
+  for (const part of (existing || "").split(/;\s*/)) {
     const i = part.indexOf("=");
     if (i > 0) map.set(part.slice(0, i), part.slice(i + 1));
   }
-  for (const part of cookieHeaderFrom(response).split(/;\\s*/)) {
+  for (const part of cookieHeaderFrom(response).split(/;\s*/)) {
     const i = part.indexOf("=");
     if (i > 0) map.set(part.slice(0, i), part.slice(i + 1));
   }
