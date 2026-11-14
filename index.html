@@ -3027,6 +3027,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             assetsData.forEach(a=>{
                 const key=String(a.name||'').toUpperCase();
                 const mapped=YAHOO_SYMBOLS[key]||[];
+                const knownNonEquity=['S&P 500','DIGITAL SECURITY','NASDAQ 100','ORO (ETC)','PLATA (ETC)'];
+                if(knownNonEquity.includes(key)||String(a.assetType||'').toUpperCase().includes('ETF'))return;
                 if(mapped.length) add(mapped[0],a.name);
                 else if(a.yahooTicker) add(a.yahooTicker,a.name);
                 else if(a.ticker&&!/^[A-Z]{2}[A-Z0-9]{10,}$/.test(String(a.ticker).toUpperCase())) add(a.ticker,a.name);
