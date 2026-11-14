@@ -902,9 +902,32 @@
                 <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4"><p class="text-xs font-bold uppercase text-rose-700">En ventana de aviso</p><p id="financial-event-due-count" class="mt-1 text-3xl font-black text-rose-950">0</p></div>
                 <div class="rounded-2xl border border-slate-600 bg-slate-900/90 p-4"><p class="text-xs font-bold uppercase text-slate-300">Eventos registrados</p><p id="financial-event-total-count" class="mt-1 text-3xl font-black text-white">0</p></div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2 mb-4"><div><h3 class="font-extrabold text-slate-900">Próximos eventos</h3><p class="text-xs text-slate-500 mt-1">Los avisos se muestran al abrir la aplicación y mientras permanezca abierta.</p></div><select id="financial-event-filter" onchange="renderFinancialCalendar()" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="all">Todos los tipos</option><option>Resultados</option><option>Presentación / Investor Day</option><option>Junta de accionistas</option><option>Dividendo</option><option>Producto / Contrato</option><option>Dato macroeconómico</option><option>Otro</option></select></div><div id="financial-event-upcoming" class="space-y-3"></div><div id="financial-event-empty" class="hidden rounded-xl border border-dashed border-slate-300 p-7 text-center text-sm text-slate-500">Todavía no tienes eventos registrados. Añade aquí fechas confirmadas para seguir los catalizadores de tus inversiones.</div></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900 mb-3">Eventos pasados</h3><div id="financial-event-past" class="space-y-3"></div><p id="financial-event-past-empty" class="hidden text-xs text-slate-500">Todavía no hay eventos pasados.</p></div>
-            <p class="text-[11px] text-slate-400">Importante: esta agenda no descarga automáticamente fechas de resultados ni garantiza que sean definitivas. Registra o verifica las fechas en la web oficial de cada empresa o en la fuente del evento. Los recordatorios funcionan dentro de la aplicación; no son avisos en segundo plano cuando está cerrada.</p>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div><h3 class="font-extrabold text-slate-900">Vista mensual</h3><p class="text-xs text-slate-500 mt-1">Selecciona un día para consultar sus acontecimientos.</p></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="financial-event-filter" onchange="renderFinancialCalendar()" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="all">Todos los tipos</option><option>Resultados</option><option>Presentación / Investor Day</option><option>Junta de accionistas</option><option>Dividendo</option><option>Producto / Contrato</option><option>Dato macroeconómico</option><option>Otro</option></select>
+                        <button type="button" onclick="syncFinancialEarnings(false)" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-3 py-2 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i>Actualizar resultados</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <button type="button" onclick="changeFinancialCalendarMonth(-1)" aria-label="Mes anterior" class="h-10 w-10 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="text-center"><h4 id="financial-calendar-month-label" class="text-lg sm:text-xl font-black text-slate-900 capitalize">Mes</h4><button type="button" onclick="goToFinancialCalendarToday()" class="text-xs font-bold text-violet-700 hover:underline">Ir a hoy</button></div>
+                    <button type="button" onclick="changeFinancialCalendarMonth(1)" aria-label="Mes siguiente" class="h-10 w-10 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center mb-1"><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">LUN</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">MAR</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">MIÉ</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">JUE</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">VIE</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">SÁB</span><span class="py-2 text-[10px] sm:text-xs font-bold text-slate-500">DOM</span></div>
+                <div id="financial-calendar-grid" class="grid grid-cols-7 gap-1" role="grid" aria-label="Calendario mensual"></div>
+                <div class="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-[10px] sm:text-xs text-slate-600">
+                    <span><i class="inline-block h-2 w-2 rounded-full bg-violet-500 mr-1"></i>Resultados</span><span><i class="inline-block h-2 w-2 rounded-full bg-blue-500 mr-1"></i>Presentaciones</span><span><i class="inline-block h-2 w-2 rounded-full bg-amber-500 mr-1"></i>Dividendos / juntas</span><span><i class="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-1"></i>Otros</span>
+                </div>
+                <p id="financial-calendar-sync-status" class="mt-3 text-[11px] text-slate-500" aria-live="polite">Los resultados automáticos se consultan al abrir la aplicación.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h3 id="financial-calendar-selected-label" class="font-extrabold text-slate-900">Eventos del día</h3><p class="text-xs text-slate-500 mt-1">Los eventos automáticos se identifican como estimaciones de Yahoo Finance.</p></div><span id="financial-calendar-selected-count" class="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-800">0 eventos</span></div>
+                <div id="financial-calendar-day-events" class="space-y-3"></div>
+                <p id="financial-calendar-day-empty" class="hidden rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">No hay eventos para este día.</p>
+            </div>
+            <p class="text-[11px] text-slate-400">Las fechas automáticas de resultados proceden del calendario de Yahoo Finance y son orientativas: pueden faltar, cambiar o no estar confirmadas por la empresa. Yahoo no ofrece una API pública oficial y esta consulta puede dejar de funcionar. Para dividendos, presentaciones y otros eventos, conserva la introducción manual y verifica siempre la fuente oficial. Los recordatorios funcionan mientras la aplicación está abierta.</p>
         </section>
 
         <!-- Estrategias: interfaz independiente -->
@@ -1260,7 +1283,11 @@
         const STORAGE_KEY = 'portfolio_control_acciones_v3';
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
         const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
+        const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
         let financialEventsData = [];
+        let financialCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        let financialCalendarSelectedDate = financialTodayISO();
+        let financialEarningsSyncRunning = false;
         const financialEventNotified = new Set();
         let performanceHistoryChartInstance = null;
 
@@ -1287,9 +1314,15 @@
             loadPortfolioData();
             loadStrategies();
             loadFinancialEvents();
+            financialCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            financialCalendarSelectedDate = financialTodayISO();
             loadTaxonomy();
             renderTaxonomySelects();
             renderDashboard();
+            const lastFinancialSync = localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY);
+            if (!lastFinancialSync || Date.now()-new Date(lastFinancialSync).getTime() > 24*60*60*1000) {
+                setTimeout(() => syncFinancialEarnings(true), 6500);
+            }
 
             // Primera actualización al abrir y refresco cada 15 minutos mientras la pestaña esté visible.
             setTimeout(() => {
@@ -1466,7 +1499,8 @@
                 strategies: Array.isArray(strategiesData) ? strategiesData : [],
                 watchlist: Array.isArray(watchlistData) ? watchlistData : [],
                 performanceHistory: readPerformanceHistory(),
-                financialEvents: Array.isArray(financialEventsData) ? financialEventsData : []
+                financialEvents: Array.isArray(financialEventsData) ? financialEventsData : [],
+                financialEventsSync: localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY) || ''
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1507,6 +1541,7 @@
                             localStorage.setItem(PERFORMANCE_HISTORY_KEY, JSON.stringify(importedData.performanceHistory));
                         }
                         if (!Array.isArray(importedData) && Array.isArray(importedData.financialEvents)) { financialEventsData = importedData.financialEvents; persistFinancialEvents(); }
+                        if (!Array.isArray(importedData) && typeof importedData.financialEventsSync === 'string') { localStorage.setItem(FINANCIAL_EVENTS_SYNC_KEY, importedData.financialEventsSync); }
                         recalculatePortfolioCalculations();
                         renderDashboard();
                         if (typeof updateStrategyReviewBadge === 'function') updateStrategyReviewBadge();
@@ -2889,7 +2924,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function saveFinancialEvent(event) {
             event.preventDefault();
             const id=document.getElementById('financial-event-edit-id').value;
-            const item={id:id||('fe_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),title:document.getElementById('financial-event-title').value.trim(),asset:document.getElementById('financial-event-asset').value,type:document.getElementById('financial-event-type').value,date:document.getElementById('financial-event-date').value,time:document.getElementById('financial-event-time').value,reminderDays:Number(document.getElementById('financial-event-reminder').value)||0,notes:document.getElementById('financial-event-notes').value.trim(),updatedAt:new Date().toISOString()};
+            const previous=id?financialEventsData.find(e=>e.id===id):null;
+            const item={...(previous||{}),id:id||('fe_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),title:document.getElementById('financial-event-title').value.trim(),asset:document.getElementById('financial-event-asset').value,type:document.getElementById('financial-event-type').value,date:document.getElementById('financial-event-date').value,time:document.getElementById('financial-event-time').value,reminderDays:Number(document.getElementById('financial-event-reminder').value)||0,notes:document.getElementById('financial-event-notes').value.trim(),source:previous?.source==='yahoo'?'manual_override':(previous?.source||'manual'),updatedAt:new Date().toISOString()};
             if(!item.title||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)){showToast('Revisa el nombre y la fecha del evento','fa-circle-exclamation');return;}
             const index=financialEventsData.findIndex(e=>e.id===id);
             if(index>=0) financialEventsData[index]=item; else financialEventsData.push(item);
@@ -2920,25 +2956,154 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const dateLabel=date.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
             const timing=days===0?'Hoy':days===1?'Mañana':days>1?'En '+days+' días':'Hace '+Math.abs(days)+' días';
             const timingClass=days>=0&&days<=Number(e.reminderDays||0)?'bg-rose-100 text-rose-800':'bg-slate-100 text-slate-600';
-            return `<article class="rounded-xl border border-slate-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><span class="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-bold text-violet-800">${escapeHtml(e.type||'Otro')}</span><span class="rounded-md px-2 py-1 text-[10px] font-bold ${timingClass}">${timing}</span></div><h4 class="mt-2 font-extrabold text-slate-900">${escapeHtml(e.title||'Evento')}</h4><p class="mt-1 text-xs text-slate-500">${escapeHtml(dateLabel)} ${e.time?'· '+escapeHtml(e.time):''} ${e.asset?'· '+escapeHtml(e.asset):'· General / mercado'}</p>${e.notes?'<p class="mt-2 text-xs text-slate-600 whitespace-pre-wrap">'+escapeHtml(e.notes)+'</p>':''}<p class="mt-1 text-[10px] text-slate-400">Aviso: ${Number(e.reminderDays||0)===0?'el mismo día':Number(e.reminderDays)+' día(s) antes'}</p></div><div class="flex shrink-0 gap-2"><button type="button" onclick="editFinancialEvent('${e.id}')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="deleteFinancialEvent('${e.id}')" class="rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"><i class="fa-solid fa-trash mr-1"></i>Eliminar</button></div></article>`;
+            const sourceLabel=e.source==='yahoo'?'Yahoo Finance · estimación':e.source==='manual_override'?'Editado manualmente':'Añadido manualmente';
+            const sourceLink=e.sourceUrl?'<a class="mt-2 inline-block text-[11px] font-bold text-blue-700 hover:underline" href="'+escapeHtml(e.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Consultar fuente <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>':'';
+            return `<article class="rounded-xl border border-slate-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><span class="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-bold text-violet-800">${escapeHtml(e.type||'Otro')}</span><span class="rounded-md px-2 py-1 text-[10px] font-bold ${timingClass}">${timing}</span><span class="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">${sourceLabel}</span></div><h4 class="mt-2 font-extrabold text-slate-900">${escapeHtml(e.title||'Evento')}</h4><p class="mt-1 text-xs text-slate-500">${escapeHtml(dateLabel)} ${e.time?'· '+escapeHtml(e.time):''} ${e.asset?'· '+escapeHtml(e.asset):'· General / mercado'}</p>${e.notes?'<p class="mt-2 text-xs text-slate-600 whitespace-pre-wrap">'+escapeHtml(e.notes)+'</p>':''}${sourceLink}<p class="mt-1 text-[10px] text-slate-400">Aviso: ${Number(e.reminderDays||0)===0?'el mismo día':Number(e.reminderDays)+' día(s) antes'}</p></div><div class="flex shrink-0 gap-2"><button type="button" onclick="editFinancialEvent('${e.id}')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="deleteFinancialEvent('${e.id}')" class="rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"><i class="fa-solid fa-trash mr-1"></i>Eliminar</button></div></article>`;
+        }
+        function financialCalendarTone(type) {
+            if(type==='Resultados') return 'bg-violet-500';
+            if(type==='Presentación / Investor Day') return 'bg-blue-500';
+            if(type==='Dividendo'||type==='Junta de accionistas') return 'bg-amber-500';
+            return 'bg-emerald-500';
+        }
+        function changeFinancialCalendarMonth(delta) {
+            financialCalendarMonth=new Date(financialCalendarMonth.getFullYear(),financialCalendarMonth.getMonth()+Number(delta||0),1);
+            renderFinancialCalendar();
+        }
+        function goToFinancialCalendarToday() {
+            const now=new Date();
+            financialCalendarMonth=new Date(now.getFullYear(),now.getMonth(),1);
+            financialCalendarSelectedDate=financialTodayISO();
+            renderFinancialCalendar();
+        }
+        function selectFinancialCalendarDate(date) {
+            financialCalendarSelectedDate=date;
+            renderFinancialCalendar();
         }
         function renderFinancialCalendar() {
             const today=financialTodayISO(), filter=document.getElementById('financial-event-filter')?.value||'all';
-            const upcoming=financialEventsData.filter(e=>e.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-            const past=financialEventsData.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date));
-            const filtered=items=>filter==='all'?items:items.filter(e=>e.type===filter);
-            const next=filtered(upcoming), old=filtered(past);
+            const filtered=financialEventsData.filter(e=>filter==='all'||e.type===filter);
+            const upcoming=filtered.filter(e=>e.date>=today);
             document.getElementById('financial-event-upcoming-count').textContent=upcoming.length;
             document.getElementById('financial-event-total-count').textContent=financialEventsData.length;
-            document.getElementById('financial-event-upcoming').innerHTML=next.map(renderFinancialEventCard).join('');
-            document.getElementById('financial-event-past').innerHTML=old.map(renderFinancialEventCard).join('');
-            document.getElementById('financial-event-empty').classList.toggle('hidden',next.length>0);
-            document.getElementById('financial-event-past-empty').classList.toggle('hidden',old.length>0);
             updateFinancialEventBadge();
+            const year=financialCalendarMonth.getFullYear(), month=financialCalendarMonth.getMonth();
+            const monthLabel=financialCalendarMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+            const label=document.getElementById('financial-calendar-month-label'); if(label) label.textContent=monthLabel;
+            const grid=document.getElementById('financial-calendar-grid');
+            const firstOffset=(new Date(year,month,1).getDay()+6)%7;
+            const daysInMonth=new Date(year,month+1,0).getDate();
+            const eventsByDate={};
+            filtered.forEach(e=>{if(!eventsByDate[e.date])eventsByDate[e.date]=[];eventsByDate[e.date].push(e);});
+            let cells='';
+            for(let cell=0;cell<42;cell++){
+                const day=cell-firstOffset+1;
+                const inMonth=day>=1&&day<=daysInMonth;
+                const date=inMonth?year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0'):'';
+                const items=date?(eventsByDate[date]||[]):[];
+                const isToday=date===today, selected=date===financialCalendarSelectedDate;
+                const classes=['min-h-[58px] sm:min-h-[76px] rounded-lg border p-1 sm:p-2 text-left flex flex-col items-start transition-colors',inMonth?'bg-white border-slate-200 hover:border-violet-400':'bg-slate-50 border-slate-100 opacity-40',''+(selected?' ring-2 ring-violet-500 border-violet-400':'')];
+                cells+=`<button type="button" ${inMonth?'':'disabled'} onclick="selectFinancialCalendarDate('${date}')" aria-label="${inMonth?day+' de '+monthLabel+', '+items.length+' eventos':'Día fuera del mes'}" aria-pressed="${selected}" class="${classes.join(' ')}"><span class="text-xs sm:text-sm font-bold ${isToday?'rounded-full bg-violet-600 text-white px-1.5 py-0.5':'text-slate-800'}">${inMonth?day:''}</span><span class="mt-1 flex flex-wrap gap-1">${items.slice(0,4).map(e=>'<i class="h-2 w-2 rounded-full '+financialCalendarTone(e.type)+'" title="'+escapeHtml(e.type)+'"></i>').join('')}${items.length>4?'<b class="text-[9px] text-slate-500">+'+(items.length-4)+'</b>':''}</span><span class="mt-auto hidden sm:block text-[9px] leading-tight text-slate-500">${items.length?items.length+' evento(s)':''}</span></button>`;
+            }
+            if(grid) grid.innerHTML=cells;
+            const selectedEvents=(eventsByDate[financialCalendarSelectedDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+            const selectedDateObj=new Date(financialCalendarSelectedDate+'T00:00:00');
+            const selectedLabel=document.getElementById('financial-calendar-selected-label');
+            if(selectedLabel) selectedLabel.textContent='Eventos · '+selectedDateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+            const count=document.getElementById('financial-calendar-selected-count'); if(count) count.textContent=selectedEvents.length+' evento(s)';
+            const dayBox=document.getElementById('financial-calendar-day-events');
+            if(dayBox) dayBox.innerHTML=selectedEvents.map(renderFinancialEventCard).join('');
+            const empty=document.getElementById('financial-calendar-day-empty'); if(empty) empty.classList.toggle('hidden',selectedEvents.length>0);
+            const status=document.getElementById('financial-calendar-sync-status');
+            if(status){
+                const last=localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY);
+                status.textContent=last?'Última consulta automática: '+new Date(last).toLocaleString('es-ES')+'. Se buscan fechas de resultados de cartera y seguimiento.':'Todavía no se ha realizado una consulta automática de resultados.';
+            }
+        }
+        function getFinancialEarningsSymbols() {
+            const list=[];
+            const add=(symbol,name)=>{if(!symbol)return;const clean=String(symbol).trim();if(clean&&!list.some(x=>x.symbol===clean))list.push({symbol:clean,name:name||clean});};
+            assetsData.forEach(a=>{
+                const key=String(a.name||'').toUpperCase();
+                const mapped=YAHOO_SYMBOLS[key]||[];
+                if(mapped.length) add(mapped[0],a.name);
+                else if(a.yahooTicker) add(a.yahooTicker,a.name);
+                else if(a.ticker&&!/^[A-Z]{2}[A-Z0-9]{10,}$/.test(String(a.ticker).toUpperCase())) add(a.ticker,a.name);
+            });
+            (Array.isArray(watchlistData)?watchlistData:[]).forEach(a=>add(a.symbol,a.name));
+            return list;
+        }
+        async function fetchFinancialEarningsForSymbol(symbol) {
+            const target='https://finance.yahoo.com/calendar/earnings?symbol='+encodeURIComponent(symbol)+'&offset=0&size=25';
+            let lastError=null;
+            for(const makeProxyUrl of YAHOO_PROXIES){
+                try{
+                    const response=await fetch(makeProxyUrl(target),{cache:'no-store',headers:{'Accept':'text/html'},signal:AbortSignal.timeout(11000)});
+                    if(!response.ok) throw new Error('HTTP '+response.status);
+                    const html=await response.text();
+                    const doc=new DOMParser().parseFromString(html,'text/html');
+                    const table=[...doc.querySelectorAll('table')].find(t=>/Earnings Date/i.test(t.innerText||t.textContent||''));
+                    if(!table) throw new Error('Yahoo no devolvió una tabla de resultados');
+                    const rows=[...table.querySelectorAll('tbody tr')];
+                    const found=[];
+                    rows.forEach(row=>{
+                        const text=row.innerText||row.textContent||'';
+                        const match=text.match(/(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},\s+20\d{2}/i);
+                        if(!match)return;
+                        const parsed=new Date(match[0]+' 12:00:00');
+                        if(Number.isNaN(parsed.getTime()))return;
+                        const date=parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0');
+                        if(date>=financialTodayISO()) found.push({date});
+                    });
+                    const unique=[...new Map(found.map(x=>[x.date,x])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+                    return unique.slice(0,2);
+                }catch(error){lastError=error;}
+            }
+            throw lastError||new Error('No se pudo consultar el calendario de Yahoo Finance');
+        }
+        async function syncFinancialEarnings(silent) {
+            if(financialEarningsSyncRunning)return;
+            const symbols=getFinancialEarningsSymbols();
+            if(!symbols.length){showToast('No hay símbolos consultables para resultados','fa-circle-info');return;}
+            financialEarningsSyncRunning=true;
+            const status=document.getElementById('financial-calendar-sync-status');
+            if(status)status.textContent='Consultando fechas de resultados de '+symbols.length+' activo(s)…';
+            let success=0, failures=0, added=0, updated=0;
+            try{
+                for(const item of symbols){
+                    try{
+                        const dates=await fetchFinancialEarningsForSymbol(item.symbol);
+                        success++;
+                        dates.forEach(result=>{
+                            const manualDuplicate=financialEventsData.some(e=>e.source!=='yahoo'&&e.type==='Resultados'&&e.asset===item.name&&e.date===result.date);
+                            if(manualDuplicate)return;
+                            const existing=financialEventsData.find(e=>e.source==='yahoo'&&e.sourceSymbol===item.symbol);
+                            const eventData={title:'Publicación de resultados · '+item.name,asset:item.name,type:'Resultados',date:result.date,time:'',notes:'Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.',source:'yahoo',sourceSymbol:item.symbol,sourceUrl:'https://finance.yahoo.com/calendar/earnings?symbol='+encodeURIComponent(item.symbol),reminderDays:3,updatedAt:new Date().toISOString()};
+                            if(existing){
+                                const changed=existing.date!==eventData.date||existing.title!==eventData.title;
+                                Object.assign(existing,eventData);
+                                if(changed)updated++;
+                            }else{
+                                eventData.id='fe_yahoo_'+item.symbol.replace(/[^a-z0-9]/gi,'_')+'_'+result.date;
+                                financialEventsData.push(eventData);added++;
+                            }
+                        });
+                    }catch(error){failures++;console.warn('Calendario de resultados no disponible para '+item.symbol,error);}
+                    await new Promise(resolve=>setTimeout(resolve,300));
+                }
+                if(success>0){
+                    localStorage.setItem(FINANCIAL_EVENTS_SYNC_KEY,new Date().toISOString());
+                    persistFinancialEvents();
+                    renderFinancialCalendar();
+                }
+                const message=success+' de '+symbols.length+' activos consultados · '+added+' nuevos · '+updated+' actualizados'+(failures?' · '+failures+' sin respuesta':'');
+                if(status)status.textContent=(success?'Consulta terminada: ':'Consulta parcial: ')+message+'. Las fechas son orientativas.';
+                if(!silent)showToast(success?'Resultados actualizados: '+added+' nuevos, '+updated+' revisados':'No se pudieron consultar los resultados','fa-calendar-check');
+            }finally{financialEarningsSyncRunning=false;}
         }
         setInterval(checkFinancialEventReminders,60000);
 
-        function showStrategiesView() {
+                function showStrategiesView() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.add('hidden');
