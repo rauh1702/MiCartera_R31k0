@@ -474,6 +474,7 @@
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
                         <button type="button" class="r31-nav-button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved text-amber-300"></i> Riesgo</button>
+                        <button type="button" class="r31-nav-button" onclick="showFinancialCalendarView()"><i class="fa-solid fa-calendar-days text-violet-300"></i> Eventos <span id="financial-event-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
                 <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
                 <button type="button" id="strategies-menu-button" class="r31-nav-button" onclick="showStrategiesView()"><i class="fa-solid fa-chess-knight text-emerald-300"></i> Estrategias <span id="strategy-review-badge" hidden aria-label="Revisiones pendientes">0</span></button>
                 <button type="button" class="r31-nav-button r31-save-button" onclick="runMenuAction(manualSave)"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
@@ -876,6 +877,36 @@
             </div>
         </section>
 
+        <!-- Calendario de eventos financieros -->
+        <section id="financial-calendar-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Agenda de mercado · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Calendario financiero</h2><p class="text-sm text-slate-300 mt-1">Organiza resultados, presentaciones, juntas y otras fechas importantes de tus inversiones.</p></div>
+                <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+            </div>
+            <div class="rounded-2xl border border-slate-600 bg-slate-900/90 p-4 sm:p-5 shadow-sm">
+                <div class="flex items-center justify-between gap-3 mb-4"><div><h3 id="financial-event-form-title" class="font-extrabold text-white text-lg">Añadir evento</h3><p class="text-xs text-slate-300 mt-1">Introduce la fecha confirmada por la empresa o fuente oficial.</p></div><i class="fa-solid fa-calendar-plus text-2xl text-violet-300"></i></div>
+                <form id="financial-event-form" onsubmit="saveFinancialEvent(event)" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <input type="hidden" id="financial-event-edit-id">
+                    <label class="block sm:col-span-2"><span class="text-xs font-bold text-slate-200">Evento *</span><input id="financial-event-title" required maxlength="100" placeholder="Ej. Presentación de resultados trimestrales" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></label>
+                    <label class="block"><span class="text-xs font-bold text-slate-200">Activo relacionado</span><select id="financial-event-asset" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"><option value="">General / mercado</option></select></label>
+                    <label class="block"><span class="text-xs font-bold text-slate-200">Tipo</span><select id="financial-event-type" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"><option>Resultados</option><option>Presentación / Investor Day</option><option>Junta de accionistas</option><option>Dividendo</option><option>Producto / Contrato</option><option>Dato macroeconómico</option><option>Otro</option></select></label>
+                    <label class="block"><span class="text-xs font-bold text-slate-200">Fecha *</span><input id="financial-event-date" type="date" required class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></label>
+                    <label class="block"><span class="text-xs font-bold text-slate-200">Hora (opcional)</span><input id="financial-event-time" type="time" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></label>
+                    <label class="block"><span class="text-xs font-bold text-slate-200">Avisar con antelación</span><select id="financial-event-reminder" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"><option value="0">Solo el día del evento</option><option value="1">1 día antes</option><option value="3" selected>3 días antes</option><option value="7">7 días antes</option><option value="14">14 días antes</option></select></label>
+                    <label class="block sm:col-span-2 xl:col-span-4"><span class="text-xs font-bold text-slate-200">Notas / fuente (opcional)</span><textarea id="financial-event-notes" rows="2" maxlength="600" placeholder="Añade detalles o la fuente donde has confirmado la fecha." class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></textarea></label>
+                    <div class="sm:col-span-2 xl:col-span-4 flex flex-wrap gap-2 pt-1"><button type="submit" id="financial-event-save" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar evento</button><button type="button" onclick="resetFinancialEventForm()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Cancelar / Limpiar</button></div>
+                </form>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-2xl border border-violet-200 bg-violet-50 p-4"><p class="text-xs font-bold uppercase text-violet-700">Próximos eventos</p><p id="financial-event-upcoming-count" class="mt-1 text-3xl font-black text-violet-950">0</p></div>
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4"><p class="text-xs font-bold uppercase text-rose-700">En ventana de aviso</p><p id="financial-event-due-count" class="mt-1 text-3xl font-black text-rose-950">0</p></div>
+                <div class="rounded-2xl border border-slate-600 bg-slate-900/90 p-4"><p class="text-xs font-bold uppercase text-slate-300">Eventos registrados</p><p id="financial-event-total-count" class="mt-1 text-3xl font-black text-white">0</p></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2 mb-4"><div><h3 class="font-extrabold text-slate-900">Próximos eventos</h3><p class="text-xs text-slate-500 mt-1">Los avisos se muestran al abrir la aplicación y mientras permanezca abierta.</p></div><select id="financial-event-filter" onchange="renderFinancialCalendar()" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="all">Todos los tipos</option><option>Resultados</option><option>Presentación / Investor Day</option><option>Junta de accionistas</option><option>Dividendo</option><option>Producto / Contrato</option><option>Dato macroeconómico</option><option>Otro</option></select></div><div id="financial-event-upcoming" class="space-y-3"></div><div id="financial-event-empty" class="hidden rounded-xl border border-dashed border-slate-300 p-7 text-center text-sm text-slate-500">Todavía no tienes eventos registrados. Añade aquí fechas confirmadas para seguir los catalizadores de tus inversiones.</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900 mb-3">Eventos pasados</h3><div id="financial-event-past" class="space-y-3"></div><p id="financial-event-past-empty" class="hidden text-xs text-slate-500">Todavía no hay eventos pasados.</p></div>
+            <p class="text-[11px]] text-slate-400">Importante: esta agenda no descarga automáticamente fechas de resultados ni garantiza que sean definitivas. Registra o verifica las fechas en la web oficial de cada empresa o en la fuente del evento. Los recordatorios funcionan dentro de la aplicación; no son avisos en segundo plano cuando está cerrada.</p>
+        </section>
+
         <!-- Estrategias: interfaz independiente -->
         <section id="strategies-view" class="hidden space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1228,6 +1259,9 @@
 
         const STORAGE_KEY = 'portfolio_control_acciones_v3';
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
+        const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
+        let financialEventsData = [];
+        const financialEventNotified = new Set();
         let performanceHistoryChartInstance = null;
 
         function toggleMainMenu() {
@@ -1252,6 +1286,7 @@
 
             loadPortfolioData();
             loadStrategies();
+            loadFinancialEvents();
             loadTaxonomy();
             renderTaxonomySelects();
             renderDashboard();
@@ -1430,7 +1465,8 @@
                 assets: assetsData,
                 strategies: Array.isArray(strategiesData) ? strategiesData : [],
                 watchlist: Array.isArray(watchlistData) ? watchlistData : [],
-                performanceHistory: readPerformanceHistory()
+                performanceHistory: readPerformanceHistory(),
+                financialEvents: Array.isArray(financialEventsData) ? financialEventsData : []
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1470,6 +1506,7 @@
                         if (!Array.isArray(importedData) && Array.isArray(importedData.performanceHistory)) {
                             localStorage.setItem(PERFORMANCE_HISTORY_KEY, JSON.stringify(importedData.performanceHistory));
                         }
+                        if (!Array.isArray(importedData) && Array.isArray(importedData.financialEvents)) { financialEventsData = importedData.financialEvents; persistFinancialEvents(); }
                         recalculatePortfolioCalculations();
                         renderDashboard();
                         if (typeof updateStrategyReviewBadge === 'function') updateStrategyReviewBadge();
@@ -2086,7 +2123,7 @@
         async function refreshWatchlist(){if(!watchlistData.length){renderWatchlist();return;}const box=document.getElementById('watchlist-list');if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';const rates=await getExchangeRates();await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates)));persistWatchlist();renderWatchlist();}
         function renderWatchlist(){const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
         function removeFromWatchlist(i){watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
-        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
+        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
@@ -2788,19 +2825,133 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             renderRiskAnalysis(); window.scrollTo({top:0,behavior:'smooth'});
         }
 
+        function loadFinancialEvents() {
+            try { const data = JSON.parse(localStorage.getItem(FINANCIAL_EVENTS_KEY) || '[]'); financialEventsData = Array.isArray(data) ? data : []; }
+            catch (_) { financialEventsData = []; }
+            updateFinancialEventBadge();
+            checkFinancialEventReminders();
+        }
+        function persistFinancialEvents() {
+            localStorage.setItem(FINANCIAL_EVENTS_KEY, JSON.stringify(financialEventsData));
+            updateFinancialEventBadge();
+        }
+        function financialTodayISO() {
+            const d = new Date();
+            return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        }
+        function financialDaysUntil(dateStr) {
+            const p=String(dateStr||'').split('-').map(Number);
+            if(p.length!==3||!p[0]||!p[1]||!p[2]) return 999999;
+            const target=Date.UTC(p[0],p[1]-1,p[2]), now=financialTodayISO().split('-').map(Number);
+            return Math.round((target-Date.UTC(now[0],now[1]-1,now[2]))/86400000);
+        }
+        function updateFinancialEventBadge() {
+            const today=financialTodayISO();
+            const count=financialEventsData.filter(e=>e.date>=today && financialDaysUntil(e.date)<=Number(e.reminderDays||0)).length;
+            const badge=document.getElementById('financial-event-badge');
+            if(badge){badge.textContent=count>99?'99+':String(count);badge.hidden=count===0;badge.title=count?count+' evento(s) en ventana de aviso':'Sin avisos próximos';}
+            const due=document.getElementById('financial-event-due-count'); if(due) due.textContent=count;
+        }
+        function checkFinancialEventReminders() {
+            const today=financialTodayISO();
+            financialEventsData.forEach(e=>{
+                const days=financialDaysUntil(e.date), lead=Number(e.reminderDays||0);
+                if(days>=0 && days<=lead){
+                    const key=e.id+'|'+today;
+                    if(!financialEventNotified.has(key)){
+                        financialEventNotified.add(key);
+                        if(typeof showToast==='function') showToast(days===0?'Hoy: '+e.title:((days===1?'Mañana: ':'En '+days+' días: ')+e.title),'fa-calendar-day');
+                    }
+                }
+            });
+            updateFinancialEventBadge();
+        }
+        function populateFinancialEventAssets() {
+            const select=document.getElementById('financial-event-asset'), current=select.value;
+            select.innerHTML='<option value="">General / mercado</option>'+assetsData.map(a=>'<option value="'+escapeHtml(a.name)+'">'+escapeHtml(a.name+(a.ticker?' ('+a.ticker+')':''))+'</option>').join('');
+            if([...select.options].some(o=>o.value===current)) select.value=current;
+        }
+        function showFinancialCalendarView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+            document.getElementById('financial-calendar-view').classList.remove('hidden');
+            document.getElementById('headerToolbar').classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            populateFinancialEventAssets(); renderFinancialCalendar(); window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function resetFinancialEventForm() {
+            const form=document.getElementById('financial-event-form'); form.reset();
+            document.getElementById('financial-event-edit-id').value='';
+            document.getElementById('financial-event-form-title').textContent='Añadir evento';
+            document.getElementById('financial-event-save').innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar evento';
+            document.getElementById('financial-event-reminder').value='3';
+            populateFinancialEventAssets();
+        }
+        function saveFinancialEvent(event) {
+            event.preventDefault();
+            const id=document.getElementById('financial-event-edit-id').value;
+            const item={id:id||('fe_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),title:document.getElementById('financial-event-title').value.trim(),asset:document.getElementById('financial-event-asset').value,type:document.getElementById('financial-event-type').value,date:document.getElementById('financial-event-date').value,time:document.getElementById('financial-event-time').value,reminderDays:Number(document.getElementById('financial-event-reminder').value)||0,notes:document.getElementById('financial-event-notes').value.trim(),updatedAt:new Date().toISOString()};
+            if(!item.title||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)){showToast('Revisa el nombre y la fecha del evento','fa-circle-exclamation');return;}
+            const index=financialEventsData.findIndex(e=>e.id===id);
+            if(index>=0) financialEventsData[index]=item; else financialEventsData.push(item);
+            persistFinancialEvents(); resetFinancialEventForm(); renderFinancialCalendar(); checkFinancialEventReminders(); showToast(index>=0?'Evento actualizado':'Evento añadido al calendario');
+        }
+        function editFinancialEvent(id) {
+            const e=financialEventsData.find(x=>x.id===id); if(!e)return;
+            populateFinancialEventAssets();
+            document.getElementById('financial-event-edit-id').value=e.id;
+            document.getElementById('financial-event-title').value=e.title||'';
+            document.getElementById('financial-event-asset').value=e.asset||'';
+            document.getElementById('financial-event-type').value=e.type||'Otro';
+            document.getElementById('financial-event-date').value=e.date||'';
+            document.getElementById('financial-event-time').value=e.time||'';
+            document.getElementById('financial-event-reminder').value=String(e.reminderDays??3);
+            document.getElementById('financial-event-notes').value=e.notes||'';
+            document.getElementById('financial-event-form-title').textContent='Editar evento';
+            document.getElementById('financial-event-save').innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios';
+            document.getElementById('financial-event-title').focus(); window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function deleteFinancialEvent(id) {
+            const e=financialEventsData.find(x=>x.id===id); if(!e)return;
+            if(!confirm('¿Eliminar el evento «'+e.title+'»?'))return;
+            financialEventsData=financialEventsData.filter(x=>x.id!==id); persistFinancialEvents(); renderFinancialCalendar(); showToast('Evento eliminado');
+        }
+        function renderFinancialEventCard(e) {
+            const days=financialDaysUntil(e.date), date=new Date(e.date+'T00:00:00');
+            const dateLabel=date.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+            const timing=days===0?'Hoy':days===1?'Mañana':days>1?'En '+days+' días':'Hace '+Math.abs(days)+' días';
+            const timingClass=days>=0&&days<=Number(e.reminderDays||0)?'bg-rose-100 text-rose-800':'bg-slate-100 text-slate-600';
+            return `<article class="rounded-xl border border-slate-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><span class="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-bold text-violet-800">${escapeHtml(e.type||'Otro')}</span><span class="rounded-md px-2 py-1 text-[10px] font-bold ${timingClass}">${timing}</span></div><h4 class="mt-2 font-extrabold text-slate-900">${escapeHtml(e.title||'Evento')}</h4><p class="mt-1 text-xs text-slate-500">${escapeHtml(dateLabel)} ${e.time?'· '+escapeHtml(e.time):''} ${e.asset?'· '+escapeHtml(e.asset):'· General / mercado'}</p>${e.notes?'<p class="mt-2 text-xs text-slate-600 whitespace-pre-wrap">'+escapeHtml(e.notes)+'</p>':''}<p class="mt-1 text-[10px] text-slate-400">Aviso: ${Number(e.reminderDays||0)===0?'el mismo día':Number(e.reminderDays)+' día(s) antes'}</p></div><div class="flex shrink-0 gap-2"><button type="button" onclick="editFinancialEvent('${e.id}')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="deleteFinancialEvent('${e.id}')" class="rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"><i class="fa-solid fa-trash mr-1"></i>Eliminar</button></div></article>`;
+        }
+        function renderFinancialCalendar() {
+            const today=financialTodayISO(), filter=document.getElementById('financial-event-filter')?.value||'all';
+            const upcoming=financialEventsData.filter(e=>e.date>=today).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+            const past=financialEventsData.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date));
+            const filtered=items=>filter==='all'?items:items.filter(e=>e.type===filter);
+            const next=filtered(upcoming), old=filtered(past);
+            document.getElementById('financial-event-upcoming-count').textContent=upcoming.length;
+            document.getElementById('financial-event-total-count').textContent=financialEventsData.length;
+            document.getElementById('financial-event-upcoming').innerHTML=next.map(renderFinancialEventCard).join('');
+            document.getElementById('financial-event-past').innerHTML=old.map(renderFinancialEventCard).join('');
+            document.getElementById('financial-event-empty').classList.toggle('hidden',next.length>0);
+            document.getElementById('financial-event-past-empty').classList.toggle('hidden',old.length>0);
+            updateFinancialEventBadge();
+        }
+        setInterval(checkFinancialEventReminders,60000);
+
         function showStrategiesView() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.add('hidden');
             document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('risk-analysis-view').classList.add('hidden');
+            document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('strategies-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             populateStrategyAssets(); renderStrategies(); window.scrollTo({top:0,behavior:'smooth'});
         }
         function showPerformanceView() {
-            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','risk-analysis-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','risk-analysis-view','financial-calendar-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('performance-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
@@ -2813,6 +2964,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('strategies-view').classList.add('hidden');
             document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('risk-analysis-view').classList.add('hidden');
+            document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
@@ -2824,6 +2976,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('daily-summary-view').classList.add('hidden');
             document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('risk-analysis-view').classList.add('hidden');
+            document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
             window.scrollTo({top:0,behavior:'smooth'});
