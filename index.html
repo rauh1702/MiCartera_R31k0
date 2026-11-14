@@ -473,7 +473,8 @@
                 </div>
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
-                        <button type="button" class="r31-nav-button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced text-cyan-300"></i> Comparativa</button>
+                        <button type="button" class="r31-nav-button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open text-amber-300"></i> Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
+                <button type="button" class="r31-nav-button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced text-cyan-300"></i> Comparativa</button>
                         <button type="button" class="r31-nav-button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved text-amber-300"></i> Riesgo</button>
                         <button type="button" class="r31-nav-button" onclick="showFinancialCalendarView()"><i class="fa-solid fa-calendar-days text-violet-300"></i> Eventos <span id="financial-event-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
                 <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
@@ -808,6 +809,43 @@
         </section>
         </section>
 
+
+        <section id="investment-journal-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-amber-400">Decisiones y aprendizaje · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Diario de inversión</h2><p class="text-sm text-slate-300 mt-1">Anota por qué entras, qué esperas y qué podría salir mal. Después revisa si tu tesis se cumplió.</p></div>
+                <div class="flex flex-wrap gap-2"><button type="button" onclick="openInvestmentJournalModal()" class="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-sm font-bold text-slate-950"><i class="fa-solid fa-plus mr-2"></i>Nueva anotación</button><button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-200"><i class="fa-solid fa-arrow-left mr-2"></i>Volver</button></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs font-bold uppercase text-slate-400">Anotaciones</p><p id="journal-total-count" class="mt-1 text-2xl font-black text-white">0</p></div>
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs font-bold uppercase text-slate-400">Revisiones pendientes</p><p id="journal-due-count" class="mt-1 text-2xl font-black text-amber-300">0</p></div>
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs font-bold uppercase text-slate-400">Tesis revisadas</p><p id="journal-reviewed-count" class="mt-1 text-2xl font-black text-emerald-300">0</p></div>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+                <input id="journal-search" type="search" oninput="renderInvestmentJournal()" placeholder="Buscar por activo o contenido…" class="min-w-0 flex-1 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white placeholder-slate-400">
+                <select id="journal-filter" onchange="renderInvestmentJournal()" class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white"><option value="all">Todas</option><option value="pending">Pendientes de revisar</option><option value="reviewed">Revisadas</option><option value="buy">Compras</option><option value="sell">Ventas</option><option value="hold">Mantener / seguimiento</option></select>
+            </div>
+            <div id="journal-empty" class="rounded-2xl border border-dashed border-slate-600 p-8 text-center text-sm text-slate-400">Todavía no tienes anotaciones. Registra tu primera decisión para poder revisarla más adelante.</div>
+            <div id="journal-list" class="space-y-3"></div>
+        </section>
+        <div id="investment-journal-modal" class="hidden fixed inset-0 z-[90] bg-slate-950/80 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto" onclick="if(event.target===this)closeInvestmentJournalModal()">
+            <div class="mx-auto my-4 max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-700 px-5 py-4"><div><h3 id="journal-form-title" class="text-lg font-black text-white">Nueva anotación</h3><p class="text-xs text-slate-400 mt-1">Guarda tu razonamiento, no solo el resultado.</p></div><button type="button" onclick="closeInvestmentJournalModal()" class="rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+                <form id="investment-journal-form" onsubmit="saveInvestmentJournalEntry(event)" class="space-y-4 p-5">
+                    <input type="hidden" id="journal-edit-id">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="text-xs font-bold text-slate-300">Fecha de decisión<input id="journal-date" type="date" required class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"></label>
+                        <label class="text-xs font-bold text-slate-300">Activo<select id="journal-asset" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"><option value="">General / mercado</option></select></label>
+                        <label class="text-xs font-bold text-slate-300">Tipo de decisión<select id="journal-action" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"><option value="buy">Comprar / ampliar</option><option value="sell">Vender / reducir</option><option value="hold">Mantener / seguir</option></select></label>
+                        <label class="text-xs font-bold text-slate-300">Fecha para revisar<input id="journal-review-date" type="date" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"><span class="mt-1 block font-normal text-slate-500">Aviso cuando llegue, mientras la app esté abierta.</span></label>
+                    </div>
+                    <label class="block text-xs font-bold text-slate-300">¿Por qué tomaste esta decisión? (tesis)<textarea id="journal-thesis" required rows="3" maxlength="3000" placeholder="Ej.: creo que la empresa puede crecer por…" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-3 text-sm text-white placeholder-slate-500"></textarea></label>
+                    <label class="block text-xs font-bold text-slate-300">¿Qué esperas que ocurra? (catalizadores / objetivo)<textarea id="journal-expectation" rows="2" maxlength="2000" placeholder="Resultados, contratos, nuevos productos, horizonte…" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-3 text-sm text-white placeholder-slate-500"></textarea></label>
+                    <label class="block text-xs font-bold text-slate-300">¿Qué podría salir mal? (riesgos)<textarea id="journal-risks" rows="2" maxlength="2000" placeholder="Dilución, deuda, competencia, regulación…" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-3 text-sm text-white placeholder-slate-500"></textarea></label>
+                    <label class="block text-xs font-bold text-slate-300">Revisión / qué ha ocurrido<textarea id="journal-outcome" rows="3" maxlength="3000" placeholder="Al revisar, anota qué se cumplió, qué falló y qué has aprendido…" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-3 text-sm text-white placeholder-slate-500"></textarea></label>
+                    <div class="flex flex-wrap justify-end gap-2 pt-2"><button type="button" onclick="closeInvestmentJournalModal()" class="rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-bold text-slate-300">Cancelar</button><button type="submit" class="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-black text-slate-950"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar anotación</button></div>
+                </form>
+            </div>
+        </div>
 
         <section id="benchmark-view" class="hidden space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1318,6 +1356,9 @@
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
         const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
         const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
+        const INVESTMENT_JOURNAL_KEY = 'micartera_r31k0_investment_journal_v1';
+        let investmentJournalData = [];
+        const investmentJournalNotified = new Set();
         let financialEventsData = [];
         let financialCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         let financialCalendarSelectedDate = financialTodayISO();
@@ -1348,6 +1389,7 @@
             loadPortfolioData();
             loadStrategies();
             loadFinancialEvents();
+            loadInvestmentJournal();
             financialCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
             financialCalendarSelectedDate = financialTodayISO();
             loadTaxonomy();
@@ -1534,7 +1576,8 @@
                 watchlist: Array.isArray(watchlistData) ? watchlistData : [],
                 performanceHistory: readPerformanceHistory(),
                 financialEvents: Array.isArray(financialEventsData) ? financialEventsData : [],
-                financialEventsSync: localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY) || ''
+                financialEventsSync: localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY) || '',
+                investmentJournal: Array.isArray(investmentJournalData) ? investmentJournalData : []
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1576,6 +1619,7 @@
                         }
                         if (!Array.isArray(importedData) && Array.isArray(importedData.financialEvents)) { financialEventsData = importedData.financialEvents; persistFinancialEvents(); }
                         if (!Array.isArray(importedData) && typeof importedData.financialEventsSync === 'string') { localStorage.setItem(FINANCIAL_EVENTS_SYNC_KEY, importedData.financialEventsSync); }
+                        if (!Array.isArray(importedData) && Array.isArray(importedData.investmentJournal)) { investmentJournalData = importedData.investmentJournal; persistInvestmentJournal(); }
                         recalculatePortfolioCalculations();
                         renderDashboard();
                         if (typeof updateStrategyReviewBadge === 'function') updateStrategyReviewBadge();
@@ -2192,7 +2236,8 @@
         async function refreshWatchlist(){if(!watchlistData.length){renderWatchlist();return;}const box=document.getElementById('watchlist-list');if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';const rates=await getExchangeRates();await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates)));persistWatchlist();renderWatchlist();}
         function renderWatchlist(){const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
         function removeFromWatchlist(i){watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
-        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
+                    document.getElementById('investment-journal-view')?.classList.add('hidden');
+function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
@@ -2855,6 +2900,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function showBenchmarkView() {
             ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
             document.getElementById('benchmark-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             window.scrollTo({top:0,behavior:'smooth'});
@@ -2937,6 +2983,118 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             finally{benchmarkComparisonRunning=false;if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate mr-2"></i>Actualizar comparativa';}}
         }
 
+        function loadInvestmentJournal() {
+            try { const parsed=JSON.parse(localStorage.getItem(INVESTMENT_JOURNAL_KEY)||'[]'); investmentJournalData=Array.isArray(parsed)?parsed:[]; }
+            catch(_){investmentJournalData=[];}
+            updateInvestmentJournalBadge(); checkInvestmentJournalReminders();
+        }
+        function persistInvestmentJournal() {
+            localStorage.setItem(INVESTMENT_JOURNAL_KEY,JSON.stringify(investmentJournalData)); updateInvestmentJournalBadge();
+        }
+        function journalTodayISO() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+        function journalDaysUntil(date) {
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return 999999;
+            const p=date.split('-').map(Number),t=journalTodayISO().split('-').map(Number);
+            return Math.round((Date.UTC(p[0],p[1]-1,p[2])-Date.UTC(t[0],t[1]-1,t[2]))/86400000);
+        }
+        function updateInvestmentJournalBadge() {
+            const due=investmentJournalData.filter(e=>e.status!=='reviewed'&&e.reviewDate&&journalDaysUntil(e.reviewDate)<=0).length;
+            const badge=document.getElementById('journal-review-badge');
+            if(badge){badge.textContent=due>99?'99+':String(due);badge.hidden=due===0;badge.title=due?due+' revisión/revisiones pendientes':'Sin revisiones pendientes';}
+            const count=document.getElementById('journal-due-count');if(count)count.textContent=due;
+        }
+        function checkInvestmentJournalReminders() {
+            const today=journalTodayISO();
+            investmentJournalData.forEach(e=>{
+                if(e.status!=='reviewed'&&e.reviewDate&&e.reviewDate<=today){
+                    const key=e.id+'|'+today;
+                    if(!investmentJournalNotified.has(key)){investmentJournalNotified.add(key);if(typeof showToast==='function')showToast('Toca revisar tu tesis: '+(e.asset||'decisión general'),'fa-book-open');}
+                }
+            });
+            updateInvestmentJournalBadge();
+        }
+        setInterval(checkInvestmentJournalReminders,60000);
+        function populateInvestmentJournalAssets(selected='') {
+            const select=document.getElementById('journal-asset');if(!select)return;
+            select.innerHTML='<option value="">General / mercado</option>'+assetsData.map(a=>'<option value="'+escapeHtml(a.name)+'">'+escapeHtml(a.name+(a.ticker?' ('+a.ticker+')':''))+'</option>').join('');
+            if([...select.options].some(o=>o.value===selected))select.value=selected;
+        }
+        function openInvestmentJournalModal(id='') {
+            const form=document.getElementById('investment-journal-form');form.reset();
+            document.getElementById('journal-edit-id').value='';
+            document.getElementById('journal-date').value=journalTodayISO();
+            document.getElementById('journal-form-title').textContent='Nueva anotación';
+            populateInvestmentJournalAssets();
+            if(id){
+                const e=investmentJournalData.find(x=>x.id===id);if(!e)return;
+                document.getElementById('journal-edit-id').value=e.id;
+                document.getElementById('journal-date').value=e.date||journalTodayISO();
+                populateInvestmentJournalAssets(e.asset||'');
+                document.getElementById('journal-action').value=e.action||'hold';
+                document.getElementById('journal-review-date').value=e.reviewDate||'';
+                document.getElementById('journal-thesis').value=e.thesis||'';
+                document.getElementById('journal-expectation').value=e.expectation||'';
+                document.getElementById('journal-risks').value=e.risks||'';
+                document.getElementById('journal-outcome').value=e.outcome||'';
+                document.getElementById('journal-form-title').textContent='Editar anotación';
+            }
+            document.getElementById('investment-journal-modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');document.getElementById('journal-thesis').focus();
+        }
+        function closeInvestmentJournalModal() {
+            document.getElementById('investment-journal-modal').classList.add('hidden');document.body.classList.remove('overflow-hidden');
+        }
+        function saveInvestmentJournalEntry(event) {
+            event.preventDefault();
+            const id=document.getElementById('journal-edit-id').value,previous=id?investmentJournalData.find(x=>x.id===id):null;
+            const outcome=document.getElementById('journal-outcome').value.trim();
+            const item={...(previous||{}),id:id||('ij_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),date:document.getElementById('journal-date').value,asset:document.getElementById('journal-asset').value,action:document.getElementById('journal-action').value,reviewDate:document.getElementById('journal-review-date').value,thesis:document.getElementById('journal-thesis').value.trim(),expectation:document.getElementById('journal-expectation').value.trim(),risks:document.getElementById('journal-risks').value.trim(),outcome,status:outcome?'reviewed':'pending',updatedAt:new Date().toISOString()};
+            if(!item.date||!item.thesis){showToast('Indica la fecha y la tesis de inversión','fa-circle-exclamation');return;}
+            const index=investmentJournalData.findIndex(x=>x.id===id);
+            if(index>=0)investmentJournalData[index]=item;else investmentJournalData.unshift(item);
+            investmentJournalData.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+            persistInvestmentJournal();closeInvestmentJournalModal();renderInvestmentJournal();checkInvestmentJournalReminders();
+            showToast(index>=0?'Anotación actualizada':'Anotación guardada en el diario','fa-book-open');
+        }
+        function markInvestmentJournalReviewed(id) { openInvestmentJournalModal(id);document.getElementById('journal-outcome').focus(); }
+        function deleteInvestmentJournalEntry(id) {
+            const e=investmentJournalData.find(x=>x.id===id);if(!e)return;
+            if(!confirm('¿Eliminar esta anotación del diario?'))return;
+            investmentJournalData=investmentJournalData.filter(x=>x.id!==id);persistInvestmentJournal();renderInvestmentJournal();showToast('Anotación eliminada');
+        }
+        function renderInvestmentJournal() {
+            const list=document.getElementById('journal-list');if(!list)return;
+            const query=(document.getElementById('journal-search')?.value||'').trim().toLowerCase();
+            const filter=document.getElementById('journal-filter')?.value||'all';
+            const reviewed=investmentJournalData.filter(e=>e.status==='reviewed').length;
+            const due=investmentJournalData.filter(e=>e.status!=='reviewed'&&e.reviewDate&&journalDaysUntil(e.reviewDate)<=0).length;
+            document.getElementById('journal-total-count').textContent=investmentJournalData.length;
+            document.getElementById('journal-reviewed-count').textContent=reviewed;document.getElementById('journal-due-count').textContent=due;
+            const actions={buy:'Comprar / ampliar',sell:'Vender / reducir',hold:'Mantener / seguir'};
+            const rows=investmentJournalData.filter(e=>{
+                const text=[e.asset,e.thesis,e.expectation,e.risks,e.outcome].join(' ').toLowerCase();
+                const matchesQuery=!query||text.includes(query);
+                const matchesFilter=filter==='all'||(filter==='pending'&&e.status!=='reviewed')||(filter==='reviewed'&&e.status==='reviewed')||e.action===filter;
+                return matchesQuery&&matchesFilter;
+            }).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+            document.getElementById('journal-empty').classList.toggle('hidden',rows.length>0);
+            if(!rows.length){list.innerHTML='';return;}
+            list.innerHTML=rows.map(e=>{
+                const days=e.reviewDate?journalDaysUntil(e.reviewDate):999999;
+                const dueLabel=!e.reviewDate?'Sin fecha de revisión':days<0?'Revisión pendiente desde '+new Date(e.reviewDate+'T12:00:00').toLocaleDateString('es-ES'):days===0?'Revisar hoy':'Revisar el '+new Date(e.reviewDate+'T12:00:00').toLocaleDateString('es-ES');
+                const badge=e.status==='reviewed'?'<span class="rounded-full bg-emerald-900/60 px-2 py-1 text-[10px] font-bold text-emerald-300">Revisada</span>':'<span class="rounded-full bg-amber-900/60 px-2 py-1 text-[10px] font-bold text-amber-300">Pendiente</span>';
+                const field=(label,value)=>value?'<div class="mt-3"><p class="text-[10px] font-black uppercase tracking-wide text-slate-400">'+label+'</p><p class="mt-1 whitespace-pre-wrap text-sm text-slate-200">'+escapeHtml(value)+'</p></div>':'';
+                const id=String(e.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                return '<article class="rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2">'+badge+'<span class="rounded-full bg-slate-800 px-2 py-1 text-[10px] font-bold text-cyan-300">'+escapeHtml(actions[e.action]||'Decisión')+'</span></div><h3 class="mt-2 text-lg font-black text-white">'+escapeHtml(e.asset||'General / mercado')+'</h3><p class="text-xs text-slate-400">Decisión del '+(e.date?new Date(e.date+'T12:00:00').toLocaleDateString('es-ES'):'—')+' · '+escapeHtml(dueLabel)+'</p></div><div class="flex gap-2"><button type="button" onclick="openInvestmentJournalModal(\''+escapeHtml(id)+'\')" class="rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200">Editar</button><button type="button" onclick="deleteInvestmentJournalEntry(\''+escapeHtml(id)+'\')" class="rounded-lg border border-rose-900/70 px-3 py-2 text-xs font-bold text-rose-300">Eliminar</button></div></div>'+field('Tu tesis',e.thesis)+field('Qué esperas que ocurra',e.expectation)+field('Riesgos identificados',e.risks)+field('Revisión / aprendizaje',e.outcome)+(e.status!=='reviewed'?'<button type="button" onclick="markInvestmentJournalReviewed(\''+escapeHtml(id)+'\')" class="mt-4 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Revisar esta decisión</button>':'')+'</article>';
+            }).join('');
+        }
+        function showInvestmentJournalView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('investment-journal-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            renderInvestmentJournal();checkInvestmentJournalReminders();window.scrollTo({top:0,behavior:'smooth'});
+        }
+
         function renderRiskBreakdown(containerId, rows, total, labelField) {
             const el = document.getElementById(containerId);
             if (!el) return;
@@ -2978,6 +3136,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function showRiskAnalysisView() {
             ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','financial-calendar-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('risk-analysis-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             renderRiskAnalysis(); window.scrollTo({top:0,behavior:'smooth'});
@@ -3032,6 +3191,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function showFinancialCalendarView() {
             ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));
             document.getElementById('financial-calendar-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
             populateFinancialEventAssets(); renderFinancialCalendar(); window.scrollTo({top:0,behavior:'smooth'});
@@ -3249,6 +3409,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('risk-analysis-view').classList.add('hidden');
             document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('strategies-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             populateStrategyAssets(); renderStrategies(); window.scrollTo({top:0,behavior:'smooth'});
@@ -3256,6 +3417,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function showPerformanceView() {
             ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','risk-analysis-view','financial-calendar-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('performance-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             renderPerformanceHistoryChart();
@@ -3269,6 +3431,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('risk-analysis-view').classList.add('hidden');
             document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             renderDailySummary(); window.scrollTo({top:0,behavior:'smooth'});
@@ -3282,6 +3445,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('benchmark-view')?.classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
             window.scrollTo({top:0,behavior:'smooth'});
         }
