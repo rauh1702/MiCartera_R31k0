@@ -2288,8 +2288,8 @@
             if(target===null&&low===null&&high===null&&count===null)return;
             if(!Array.isArray(item.analystTargetHistory))item.analystTargetHistory=[];
             const last=item.analystTargetHistory[item.analystTargetHistory.length-1];
-            const same=last&&last.target===target&&last.low===low&&last.high===high&&last.count===count&&last.current===current&&last.currency===(sourceCurrency||"EUR");
-            if(same&&Date.now()-new Date(last.date).getTime()<6*60*60*1000)return;
+            const same=last&&last.target===target&&last.low===low&&last.high===high&&last.count===count&&last.currency===(sourceCurrency||"EUR");
+            if(same)return;
             item.analystTargetHistory.push({date:new Date().toISOString(),target,low,high,count,current,currency:sourceCurrency||"EUR"});
             if(item.analystTargetHistory.length>60)item.analystTargetHistory=item.analystTargetHistory.slice(-60);
             persistWatchlist();
