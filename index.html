@@ -2968,6 +2968,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         function changeFinancialCalendarMonth(delta) {
             financialCalendarMonth=new Date(financialCalendarMonth.getFullYear(),financialCalendarMonth.getMonth()+Number(delta||0),1);
+            financialCalendarSelectedDate=financialCalendarMonth.getFullYear()+'-'+String(financialCalendarMonth.getMonth()+1).padStart(2,'0')+'-01';
             renderFinancialCalendar();
         }
         function goToFinancialCalendarToday() {
@@ -3074,15 +3075,16 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     try{
                         const dates=await fetchFinancialEarningsForSymbol(item.symbol);
                         success++;
+                        const currentDates=dates.map(x=>x.date);
+                        financialEventsData=financialEventsData.filter(e=>!(e.source==='yahoo'&&e.sourceSymbol===item.symbol&&e.date>=financialTodayISO()&&!currentDates.includes(e.date)));
                         dates.forEach(result=>{
                             const manualDuplicate=financialEventsData.some(e=>e.source!=='yahoo'&&e.type==='Resultados'&&e.asset===item.name&&e.date===result.date);
                             if(manualDuplicate)return;
-                            const existing=financialEventsData.find(e=>e.source==='yahoo'&&e.sourceSymbol===item.symbol);
+                            const existing=financialEventsData.find(e=>e.source==='yahoo'&&e.sourceSymbol===item.symbol&&e.date===result.date);
                             const eventData={title:'Publicación de resultados · '+item.name,asset:item.name,type:'Resultados',date:result.date,time:'',notes:'Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.',source:'yahoo',sourceSymbol:item.symbol,sourceUrl:'https://finance.yahoo.com/calendar/earnings?symbol='+encodeURIComponent(item.symbol),reminderDays:3,updatedAt:new Date().toISOString()};
                             if(existing){
-                                const changed=existing.date!==eventData.date||existing.title!==eventData.title;
                                 Object.assign(existing,eventData);
-                                if(changed)updated++;
+                                updated++;
                             }else{
                                 eventData.id='fe_yahoo_'+item.symbol.replace(/[^a-z0-9]/gi,'_')+'_'+result.date;
                                 financialEventsData.push(eventData);added++;
