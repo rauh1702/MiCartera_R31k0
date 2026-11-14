@@ -602,6 +602,40 @@
             </div>
         </section>
 
+        <!-- Rentabilidad real y evolución histórica -->
+        <section class="glass-card p-5 sm:p-6 rounded-2xl shadow-sm border border-emerald-200/80 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-600"></i> Rentabilidad real de la cartera</h3>
+                    <p class="text-xs text-slate-500 mt-1">Incluye ganancias realizadas por ventas y ganancias/pérdidas latentes de las posiciones abiertas. Descuenta las comisiones registradas.</p>
+                </div>
+                <button onclick="savePerformanceSnapshot(true)" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-camera mr-1"></i> Guardar punto de hoy</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Rentabilidad acumulada</div>
+                    <div id="performance-total-pct" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Sobre el total histórico de compras</div>
+                </div>
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Resultado total</div>
+                    <div id="performance-total-eur" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Realizado + latente</div>
+                </div>
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Capital histórico aportado</div>
+                    <div id="performance-invested" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Suma de compras y comisiones</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <p id="performance-history-status" class="text-[11px] text-slate-500">El histórico comenzará a registrarse desde ahora.</p>
+                <button onclick="clearPerformanceHistory()" class="text-[11px] text-slate-500 hover:text-rose-600 underline">Borrar histórico de evolución</button>
+            </div>
+            <div id="performance-history-empty" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">Todavía no hay puntos históricos. Se guardará uno automáticamente al actualizar todas las cotizaciones.</div>
+            <div id="performance-history-wrap" class="hidden h-72 sm:h-80 relative"><canvas id="performanceHistoryChart"></canvas></div>
+        </section>
+
         <!-- Charts Section: each dimension has its own independent chart -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -1157,6 +1191,8 @@
         let assetTypes = [...DEFAULT_ASSET_TYPES];
 
         const STORAGE_KEY = 'portfolio_control_acciones_v3';
+        const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
+        let performanceHistoryChartInstance = null;
 
         function toggleMainMenu() {
             // Kept as a compatibility helper; dropdowns close only from their own parent button.
@@ -1576,6 +1612,8 @@
             renderCategoryFilterButtons();
             renderAssetTypeFilterButtons();
             renderKPIs(data);
+            renderPerformanceSummary();
+            renderPerformanceHistoryChart();
             renderTable(data);
             renderCharts(data);
         }
@@ -1627,6 +1665,138 @@
             if(kpiDetailChartInstance) kpiDetailChartInstance.destroy();
             const ctx=document.getElementById('kpiDetailChart').getContext('2d');
             kpiDetailChartInstance=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.name),datasets:[{label:c.label,data:rows.map(r=>r.value),backgroundColor:rows.map(r=>r.value<0?'rgba(244,63,94,.8)':'rgba(34,197,94,.8)'),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:x=>' '+money(x.raw)}}},scales:{x:{ticks:{color:'#cbd5e1',callback:v=>Number(v).toLocaleString('es-ES')+' €'},grid:{color:'rgba(148,163,184,.15)'}},y:{ticks:{color:'#f8fafc'},grid:{display:false}}}}});
+        }
+
+        function getPortfolioPerformanceMetrics() {
+            let totalPurchases = 0;
+            let realized = 0;
+            let latent = 0;
+            let marketValue = 0;
+            assetsData.forEach(asset => {
+                (asset.history || []).forEach(tx => {
+                    if (tx.type === 'Compra') totalPurchases += (Number(tx.qty) || 0) * (Number(tx.price) || 0) + (Number(tx.comm) || 0);
+                });
+                realized += Number(asset.realizedProfit) || 0;
+                latent += Number(asset.latentProfit) || 0;
+                marketValue += Number(asset.marketValue) || 0;
+            });
+            const totalProfit = realized + latent;
+            const returnPct = totalPurchases > 0 ? totalProfit / totalPurchases * 100 : null;
+            return { totalPurchases, realized, latent, totalProfit, marketValue, returnPct };
+        }
+
+        function readPerformanceHistory() {
+            try {
+                const data = JSON.parse(localStorage.getItem(PERFORMANCE_HISTORY_KEY) || '[]');
+                return Array.isArray(data) ? data.filter(x => x && /^\\d{4}-\\d{2}-\\d{2}$/.test(x.date) && Number.isFinite(Number(x.returnPct))) : [];
+            } catch (_) { return []; }
+        }
+
+        function savePerformanceSnapshot(showMessage = false) {
+            recalculatePortfolioCalculations();
+            const metrics = getPortfolioPerformanceMetrics();
+            if (metrics.returnPct === null) {
+                if (showMessage) showToast('Aún no hay compras registradas para calcular la rentabilidad.');
+                return;
+            }
+            const history = readPerformanceHistory();
+            const today = typeof localDateISO === 'function' ? localDateISO() : new Date().toISOString().slice(0,10);
+            const point = {
+                date: today,
+                returnPct: Number(metrics.returnPct.toFixed(4)),
+                totalProfit: Number(metrics.totalProfit.toFixed(2)),
+                totalPurchases: Number(metrics.totalPurchases.toFixed(2)),
+                marketValue: Number(metrics.marketValue.toFixed(2))
+            };
+            const existing = history.findIndex(x => x.date === today);
+            if (existing >= 0) history[existing] = point;
+            else history.push(point);
+            history.sort((a,b) => a.date.localeCompare(b.date));
+            try {
+                localStorage.setItem(PERFORMANCE_HISTORY_KEY, JSON.stringify(history.slice(-3650)));
+                renderPerformanceSummary();
+                renderPerformanceHistoryChart();
+                if (showMessage) showToast('Punto de evolución de hoy guardado');
+            } catch (error) {
+                console.error('No se pudo guardar el histórico de rentabilidad:', error);
+                if (showMessage) showToast('No se pudo guardar el histórico. Comprueba el espacio disponible.');
+            }
+        }
+
+        function renderPerformanceSummary() {
+            const metrics = getPortfolioPerformanceMetrics();
+            const pctEl = document.getElementById('performance-total-pct');
+            const eurEl = document.getElementById('performance-total-eur');
+            const investedEl = document.getElementById('performance-invested');
+            if (!pctEl || !eurEl || !investedEl) return;
+            if (metrics.returnPct === null) {
+                pctEl.textContent = eurEl.textContent = investedEl.textContent = '—';
+                return;
+            }
+            const signed = value => (value > 0 ? '+' : '') + value.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+            pctEl.textContent = (metrics.returnPct > 0 ? '+' : '') + metrics.returnPct.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %';
+            pctEl.className = 'text-2xl font-black mt-1 ' + (metrics.returnPct > 0 ? 'text-emerald-600' : metrics.returnPct < 0 ? 'text-rose-600' : 'text-slate-800');
+            eurEl.textContent = signed(metrics.totalProfit) + ' €';
+            eurEl.className = 'text-2xl font-black mt-1 ' + (metrics.totalProfit > 0 ? 'text-emerald-600' : metrics.totalProfit < 0 ? 'text-rose-600' : 'text-slate-800');
+            investedEl.textContent = metrics.totalPurchases.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+            const history = readPerformanceHistory();
+            const status = document.getElementById('performance-history-status');
+            if (status) status.textContent = history.length
+                ? 'Histórico desde ' + new Date(history[0].date + 'T12:00:00').toLocaleDateString('es-ES') + ' · ' + history.length + ' puntos guardados (máximo 1 por día).'
+                : 'El histórico comenzará a registrarse desde ahora; no se inventan cotizaciones pasadas.';
+        }
+
+        function renderPerformanceHistoryChart() {
+            const history = readPerformanceHistory();
+            const empty = document.getElementById('performance-history-empty');
+            const wrap = document.getElementById('performance-history-wrap');
+            const canvas = document.getElementById('performanceHistoryChart');
+            if (!empty || !wrap || !canvas) return;
+            if (performanceHistoryChartInstance) { performanceHistoryChartInstance.destroy(); performanceHistoryChartInstance = null; }
+            if (!history.length) {
+                empty.classList.remove('hidden');
+                wrap.classList.add('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            wrap.classList.remove('hidden');
+            performanceHistoryChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: history.map(x => new Date(x.date + 'T12:00:00').toLocaleDateString('es-ES')),
+                    datasets: [{
+                        label: 'Rentabilidad acumulada (%)',
+                        data: history.map(x => x.returnPct),
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(16,185,129,.14)',
+                        fill: true,
+                        tension: .25,
+                        pointRadius: history.length > 90 ? 0 : 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, labels: { color: '#475569' } },
+                        tooltip: { callbacks: { label: c => ' Rentabilidad: ' + (c.raw > 0 ? '+' : '') + c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#64748b', maxTicksLimit: 8 }, grid: { color: 'rgba(148,163,184,.14)' } },
+                        y: { ticks: { color: '#64748b', callback: v => v + ' %' }, grid: { color: 'rgba(148,163,184,.14)' } }
+                    }
+                }
+            });
+        }
+
+        function clearPerformanceHistory() {
+            if (!confirm('¿Borrar únicamente el histórico de evolución de rentabilidad? Tus activos y operaciones no se modificarán.')) return;
+            localStorage.removeItem(PERFORMANCE_HISTORY_KEY);
+            renderPerformanceSummary();
+            renderPerformanceHistoryChart();
+            showToast('Histórico de evolución borrado. La cartera sigue intacta.');
         }
 
         function renderKPIs(data) {
@@ -1981,6 +2151,7 @@
                 }));
                 savePortfolioData();
                 renderDashboard();
+                if (updatedCount > 0) savePerformanceSnapshot(false);
                 const message = `${updatedCount} cotizaciones actualizadas` +
                     (failures.length ? `; ${failures.length} sin actualizar: ${failures.join(" | ")}` : "");
                 showToast(message);
@@ -2109,6 +2280,7 @@
                 asset.history[editingTransactionIndex] = candidate;
                 savePortfolioData();
                 recalculatePortfolioCalculations();
+                savePerformanceSnapshot(false);
                 const assetNameForToast = asset.name;
                 closeTransactionModal();
                 renderDashboard();
@@ -2122,6 +2294,8 @@
             }
             asset.history.push(candidate);
             savePortfolioData();
+            recalculatePortfolioCalculations();
+            savePerformanceSnapshot(false);
             closeTransactionModal();
             renderDashboard();
             if (currentActiveAsset && currentActiveAsset.name === assetName) openModal(assetName);
