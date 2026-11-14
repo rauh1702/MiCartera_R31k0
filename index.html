@@ -1569,7 +1569,7 @@
             if (typeof persistStrategies === 'function') persistStrategies();
             const backup = {
                 app: 'MiCartera R31k0',
-                formatVersion: 3,
+                formatVersion: 4,
                 exportedAt: new Date().toISOString(),
                 assets: assetsData,
                 strategies: Array.isArray(strategiesData) ? strategiesData : [],
@@ -1588,7 +1588,7 @@
             downloadAnchor.click();
             downloadAnchor.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-            showToast("Copia JSON descargada: cartera y estrategias incluidas");
+            showToast("Copia JSON descargada: cartera, estrategias y diario incluidos");
         }
 
         function triggerImportJson() {
@@ -1623,7 +1623,7 @@
                         recalculatePortfolioCalculations();
                         renderDashboard();
                         if (typeof updateStrategyReviewBadge === 'function') updateStrategyReviewBadge();
-                        showToast(Array.isArray(importedData) ? "Copia antigua de cartera cargada correctamente" : "Copia cargada: cartera y estrategias restauradas");
+                        showToast(Array.isArray(importedData) ? "Copia antigua de cartera cargada correctamente" : "Copia cargada: cartera, estrategias y diario restaurados cuando estaban incluidos");
                     } else {
                         alert("El archivo JSON no contiene una copia válida de MiCartera.");
                     }
@@ -2237,7 +2237,7 @@
         function renderWatchlist(){const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
         function removeFromWatchlist(i){watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
                     document.getElementById('investment-journal-view')?.classList.add('hidden');
-function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
+function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
