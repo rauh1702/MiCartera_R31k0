@@ -932,7 +932,13 @@
                     <div class="rounded-xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs text-slate-400">Variación del periodo</p><p id="watch-metric-return" class="mt-1 text-xl font-black text-white">—</p></div>
                     <div class="rounded-xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs text-slate-400">Volumen medio</p><p id="watch-metric-volume" class="mt-1 text-xl font-black text-white">—</p></div>
                 </div>
-                <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100"><strong>Nota:</strong> esta primera fase muestra cotización e histórico técnico. Todavía no emite señales de compra/venta ni conclusiones fundamentales. Los datos dependen de Yahoo Finance y de la disponibilidad de los intermediarios de conexión.</div>
+                <section class="rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-extrabold text-white text-lg">Análisis fundamental</h3><p class="text-xs text-slate-400 mt-1">Valoración, crecimiento, rentabilidad y salud financiera.</p></div><button type="button" id="watch-fundamentals-refresh" onclick="loadWatchFundamentals()" class="rounded-xl border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-2"></i>Actualizar fundamentales</button></div>
+                    <p id="watch-fundamentals-status" class="text-sm text-slate-300" aria-live="polite">Consultando datos fundamentales…</p>
+                    <div id="watch-fundamentals-content" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
+                    <p class="text-[11px] text-slate-500">Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>
+                </section>
+                <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100"><strong>Importante:</strong> los indicadores fundamentales son datos descriptivos, no recomendaciones de compra o venta. Comprueba siempre la fecha de los últimos resultados y los informes oficiales de la empresa.</div>
             </section>
         </section>
 
@@ -2267,9 +2273,79 @@
         let watchDetailChart = null, watchDetailIndex = null, watchDetailRange = "year";
         let watchDetailRequestId = 0;
         function closeWatchDetail(){if(watchDetailChart){watchDetailChart.destroy();watchDetailChart=null;}watchDetailIndex=null;document.getElementById("watch-detail-view")?.classList.add("hidden");document.getElementById("watchlist-list")?.classList.remove("hidden");document.getElementById("watchlist-empty")?.classList.remove("hidden");}
-        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";await setWatchChartRange("year");window.scrollTo({top:0,behavior:"smooth"});}
+        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";await setWatchChartRange("year");loadWatchFundamentals();window.scrollTo({top:0,behavior:"smooth"});}
         function setWatchChartRange(range){watchDetailRange=range;document.querySelectorAll(".watch-range-btn").forEach(b=>b.classList.toggle("active",b.dataset.range===range));return loadWatchDetail();}
         async function fetchWatchHistory(symbol,range){const params={day:"range=1d&interval=5m",week:"range=5d&interval=15m",month:"range=1mo&interval=1d",year:"range=1y&interval=1d"};const target="https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+(params[range]||params.year)+"&_="+Date.now();const errors=[];for(const makeProxyUrl of YAHOO_PROXIES){try{const json=await fetchJsonWithTimeout(makeProxyUrl(target),12000);const result=json.chart?.result?.[0];if(!result)throw new Error(json.chart?.error?.description||"Sin histórico disponible");const quote=result.indicators?.quote?.[0]||{};const timestamps=result.timestamp||[];const closes=quote.close||[];const rows=[];for(let i=0;i<timestamps.length;i++){const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({time:timestamps[i],close,volume:Number(quote.volume?.[i])||0});}if(!rows.length)throw new Error("Yahoo no devolvió precios históricos");return {rows,currency:result.meta?.currency||"EUR",meta:result.meta||{}};}catch(e){errors.push(e.message||"Error de conexión");}}throw new Error("No se pudo cargar el histórico: "+errors.join(" · "));}
+        let watchFundamentalsRequestId=0;
+        function yahooRawValue(obj){if(obj==null)return null;if(typeof obj==="number")return obj;if(typeof obj.raw==="number")return obj.raw;if(typeof obj.value==="number")return obj.value;return null;}
+        function formatFundamentalNumber(value,decimals=2){return value==null||!Number.isFinite(Number(value))?"No disponible":Number(value).toLocaleString("es-ES",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});}
+        function renderWatchFundamentals(data,sourceCurrency,rates){
+            const money=(obj)=>{const n=yahooRawValue(obj);if(n==null)return "No disponible";try{return formatFundamentalNumber(convertToEUR(n,sourceCurrency||"EUR",rates),2)+" €";}catch(_){return formatFundamentalNumber(n,2)+" "+(sourceCurrency||"");}};
+            const pct=(obj)=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n*100,2)+"%";};
+            const ratio=(obj,suffix="x")=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n,2)+(suffix? " "+suffix:"");};
+            const raw=(obj)=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n,2);};
+            const valuation=[
+                ["Capitalización bursátil",money(data.price?.marketCap||data.summaryDetail?.marketCap)],
+                ["Valor de empresa (EV)",money(data.defaultKeyStatistics?.enterpriseValue)],
+                ["PER (últimos 12 meses)",ratio(data.summaryDetail?.trailingPE)],
+                ["PER estimado",ratio(data.summaryDetail?.forwardPE)],
+                ["Precio / ventas",ratio(data.summaryDetail?.priceToSalesTrailing12Months)],
+                ["Precio / valor contable",ratio(data.defaultKeyStatistics?.priceToBook)],
+                ["Precio objetivo medio",money(data.financialData?.targetMeanPrice)]
+            ];
+            const growth=[
+                ["Crecimiento de ingresos",pct(data.financialData?.revenueGrowth)],
+                ["Crecimiento de beneficios",pct(data.financialData?.earningsGrowth)],
+                ["Margen bruto",pct(data.financialData?.grossMargins)],
+                ["Margen operativo",pct(data.financialData?.operatingMargins)],
+                ["Margen de beneficio",pct(data.financialData?.profitMargins)],
+                ["Rentabilidad sobre fondos propios (ROE)",pct(data.financialData?.returnOnEquity)],
+                ["Rentabilidad sobre activos (ROA)",pct(data.financialData?.returnOnAssets)]
+            ];
+            const health=[
+                ["Efectivo y equivalentes",money(data.financialData?.totalCash)],
+                ["Deuda total",money(data.financialData?.totalDebt)],
+                ["Deuda / patrimonio",data.financialData?.debtToEquity?raw(data.financialData.debtToEquity)+"%":"No disponible"],
+                ["Flujo de caja libre",money(data.financialData?.freeCashflow)],
+                ["Flujo de caja operativo",money(data.financialData?.operatingCashflow)],
+                ["Ratio corriente",ratio(data.financialData?.currentRatio)],
+                ["Recomendación analistas",data.financialData?.recommendationKey?.fmt||data.financialData?.recommendationKey||"No disponible"]
+            ];
+            const groups=[["Valoración",valuation],["Crecimiento y rentabilidad",growth],["Salud financiera",health]];
+            const host=document.getElementById("watch-fundamentals-content");if(!host)return;
+            host.innerHTML=groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+title+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>'<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><dt class="text-xs text-slate-400">'+label+'</dt><dd class="text-sm font-bold text-slate-100 text-right">'+value+'</dd></div>').join("")+'</dl></div>').join("");
+        }
+        async function loadWatchFundamentals(){
+            const item=watchlistData[watchDetailIndex];if(!item)return;
+            const requestId=++watchFundamentalsRequestId,symbol=item.symbol;
+            const status=document.getElementById("watch-fundamentals-status"),button=document.getElementById("watch-fundamentals-refresh");
+            if(status)status.textContent="Descargando fundamentales de "+symbol+"…";if(button)button.disabled=true;
+            const modules="price,summaryDetail,defaultKeyStatistics,financialData";
+            const target="https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/"+encodeURIComponent(symbol)+"?type=trailingMarketCap&merge=false&period1="+Math.floor(Date.now()/1000-86400*365)+"&period2="+Math.floor(Date.now()/1000);
+            const quoteTarget="https://query1.finance.yahoo.com/v10/finance/quoteSummary/"+encodeURIComponent(symbol)+"?modules="+modules+"&formatted=true&corsDomain=finance.yahoo.com&_="+Date.now();
+            const errors=[];
+            try{
+                let data=null;
+                for(const makeProxyUrl of YAHOO_PROXIES){
+                    try{
+                        const json=await fetchJsonWithTimeout(makeProxyUrl(quoteTarget),12000);
+                        const result=json.quoteSummary?.result?.[0];
+                        if(!result)throw new Error(json.quoteSummary?.error?.description||"Yahoo no ha devuelto fundamentales");
+                        data=result;break;
+                    }catch(error){errors.push(error.message||"Error de conexión");}
+                }
+                if(!data)throw new Error(errors.join(" · ")||"No hay datos fundamentales para este activo.");
+                const rates=await getExchangeRates();
+                if(requestId!==watchFundamentalsRequestId||watchlistData[watchDetailIndex]?.symbol!==symbol)return;
+                const currency=data.price?.currency||data.summaryDetail?.currency||item.currency||"EUR";
+                renderWatchFundamentals(data,currency,rates);
+                const profile=data.price?.shortName||data.price?.longName||item.name||symbol;
+                if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · consulta: "+new Date().toLocaleString("es-ES")+".";
+            }catch(error){
+                if(status)status.textContent="No se han podido obtener fundamentales: "+(error.message||"fuente no disponible")+". Puede que Yahoo no ofrezca cobertura para este activo o que el intermediario esté temporalmente limitado.";
+                const host=document.getElementById("watch-fundamentals-content");if(host)host.innerHTML='<div class="lg:col-span-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100">No se muestran cifras estimadas ni datos inventados. Prueba a actualizar más tarde o consulta los informes oficiales de la empresa.</div>';
+            }finally{if(requestId===watchFundamentalsRequestId&&button)button.disabled=false;}
+        }
         async function loadWatchDetail(){const item=watchlistData[watchDetailIndex];if(!item)return;const requestId=++watchDetailRequestId;const requestedRange=watchDetailRange;const btn=document.getElementById("watch-detail-refresh");if(btn)btn.disabled=true;const status=document.getElementById("watch-detail-status");if(status)status.textContent="Descargando histórico de "+requestedRange+"…";try{const results=await Promise.all([fetchWatchHistory(item.symbol,requestedRange),getExchangeRates()]);if(requestId!==watchDetailRequestId||watchlistData[watchDetailIndex]!==item)return;const history=results[0],rates=results[1];const values=history.rows.map(r=>({time:r.time,price:convertToEUR(r.close,history.currency,rates),volume:r.volume}));const prices=values.map(x=>x.price);const first=prices[0],last=prices[prices.length-1],high=Math.max(...prices),low=Math.min(...prices);const avgVol=values.reduce((a,b)=>a+b.volume,0)/Math.max(1,values.length);const fmt=n=>Number(n).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:4})+" €";document.getElementById("watch-detail-name").textContent=item.name||item.symbol;document.getElementById("watch-detail-symbol").textContent=item.symbol+" · "+(history.meta.exchangeName||item.exchange||"")+" · "+history.currency;document.getElementById("watch-detail-price").textContent=fmt(last);const pct=first?((last-first)/first)*100:0;const changeEl=document.getElementById("watch-detail-change");changeEl.textContent=(pct>=0?"+":"")+pct.toFixed(2)+"% en el periodo";changeEl.className="mt-1 text-sm font-bold "+(pct>=0?"text-emerald-400":"text-rose-400");document.getElementById("watch-detail-time").textContent="Último dato: "+new Date(values[values.length-1].time*1000).toLocaleString("es-ES");document.getElementById("watch-metric-high").textContent=fmt(high);document.getElementById("watch-metric-low").textContent=fmt(low);const ret=document.getElementById("watch-metric-return");ret.textContent=(pct>=0?"+":"")+pct.toFixed(2)+"%";ret.className="mt-1 text-xl font-black "+(pct>=0?"text-emerald-400":"text-rose-400");document.getElementById("watch-metric-volume").textContent=avgVol.toLocaleString("es-ES",{maximumFractionDigits:0});if(watchDetailChart){watchDetailChart.destroy();watchDetailChart=null;}if(typeof Chart==="undefined")throw new Error("No se ha podido cargar Chart.js");const ctx=document.getElementById("watch-detail-chart");watchDetailChart=new Chart(ctx,{type:"line",data:{labels:values.map(x=>new Date(x.time*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short",hour:(requestedRange==="day"||requestedRange==="week")?"2-digit":undefined,minute:(requestedRange==="day"||requestedRange==="week")?"2-digit":undefined})),datasets:[{label:"Precio (€)",data:prices,borderColor:"#22d3ee",backgroundColor:"rgba(34,211,238,.12)",fill:true,tension:.22,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:"#cbd5e1"}},tooltip:{callbacks:{label:c=>" "+fmt(c.parsed.y)}}},scales:{x:{ticks:{color:"#94a3b8",maxTicksLimit:8},grid:{color:"rgba(148,163,184,.12)"}},y:{ticks:{color:"#94a3b8",callback:v=>Number(v).toLocaleString("es-ES")+" €"},grid:{color:"rgba(148,163,184,.12)"}}}}});if(status){const firstDate=new Date(values[0].time*1000).toLocaleDateString("es-ES");const lastDate=new Date(values[values.length-1].time*1000).toLocaleDateString("es-ES");const periodNames={day:"Día",week:"Semana",month:"Mes",year:"Año"};status.textContent="Vista "+(periodNames[requestedRange]||requestedRange)+" · "+values.length+" registros · "+firstDate+" – "+lastDate+". Datos solicitados de nuevo a Yahoo Finance."; }}catch(e){if(status)status.textContent=e.message||"No se pudo cargar el análisis.";console.warn("Error en ficha de seguimiento:",e);}finally{if(btn)btn.disabled=false;}}
         function removeFromWatchlist(i){if(watchDetailIndex===i)closeWatchDetail();watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
 
