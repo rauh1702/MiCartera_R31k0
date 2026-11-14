@@ -473,6 +473,7 @@
                 </div>
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
+                <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
                 <button type="button" id="strategies-menu-button" class="r31-nav-button" onclick="showStrategiesView()"><i class="fa-solid fa-chess-knight text-emerald-300"></i> Estrategias <span id="strategy-review-badge" hidden aria-label="Revisiones pendientes">0</span></button>
                 <button type="button" class="r31-nav-button r31-save-button" onclick="runMenuAction(manualSave)"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
             </nav>
@@ -600,40 +601,6 @@
                     <span id="kpi-mayor-monto" class="font-semibold text-slate-700">0.00 €</span> (<span id="kpi-mayor-pct">0%</span>)
                 </div>
             </div>
-        </section>
-
-        <!-- Rentabilidad real y evolución histórica -->
-        <section class="glass-card p-5 sm:p-6 rounded-2xl shadow-sm border border-emerald-200/80 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-600"></i> Rentabilidad real de la cartera</h3>
-                    <p class="text-xs text-slate-500 mt-1">Incluye ganancias realizadas por ventas y ganancias/pérdidas latentes de las posiciones abiertas. Descuenta las comisiones registradas.</p>
-                </div>
-                <button onclick="savePerformanceSnapshot(true)" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-camera mr-1"></i> Guardar punto de hoy</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Rentabilidad acumulada</div>
-                    <div id="performance-total-pct" class="text-2xl font-black mt-1 text-slate-800">—</div>
-                    <div class="text-xs text-slate-500 mt-1">Sobre el total histórico de compras</div>
-                </div>
-                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Resultado total</div>
-                    <div id="performance-total-eur" class="text-2xl font-black mt-1 text-slate-800">—</div>
-                    <div class="text-xs text-slate-500 mt-1">Realizado + latente</div>
-                </div>
-                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Capital histórico aportado</div>
-                    <div id="performance-invested" class="text-2xl font-black mt-1 text-slate-800">—</div>
-                    <div class="text-xs text-slate-500 mt-1">Suma de compras y comisiones</div>
-                </div>
-            </div>
-            <div class="flex flex-wrap justify-between items-center gap-2">
-                <p id="performance-history-status" class="text-[11px] text-slate-500">El histórico comenzará a registrarse desde ahora.</p>
-                <button onclick="clearPerformanceHistory()" class="text-[11px] text-slate-500 hover:text-rose-600 underline">Borrar histórico de evolución</button>
-            </div>
-            <div id="performance-history-empty" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">Todavía no hay puntos históricos. Se guardará uno automáticamente al actualizar todas las cotizaciones.</div>
-            <div id="performance-history-wrap" class="hidden h-72 sm:h-80 relative"><canvas id="performanceHistoryChart"></canvas></div>
         </section>
 
         <!-- Charts Section: each dimension has its own independent chart -->
@@ -793,6 +760,51 @@
             </div>
         </section>
         </div><!-- /dashboard-view -->
+        <!-- Pantalla independiente de rentabilidad real -->
+        <section id="performance-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[.18em] text-emerald-400">Análisis · MiCartera R31k0</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Rentabilidad real de la cartera</h2>
+                    <p class="text-sm text-slate-300 mt-1">Consulta el resultado acumulado y la evolución histórica de tus inversiones.</p>
+                </div>
+                <button onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver al inicio</button>
+            </div>
+        <!-- Rentabilidad real y evolución histórica -->
+        <section class="glass-card p-5 sm:p-6 rounded-2xl shadow-sm border border-emerald-200/80 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-600"></i> Rentabilidad real de la cartera</h3>
+                    <p class="text-xs text-slate-500 mt-1">Incluye ganancias realizadas por ventas y ganancias/pérdidas latentes de las posiciones abiertas. Descuenta las comisiones registradas.</p>
+                </div>
+                <button onclick="savePerformanceSnapshot(true)" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-camera mr-1"></i> Guardar punto de hoy</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Rentabilidad acumulada</div>
+                    <div id="performance-total-pct" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Sobre el total histórico de compras</div>
+                </div>
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Resultado total</div>
+                    <div id="performance-total-eur" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Realizado + latente</div>
+                </div>
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Capital histórico aportado</div>
+                    <div id="performance-invested" class="text-2xl font-black mt-1 text-slate-800">—</div>
+                    <div class="text-xs text-slate-500 mt-1">Suma de compras y comisiones</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <p id="performance-history-status" class="text-[11px] text-slate-500">El histórico comenzará a registrarse desde ahora.</p>
+                <button onclick="clearPerformanceHistory()" class="text-[11px] text-slate-500 hover:text-rose-600 underline">Borrar histórico de evolución</button>
+            </div>
+            <div id="performance-history-empty" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">Todavía no hay puntos históricos. Se guardará uno automáticamente al actualizar todas las cotizaciones.</div>
+            <div id="performance-history-wrap" class="hidden h-72 sm:h-80 relative"><canvas id="performanceHistoryChart"></canvas></div>
+        </section>
+        </section>
+
 
         <!-- Seguimiento independiente de activos fuera de cartera -->
         <section id="watchlist-view" class="hidden space-y-6">
@@ -2050,7 +2062,7 @@
         async function refreshWatchlist(){if(!watchlistData.length){renderWatchlist();return;}const box=document.getElementById('watchlist-list');if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';const rates=await getExchangeRates();await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates)));persistWatchlist();renderWatchlist();}
         function renderWatchlist(){const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
         function removeFromWatchlist(i){watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
-        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
+        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
@@ -2710,15 +2722,25 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.add('hidden');
+            document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('strategies-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             populateStrategyAssets(); renderStrategies(); window.scrollTo({top:0,behavior:'smooth'});
         }
+        function showPerformanceView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('performance-view').classList.remove('hidden');
+            document.getElementById('headerToolbar').classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
+            renderPerformanceHistoryChart();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
         function showDailySummaryView() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('strategies-view').classList.add('hidden');
+            document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
@@ -2728,6 +2750,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('strategies-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.add('hidden');
+            document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
             window.scrollTo({top:0,behavior:'smooth'});
