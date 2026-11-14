@@ -2279,6 +2279,32 @@
         let watchFundamentalsRequestId=0;
         function yahooRawValue(obj){if(obj==null)return null;if(typeof obj==="number")return obj;if(typeof obj.raw==="number")return obj.raw;if(typeof obj.value==="number")return obj.value;return null;}
         function formatFundamentalNumber(value,decimals=2){return value==null||!Number.isFinite(Number(value))?"No disponible":Number(value).toLocaleString("es-ES",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});}
+        function recordAnalystTargetSnapshot(item,data,sourceCurrency){
+            if(!item||!data?.financialData)return;
+            const fd=data.financialData;
+            const target=yahooRawValue(fd.targetMeanPrice),low=yahooRawValue(fd.targetLowPrice),high=yahooRawValue(fd.targetHighPrice);
+            const current=yahooRawValue(data.price?.regularMarketPrice)||yahooRawValue(fd.currentPrice);
+            const count=yahooRawValue(fd.numberOfAnalystOpinions);
+            if(target===null&&low===null&&high===null&&count===null)return;
+            if(!Array.isArray(item.analystTargetHistory))item.analystTargetHistory=[];
+            const last=item.analystTargetHistory[item.analystTargetHistory.length-1];
+            const same=last&&last.target===target&&last.low===low&&last.high===high&&last.count===count&&last.current===current&&last.currency===(sourceCurrency||"EUR");
+            if(same&&Date.now()-new Date(last.date).getTime()<6*60*60*1000)return;
+            item.analystTargetHistory.push({date:new Date().toISOString(),target,low,high,count,current,currency:sourceCurrency||"EUR"});
+            if(item.analystTargetHistory.length>60)item.analystTargetHistory=item.analystTargetHistory.slice(-60);
+            persistWatchlist();
+        }
+        function renderAnalystTargetHistory(item,rates){
+            const history=Array.isArray(item?.analystTargetHistory)?item.analystTargetHistory:[];
+            const money=(v,currency)=>{if(v==null)return "—";try{return formatFundamentalNumber(convertToEUR(v,currency||"EUR",rates),2)+" €";}catch(e){return formatFundamentalNumber(v,2)+" "+(currency||"");}};
+            const rows=history.slice().reverse().map(x=>{
+                const curr=x.currency||"EUR",target=money(x.target,curr),low=money(x.low,curr),high=money(x.high,curr);
+                const upside=x.target!=null&&x.current>0?((x.target/x.current)-1)*100:null;
+                return '<tr class="border-t border-slate-800"><td class="py-2 pr-3 whitespace-nowrap">'+new Date(x.date).toLocaleString("es-ES")+'</td><td class="py-2 pr-3 text-right">'+target+'</td><td class="py-2 pr-3 text-right">'+(upside===null?"—":(upside>0?"+":"")+upside.toFixed(2)+"%")+'</td><td class="py-2 pr-3 text-right whitespace-nowrap">'+low+' – '+high+'</td><td class="py-2 text-right">'+(x.count==null?"—":Math.round(x.count))+'</td></tr>';
+            }).join("");
+            return '<div class="lg:col-span-3 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h4 class="font-bold text-cyan-300">Historial de objetivos de analistas</h4><p class="text-xs text-slate-400 mt-1">Evolución desde que se activa el registro en esta app; no es un histórico retroactivo de Yahoo.</p></div><span class="text-xs text-slate-400">'+history.length+' capturas</span></div>'+(rows?'<div class="overflow-x-auto"><table class="w-full text-xs text-slate-300"><thead><tr class="text-slate-400 text-left"><th class="pb-2 pr-3">Fecha</th><th class="pb-2 pr-3 text-right">Objetivo medio</th><th class="pb-2 pr-3 text-right">Potencial</th><th class="pb-2 pr-3 text-right">Rango</th><th class="pb-2 text-right">Analistas</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="text-sm text-slate-400">Todavía no hay capturas. Se guardará una nueva cuando se actualicen los fundamentales.</p>')+'</div>';
+        }
+
         function renderWatchFundamentals(data, sourceCurrency, rates) {
             const number = obj => yahooRawValue(obj);
             const escape = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -2380,7 +2406,7 @@
             const semaforoHtml='<div class="lg:col-span-3 rounded-xl border '+theme.border+' bg-slate-950/80 p-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs uppercase tracking-wider text-slate-400">Semáforo fundamental · orientativo</div><div class="mt-1 text-xs text-slate-400">'+escape(sectorLabel)+'</div><h4 class="mt-1 text-lg font-black '+theme.titleColor+'">'+theme.title+'</h4></div><div class="text-right"><div class="text-3xl font-black '+theme.scoreColor+'">'+(score===null?"—":score+"/100")+'</div><div class="text-xs text-slate-400">'+available.length+' de '+checks.length+' métricas disponibles</div></div></div><p class="mt-2 text-sm text-slate-300">'+theme.desc+'</p><div class="mt-4 grid gap-4 md:grid-cols-2"><div><div class="mb-2 text-xs font-bold uppercase text-emerald-300">Puntos favorables</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(positive,"No se detectan fortalezas claras entre los datos disponibles.")+'</ul></div><div><div class="mb-2 text-xs font-bold uppercase text-rose-300">Riesgos a vigilar</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(negative,"No aparecen alertas claras en las métricas disponibles.")+'</ul></div></div>'+(valuationNotes.length?'<div class="mt-4 border-t border-slate-800 pt-3"><div class="mb-2 text-xs font-bold uppercase text-amber-300">Valoración y expectativas (aparte del semáforo)</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(valuationNotes,"")+'</ul></div>':'')+'<p class="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-500">Puntuación heurística basada únicamente en los datos disponibles de Yahoo Finance. No compara empresas del mismo sector, puede penalizar modelos de negocio con deuda estructural y no constituye recomendación de compra o venta. Contrasta siempre con informes recientes.</p></div>';
             const checkByLabel={"Crecimiento de ingresos":"Crecimiento de ingresos","Crecimiento de beneficios":"Crecimiento de beneficios","Margen bruto":"Margen bruto","Margen operativo":"Margen operativo","Margen de beneficio":"Margen neto","Rentabilidad sobre fondos propios (ROE)":"ROE","Rentabilidad sobre activos (ROA)":"ROA","Deuda / patrimonio":"Deuda / patrimonio","Ratio corriente":"Ratio corriente","Flujo de caja libre":"Flujo de caja libre"};
             const groupsHtml=groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+escape(title)+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>{const check=checks.find(x=>x.name===checkByLabel[label]);const scoreValue=check&&check.value!==null?check.score(check.value):null;const badge=scoreValue===null?'':'<span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold '+(scoreValue>=0.7?'bg-emerald-500/15 text-emerald-300':scoreValue>=0.4?'bg-amber-500/15 text-amber-300':'bg-rose-500/15 text-rose-300')+'">'+(scoreValue>=0.7?'Favorable':scoreValue>=0.4?'Mixto':'Débil')+'</span>';return '<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><div class="min-w-0"><dt class="text-xs text-slate-400">'+escape(label)+'</dt>'+(badge?'<div class="mt-1">'+badge+'</div>':'')+'</div><dd class="text-sm font-bold text-slate-100 text-right">'+escape(value)+'</dd></div>';}).join("")+'</dl></div>').join("");
-            host.innerHTML=semaforoHtml+groupsHtml;
+            host.innerHTML=semaforoHtml+groupsHtml+renderAnalystTargetHistory(watchlistData[watchDetailIndex],rates);
         }
         async function loadWatchFundamentals(){
             const item=watchlistData[watchDetailIndex];if(!item)return;
@@ -2396,7 +2422,7 @@
                 const rates=await getExchangeRates();
                 if(requestId!==watchFundamentalsRequestId||watchlistData[watchDetailIndex]?.symbol!==symbol)return;
                 const currency=result.price?.currency||result.summaryDetail?.currency||item.currency||"EUR";
-                renderWatchFundamentals(result,currency,rates);
+                recordAnalystTargetSnapshot(item,result,currency);\n                renderWatchFundamentals(result,currency,rates);
                 const profile=result.price?.shortName||result.price?.longName||item.name||symbol;
                 if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · Yahoo Finance mediante servicio seguro · consulta: "+new Date().toLocaleString("es-ES")+".";
             }catch(error){
