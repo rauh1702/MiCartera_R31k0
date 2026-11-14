@@ -2320,29 +2320,20 @@
             const requestId=++watchFundamentalsRequestId,symbol=item.symbol;
             const status=document.getElementById("watch-fundamentals-status"),button=document.getElementById("watch-fundamentals-refresh");
             if(status)status.textContent="Descargando fundamentales de "+symbol+"…";if(button)button.disabled=true;
-            const modules="price,summaryDetail,defaultKeyStatistics,financialData";
-            const target="https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/"+encodeURIComponent(symbol)+"?type=trailingMarketCap&merge=false&period1="+Math.floor(Date.now()/1000-86400*365)+"&period2="+Math.floor(Date.now()/1000);
-            const quoteTarget="https://query1.finance.yahoo.com/v10/finance/quoteSummary/"+encodeURIComponent(symbol)+"?modules="+modules+"&formatted=true&corsDomain=finance.yahoo.com&_="+Date.now();
-            const errors=[];
+            const workerBase="https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev";
             try{
-                let data=null;
-                for(const makeProxyUrl of YAHOO_PROXIES){
-                    try{
-                        const json=await fetchJsonWithTimeout(makeProxyUrl(quoteTarget),12000);
-                        const result=json.quoteSummary?.result?.[0];
-                        if(!result)throw new Error(json.quoteSummary?.error?.description||"Yahoo no ha devuelto fundamentales");
-                        data=result;break;
-                    }catch(error){errors.push(error.message||"Error de conexión");}
-                }
-                if(!data)throw new Error(errors.join(" · ")||"No hay datos fundamentales para este activo.");
+                const url=workerBase+"/fundamentals?symbol="+encodeURIComponent(symbol)+"&_="+Date.now();
+                const json=await fetchJsonWithTimeout(url,20000);
+                const result=json.quoteSummary?.result?.[0];
+                if(!result)throw new Error(json.quoteSummary?.error?.description||json.error||"El servicio no ha devuelto fundamentales para "+symbol);
                 const rates=await getExchangeRates();
                 if(requestId!==watchFundamentalsRequestId||watchlistData[watchDetailIndex]?.symbol!==symbol)return;
-                const currency=data.price?.currency||data.summaryDetail?.currency||item.currency||"EUR";
-                renderWatchFundamentals(data,currency,rates);
-                const profile=data.price?.shortName||data.price?.longName||item.name||symbol;
-                if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · consulta: "+new Date().toLocaleString("es-ES")+".";
+                const currency=result.price?.currency||result.summaryDetail?.currency||item.currency||"EUR";
+                renderWatchFundamentals(result,currency,rates);
+                const profile=result.price?.shortName||result.price?.longName||item.name||symbol;
+                if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · Yahoo Finance mediante servicio seguro · consulta: "+new Date().toLocaleString("es-ES")+".";
             }catch(error){
-                if(status)status.textContent="No se han podido obtener fundamentales: "+(error.message||"fuente no disponible")+". Puede que Yahoo no ofrezca cobertura para este activo o que el intermediario esté temporalmente limitado.";
+                if(status)status.textContent="No se han podido obtener fundamentales: "+(error.message||"servicio no disponible")+". Comprueba que el Worker de Cloudflare esté activo e inténtalo de nuevo.";
                 const host=document.getElementById("watch-fundamentals-content");if(host)host.innerHTML='<div class="lg:col-span-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100">No se muestran cifras estimadas ni datos inventados. Prueba a actualizar más tarde o consulta los informes oficiales de la empresa.</div>';
             }finally{if(requestId===watchFundamentalsRequestId&&button)button.disabled=false;}
         }
