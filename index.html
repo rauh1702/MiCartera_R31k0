@@ -1688,7 +1688,7 @@
         function readPerformanceHistory() {
             try {
                 const data = JSON.parse(localStorage.getItem(PERFORMANCE_HISTORY_KEY) || '[]');
-                return Array.isArray(data) ? data.filter(x => x && /^\\d{4}-\\d{2}-\\d{2}$/.test(x.date) && Number.isFinite(Number(x.returnPct))) : [];
+                return Array.isArray(data) ? data.filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && Number.isFinite(Number(x.returnPct))) : [];
             } catch (_) { return []; }
         }
 
