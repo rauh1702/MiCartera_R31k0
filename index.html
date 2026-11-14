@@ -881,10 +881,14 @@
         <section id="financial-calendar-view" class="hidden space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div><p class="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Agenda de mercado · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Calendario financiero</h2><p class="text-sm text-slate-300 mt-1">Organiza resultados, presentaciones, juntas y otras fechas importantes de tus inversiones.</p></div>
-                <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="openFinancialEventModal()" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-plus mr-2"></i>Añadir evento</button>
+                    <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+                </div>
             </div>
-            <div class="rounded-2xl border border-slate-600 bg-slate-900/90 p-4 sm:p-5 shadow-sm">
-                <div class="flex items-center justify-between gap-3 mb-4"><div><h3 id="financial-event-form-title" class="font-extrabold text-white text-lg">Añadir evento</h3><p class="text-xs text-slate-300 mt-1">Introduce la fecha confirmada por la empresa o fuente oficial.</p></div><i class="fa-solid fa-calendar-plus text-2xl text-violet-300"></i></div>
+            <div id="financial-event-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/75 p-3 sm:p-6 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="financial-event-form-title" onclick="if(event.target===this)closeFinancialEventModal()">
+              <div class="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-600 bg-slate-900 p-4 sm:p-5 shadow-2xl">
+                <div class="flex items-center justify-between gap-3 mb-4"><div><h3 id="financial-event-form-title" class="font-extrabold text-white text-lg">Añadir evento</h3><p class="text-xs text-slate-300 mt-1">Introduce la fecha confirmada por la empresa o fuente oficial.</p></div><button type="button" onclick="closeFinancialEventModal()" aria-label="Cerrar ventana" class="h-10 w-10 rounded-xl border border-slate-600 text-white hover:bg-slate-800"><i class="fa-solid fa-xmark"></i></button></div>
                 <form id="financial-event-form" onsubmit="saveFinancialEvent(event)" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                     <input type="hidden" id="financial-event-edit-id">
                     <label class="block sm:col-span-2"><span class="text-xs font-bold text-slate-200">Evento *</span><input id="financial-event-title" required maxlength="100" placeholder="Ej. Presentación de resultados trimestrales" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></label>
@@ -894,8 +898,9 @@
                     <label class="block"><span class="text-xs font-bold text-slate-200">Hora (opcional)</span><input id="financial-event-time" type="time" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></label>
                     <label class="block"><span class="text-xs font-bold text-slate-200">Avisar con antelación</span><select id="financial-event-reminder" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"><option value="0">Solo el día del evento</option><option value="1">1 día antes</option><option value="3" selected>3 días antes</option><option value="7">7 días antes</option><option value="14">14 días antes</option></select></label>
                     <label class="block sm:col-span-2 xl:col-span-4"><span class="text-xs font-bold text-slate-200">Notas / fuente (opcional)</span><textarea id="financial-event-notes" rows="2" maxlength="600" placeholder="Añade detalles o la fuente donde has confirmado la fecha." class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900"></textarea></label>
-                    <div class="sm:col-span-2 xl:col-span-4 flex flex-wrap gap-2 pt-1"><button type="submit" id="financial-event-save" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar evento</button><button type="button" onclick="resetFinancialEventForm()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Cancelar / Limpiar</button></div>
+                    <div class="sm:col-span-2 xl:col-span-4 flex flex-wrap gap-2 pt-1"><button type="submit" id="financial-event-save" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar evento</button><button type="button" onclick="closeFinancialEventModal()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Cancelar</button></div>
                 </form>
+              </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="rounded-2xl border border-violet-200 bg-violet-50 p-4"><p class="text-xs font-bold uppercase text-violet-700">Próximos eventos</p><p id="financial-event-upcoming-count" class="mt-1 text-3xl font-black text-violet-950">0</p></div>
@@ -2921,6 +2926,16 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('financial-event-reminder').value='3';
             populateFinancialEventAssets();
         }
+        function openFinancialEventModal() {
+            resetFinancialEventForm();
+            const modal=document.getElementById('financial-event-modal');
+            modal.classList.remove('hidden');
+            document.getElementById('financial-event-title').focus();
+        }
+        function closeFinancialEventModal() {
+            document.getElementById('financial-event-modal').classList.add('hidden');
+            resetFinancialEventForm();
+        }
         function saveFinancialEvent(event) {
             event.preventDefault();
             const id=document.getElementById('financial-event-edit-id').value;
@@ -2929,7 +2944,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if(!item.title||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)){showToast('Revisa el nombre y la fecha del evento','fa-circle-exclamation');return;}
             const index=financialEventsData.findIndex(e=>e.id===id);
             if(index>=0) financialEventsData[index]=item; else financialEventsData.push(item);
-            persistFinancialEvents(); resetFinancialEventForm(); renderFinancialCalendar(); checkFinancialEventReminders(); showToast(index>=0?'Evento actualizado':'Evento añadido al calendario');
+            persistFinancialEvents(); closeFinancialEventModal(); renderFinancialCalendar(); checkFinancialEventReminders(); showToast(index>=0?'Evento actualizado':'Evento añadido al calendario');
         }
         function editFinancialEvent(id) {
             const e=financialEventsData.find(x=>x.id===id); if(!e)return;
@@ -2944,7 +2959,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('financial-event-notes').value=e.notes||'';
             document.getElementById('financial-event-form-title').textContent='Editar evento';
             document.getElementById('financial-event-save').innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios';
-            document.getElementById('financial-event-title').focus(); window.scrollTo({top:0,behavior:'smooth'});
+            document.getElementById('financial-event-modal').classList.remove('hidden');
+            document.getElementById('financial-event-title').focus();
         }
         function deleteFinancialEvent(id) {
             const e=financialEventsData.find(x=>x.id===id); if(!e)return;
