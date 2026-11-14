@@ -473,6 +473,7 @@
                 </div>
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
+                        <button type="button" class="r31-nav-button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved text-amber-300"></i> Riesgo</button>
                 <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
                 <button type="button" id="strategies-menu-button" class="r31-nav-button" onclick="showStrategiesView()"><i class="fa-solid fa-chess-knight text-emerald-300"></i> Estrategias <span id="strategy-review-badge" hidden aria-label="Revisiones pendientes">0</span></button>
                 <button type="button" class="r31-nav-button r31-save-button" onclick="runMenuAction(manualSave)"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
@@ -805,6 +806,29 @@
         </section>
         </section>
 
+
+        <section id="risk-analysis-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-amber-600">Control de exposición · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Riesgo y concentración</h2><p class="text-sm text-slate-500 mt-1">Comprueba cuánto pesa cada posición, sector y tipo de activo en tu cartera.</p></div>
+                <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+            </div>
+            <div id="risk-analysis-empty" class="hidden rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No hay posiciones abiertas con valor de mercado para analizar.</div>
+            <div id="risk-analysis-content" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Valor total de cartera</p><p id="risk-total-value" class="mt-1 text-2xl font-black text-slate-900">—</p><p id="risk-position-count" class="mt-1 text-xs text-slate-500">—</p></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Mayor posición</p><p id="risk-largest-position" class="mt-1 text-xl font-black text-slate-900">—</p><p id="risk-largest-position-pct" class="mt-1 text-xs text-slate-500">—</p></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Mayor sector</p><p id="risk-largest-sector" class="mt-1 text-xl font-black text-slate-900">—</p><p id="risk-largest-sector-pct" class="mt-1 text-xs text-slate-500">—</p></div>
+                </div>
+                <div id="risk-alerts" class="space-y-2"></div>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Concentración por activo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Peso de cada posición sobre el valor total.</p><div id="risk-by-asset" class="space-y-3"></div></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por sector</h3><p class="text-xs text-slate-500 mt-1 mb-4">Agrupación según el sector asignado a cada activo.</p><div id="risk-by-sector" class="space-y-3"></div></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por tipo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Acciones, ETF, ETC y demás tipos configurados.</p><div id="risk-by-type" class="space-y-3"></div></div>
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-amber-950">Cómo interpretar este análisis</h3><ul class="mt-3 space-y-2 text-xs text-amber-900 list-disc pl-4"><li>Una posición por encima del 20 % se marca como concentración elevada.</li><li>Un sector por encima del 35 % se marca como exposición elevada.</li><li>Los porcentajes se calculan sobre el valor de mercado actual.</li><li>Son avisos orientativos: no miden volatilidad, correlación ni riesgo de pérdida.</li></ul></div>
+                </div>
+                <p class="text-[11px] text-slate-400">Solo se incluyen posiciones con unidades y valor de mercado positivo. Los activos sin sector o tipo asignado aparecen como «Sin clasificar».</p>
+            </div>
+        </section>
 
         <!-- Seguimiento independiente de activos fuera de cartera -->
         <section id="watchlist-view" class="hidden space-y-6">
@@ -2062,7 +2086,7 @@
         async function refreshWatchlist(){if(!watchlistData.length){renderWatchlist();return;}const box=document.getElementById('watchlist-list');if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';const rates=await getExchangeRates();await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates)));persistWatchlist();renderWatchlist();}
         function renderWatchlist(){const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
         function removeFromWatchlist(i){watchlistData.splice(i,1);persistWatchlist();renderWatchlist();}
-        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
+        function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
@@ -2718,6 +2742,52 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if (expandedStrategyIds.has(id)) expandedStrategyIds.delete(id); else expandedStrategyIds.add(id);
             renderStrategies();
         }
+        function renderRiskBreakdown(containerId, rows, total, labelField) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            if (!rows.length || total <= 0) { el.innerHTML = '<p class="text-xs text-slate-400">Sin datos para mostrar.</p>'; return; }
+            el.innerHTML = rows.map(row => {
+                const pct = Math.max(0, Math.min(100, row.value / total * 100));
+                return `<div><div class="flex justify-between items-baseline gap-3 text-xs"><span class="font-semibold text-slate-700 truncate">${escapeHtml(String(row[labelField] || 'Sin clasificar'))}</span><span class="font-bold text-slate-900 whitespace-nowrap">${pct.toFixed(1).replace('.',',')} % · ${row.value.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span></div><div class="mt-1.5 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full bg-cyan-500" style="width:${pct.toFixed(2)}%"></div></div></div>`;
+            }).join('');
+        }
+        function renderRiskAnalysis() {
+            recalculatePortfolioCalculations();
+            const positions = assetsData.filter(a => (Number(a.shares)||0) > 0 && (Number(a.marketValue)||0) > 0)
+                .map(a => ({name:a.name||a.ticker||'Activo', ticker:a.ticker||'', category:a.category||'Sin clasificar', type:a.assetType||'Sin clasificar', value:Number(a.marketValue)||0}))
+                .sort((a,b)=>b.value-a.value);
+            const total = positions.reduce((sum,a)=>sum+a.value,0);
+            const empty = document.getElementById('risk-analysis-empty');
+            const content = document.getElementById('risk-analysis-content');
+            if (!positions.length || total <= 0) { empty.classList.remove('hidden'); content.classList.add('hidden'); return; }
+            empty.classList.add('hidden'); content.classList.remove('hidden');
+            const pct = value => value / total * 100;
+            const money = value => value.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+            document.getElementById('risk-total-value').textContent = money(total);
+            document.getElementById('risk-position-count').textContent = positions.length+' posición(es) abiertas incluidas';
+            const largest = positions[0];
+            document.getElementById('risk-largest-position').textContent = largest.name;
+            document.getElementById('risk-largest-position-pct').textContent = pct(largest.value).toFixed(1).replace('.',',')+' % de la cartera · '+money(largest.value);
+            const group = key => { const map = new Map(); positions.forEach(a => map.set(a[key],(map.get(a[key])||0)+a.value)); return [...map.entries()].map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value); };
+            const sectors = group('category'), types = group('type');
+            document.getElementById('risk-largest-sector').textContent = sectors[0]?.name || '—';
+            document.getElementById('risk-largest-sector-pct').textContent = sectors[0] ? pct(sectors[0].value).toFixed(1).replace('.',',')+' % de la cartera · '+money(sectors[0].value) : '—';
+            renderRiskBreakdown('risk-by-asset',positions.map(a=>({name:a.name+(a.ticker?' ('+a.ticker+')':''),value:a.value})),total,'name');
+            renderRiskBreakdown('risk-by-sector',sectors,total,'name');
+            renderRiskBreakdown('risk-by-type',types,total,'name');
+            const alerts=[];
+            positions.filter(a=>pct(a.value)>20).forEach(a=>alerts.push({level:'high',text:`${a.name} representa el ${pct(a.value).toFixed(1).replace('.',',')} % de la cartera (más del 20 %).`}));
+            sectors.filter(a=>pct(a.value)>35).forEach(a=>alerts.push({level:'medium',text:`El sector «${a.name}» representa el ${pct(a.value).toFixed(1).replace('.',',')} % de la cartera (más del 35 %).`}));
+            document.getElementById('risk-alerts').innerHTML = alerts.length ? alerts.map(a=>`<div class="rounded-xl border px-4 py-3 text-xs font-semibold ${a.level==='high'?'border-rose-200 bg-rose-50 text-rose-800':'border-amber-200 bg-amber-50 text-amber-900'}"><i class="fa-solid ${a.level==='high'?'fa-triangle-exclamation':'fa-circle-info'} mr-2"></i>${escapeHtml(a.text)}</div>`).join('') : '<div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800"><i class="fa-solid fa-check-circle mr-2"></i>No se detectan concentraciones por encima de los umbrales orientativos configurados.</div>';
+        }
+        function showRiskAnalysisView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('risk-analysis-view').classList.remove('hidden');
+            document.getElementById('headerToolbar').classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
+            renderRiskAnalysis(); window.scrollTo({top:0,behavior:'smooth'});
+        }
+
         function showStrategiesView() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
@@ -2729,7 +2799,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             populateStrategyAssets(); renderStrategies(); window.scrollTo({top:0,behavior:'smooth'});
         }
         function showPerformanceView() {
-            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','risk-analysis-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('performance-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
@@ -2751,6 +2821,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('watchlist-view').classList.add('hidden');
             document.getElementById('daily-summary-view').classList.add('hidden');
             document.getElementById('performance-view').classList.add('hidden');
+            document.getElementById('risk-analysis-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
             window.scrollTo({top:0,behavior:'smooth'});
