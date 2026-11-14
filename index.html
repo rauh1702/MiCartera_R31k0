@@ -923,6 +923,42 @@
                     </div>
                 </div>
 
+                <!-- Objetivos y alertas de precio -->
+                <div class="bg-amber-50/70 border border-amber-200 p-4 rounded-xl space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye"></i> Objetivos y alertas
+                        </h4>
+                        <span class="text-[10px] text-amber-800">Precios en euros (€)</span>
+                    </div>
+                    <p class="text-xs text-slate-600">Define los precios a los que quieres que MiCartera te avise. El aviso se activa cuando la cotización cruza el objetivo.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="target-buy-price" class="text-xs font-semibold text-slate-700 block mb-1">Objetivo de compra · avisar al bajar a</label>
+                            <div class="relative">
+                                <input type="number" min="0" step="0.0001" id="target-buy-price" placeholder="Sin objetivo" class="w-full text-sm p-2.5 pr-8 rounded-lg border border-amber-200 bg-white text-slate-900">
+                                <span class="absolute right-3 top-2.5 text-xs text-slate-500">€</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="target-sell-price" class="text-xs font-semibold text-slate-700 block mb-1">Objetivo de venta · avisar al subir a</label>
+                            <div class="relative">
+                                <input type="number" min="0" step="0.0001" id="target-sell-price" placeholder="Sin objetivo" class="w-full text-sm p-2.5 pr-8 rounded-lg border border-amber-200 bg-white text-slate-900">
+                                <span class="absolute right-3 top-2.5 text-xs text-slate-500">€</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="saveAssetTargets()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-lg">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Guardar objetivos
+                        </button>
+                        <button onclick="enablePriceNotifications()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 px-3 rounded-lg">
+                            <i class="fa-regular fa-bell mr-1"></i> Activar avisos del navegador
+                        </button>
+                    </div>
+                    <p id="asset-target-status" class="text-[11px] text-slate-600">No hay objetivos configurados.</p>
+                </div>
+
                 <!-- Simulation tool inside modal -->
                 <div class="bg-blue-50/70 border border-blue-200 p-4 rounded-xl space-y-3">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
@@ -1931,7 +1967,7 @@
                     if (!asset.ticker || asset.ticker === 'VAR:ACT') return;
                     try {
                         const quote = await fetchAssetQuote(asset, fxRates);
-                        asset.currentPrice = quote.price;
+                        applyPriceAndCheckAlerts(asset, quote.price);
                         // Guarda también el cierre anterior convertido a euros: lo usa
                         // el modo «Variación del día» del Resumen diario.
                         asset.previousCloseEUR = quote.previousCloseEUR;
@@ -1966,7 +2002,7 @@
             try {
                 const fxRates = await getExchangeRates();
                 const quote = await fetchAssetQuote(asset, fxRates);
-                asset.currentPrice = quote.price;
+                applyPriceAndCheckAlerts(asset, quote.price);
                 asset.previousCloseEUR = quote.previousCloseEUR;
                 asset.yahooTicker = quote.symbol;
                 asset.priceCurrency = quote.currency;
@@ -2192,6 +2228,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('modal-assettype-select').value = asset.assetType || 'OTROS';
             document.getElementById('modal-currentprice-input').value = asset.currentPrice || asset.pmp || 0;
             document.getElementById('modal-color-picker').value = asset.color || '#3b82f6';
+            document.getElementById('target-buy-price').value = asset.targetBuyPrice ?? '';
+            document.getElementById('target-sell-price').value = asset.targetSellPrice ?? '';
+            renderAssetTargetStatus(asset);
 
             document.getElementById('modal-shares').innerText = asset.shares.toLocaleString('es-ES', { maximumFractionDigits: 4 });
             document.getElementById('modal-pmp').innerText = asset.pmp.toFixed(2) + ' €';
@@ -2234,10 +2273,93 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             showToast(`Tipo de activo de ${currentActiveAsset.name} actualizado a ${newType}`);
         }
 
+        function renderAssetTargetStatus(asset) {
+            const status = document.getElementById('asset-target-status');
+            if (!status || !asset) return;
+            const buy = Number(asset.targetBuyPrice) > 0 ? Number(asset.targetBuyPrice).toLocaleString('es-ES', { maximumFractionDigits: 4 }) + ' €' : 'desactivado';
+            const sell = Number(asset.targetSellPrice) > 0 ? Number(asset.targetSellPrice).toLocaleString('es-ES', { maximumFractionDigits: 4 }) + ' €' : 'desactivado';
+            status.textContent = 'Compra: ' + buy + ' · Venta: ' + sell + '. Los avisos se repiten si el precio vuelve a cruzar el objetivo.';
+        }
+
+        function saveAssetTargets() {
+            if (!currentActiveAsset) return;
+            const readTarget = id => {
+                const raw = document.getElementById(id).value.trim();
+                if (raw === '') return null;
+                const value = Number(raw);
+                return Number.isFinite(value) && value > 0 ? value : NaN;
+            };
+            const buy = readTarget('target-buy-price');
+            const sell = readTarget('target-sell-price');
+            if (Number.isNaN(buy) || Number.isNaN(sell)) {
+                showToast('Introduce objetivos mayores que cero o deja el campo vacío.');
+                return;
+            }
+            if (buy !== currentActiveAsset.targetBuyPrice) currentActiveAsset.targetBuyAlerted = false;
+            if (sell !== currentActiveAsset.targetSellPrice) currentActiveAsset.targetSellAlerted = false;
+            currentActiveAsset.targetBuyPrice = buy;
+            currentActiveAsset.targetSellPrice = sell;
+            savePortfolioData();
+            renderAssetTargetStatus(currentActiveAsset);
+            showToast('Objetivos de ' + currentActiveAsset.name + ' guardados');
+        }
+
+        async function enablePriceNotifications() {
+            if (!('Notification' in window)) {
+                showToast('Este navegador no admite notificaciones. Seguirás viendo avisos dentro de MiCartera.');
+                return;
+            }
+            try {
+                const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+                if (permission === 'granted') showToast('Notificaciones del navegador activadas');
+                else showToast('Notificaciones no autorizadas. Los avisos internos seguirán funcionando.');
+            } catch (error) {
+                showToast('No se pudieron activar las notificaciones del navegador.');
+            }
+        }
+
+        function sendAssetTargetAlert(asset, kind, target, price) {
+            const direction = kind === 'buy' ? 'ha bajado hasta' : 'ha subido hasta';
+            const message = asset.name + ' ' + direction + ' ' + price.toLocaleString('es-ES', { maximumFractionDigits: 4 }) + ' €. Objetivo: ' + target.toLocaleString('es-ES', { maximumFractionDigits: 4 }) + ' €.';
+            showToast(message);
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notification = new Notification('MiCartera R31k0 · Objetivo alcanzado', { body: message, tag: 'target-' + kind + '-' + asset.name });
+                    notification.onclick = () => { window.focus(); notification.close(); };
+                } catch (error) {
+                    console.warn('No se pudo mostrar la notificación:', error);
+                }
+            }
+        }
+
+        function applyPriceAndCheckAlerts(asset, newPrice) {
+            const previousPrice = Number(asset.currentPrice) || 0;
+            const price = Number(newPrice) || 0;
+            asset.currentPrice = price;
+            if (previousPrice <= 0 || price <= 0) return;
+            const buy = Number(asset.targetBuyPrice) || 0;
+            const sell = Number(asset.targetSellPrice) || 0;
+
+            if (buy > 0) {
+                if (price > buy) asset.targetBuyAlerted = false;
+                else if (previousPrice > buy && price <= buy && !asset.targetBuyAlerted) {
+                    asset.targetBuyAlerted = true;
+                    sendAssetTargetAlert(asset, 'buy', buy, price);
+                }
+            }
+            if (sell > 0) {
+                if (price < sell) asset.targetSellAlerted = false;
+                else if (previousPrice < sell && price >= sell && !asset.targetSellAlerted) {
+                    asset.targetSellAlerted = true;
+                    sendAssetTargetAlert(asset, 'sell', sell, price);
+                }
+            }
+        }
+
         function updateCurrentPrice(newPrice) {
             if (!currentActiveAsset) return;
             const price = parseFloat(newPrice) || 0;
-            currentActiveAsset.currentPrice = price;
+            applyPriceAndCheckAlerts(currentActiveAsset, price);
             savePortfolioData();
             renderDashboard();
             openModal(currentActiveAsset.name);
