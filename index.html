@@ -2286,6 +2286,13 @@
             const pct = obj => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n*100,2)+"%"; };
             const ratio = (obj,suffix="x") => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n,2)+(suffix?" "+suffix:""); };
             const raw = obj => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n,2); };
+            const targetMean=number(data.financialData?.targetMeanPrice);
+            const currentPrice=number(data.price?.regularMarketPrice)||number(data.financialData?.currentPrice);
+            const targetLow=number(data.financialData?.targetLowPrice);
+            const targetHigh=number(data.financialData?.targetHighPrice);
+            const analystUpside=targetMean!==null&&currentPrice!==null&&currentPrice>0?((targetMean/currentPrice)-1)*100:null;
+            const analystRange=targetLow!==null&&targetHigh!==null?money(data.financialData.targetLowPrice)+" – "+money(data.financialData.targetHighPrice):"No disponible";
+            const analystCount=number(data.financialData?.numberOfAnalystOpinions);
             const valuation=[
                 ["Capitalización bursátil",money(data.price?.marketCap||data.summaryDetail?.marketCap)],
                 ["Valor de empresa (EV)",money(data.defaultKeyStatistics?.enterpriseValue)],
@@ -2293,7 +2300,10 @@
                 ["PER estimado",ratio(data.summaryDetail?.forwardPE)],
                 ["Precio / ventas",ratio(data.summaryDetail?.priceToSalesTrailing12Months)],
                 ["Precio / valor contable",ratio(data.defaultKeyStatistics?.priceToBook)],
-                ["Precio objetivo medio",money(data.financialData?.targetMeanPrice)]
+                ["Precio objetivo medio",money(data.financialData?.targetMeanPrice)],
+                ["Potencial hasta objetivo medio",analystUpside===null?"No disponible":(analystUpside>0?"+":"")+formatFundamentalNumber(analystUpside,2)+"%"],
+                ["Rango de objetivos analistas",analystRange],
+                ["Analistas que cubren la acción",analystCount===null?"No disponible":String(Math.round(analystCount))]
             ];
             const growth=[
                 ["Crecimiento de ingresos",pct(data.financialData?.revenueGrowth)],
