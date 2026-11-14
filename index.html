@@ -2279,11 +2279,13 @@
         let watchFundamentalsRequestId=0;
         function yahooRawValue(obj){if(obj==null)return null;if(typeof obj==="number")return obj;if(typeof obj.raw==="number")return obj.raw;if(typeof obj.value==="number")return obj.value;return null;}
         function formatFundamentalNumber(value,decimals=2){return value==null||!Number.isFinite(Number(value))?"No disponible":Number(value).toLocaleString("es-ES",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});}
-        function renderWatchFundamentals(data,sourceCurrency,rates){
-            const money=(obj)=>{const n=yahooRawValue(obj);if(n==null)return "No disponible";try{return formatFundamentalNumber(convertToEUR(n,sourceCurrency||"EUR",rates),2)+" €";}catch(_){return formatFundamentalNumber(n,2)+" "+(sourceCurrency||"");}};
-            const pct=(obj)=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n*100,2)+"%";};
-            const ratio=(obj,suffix="x")=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n,2)+(suffix? " "+suffix:"");};
-            const raw=(obj)=>{const n=yahooRawValue(obj);return n==null?"No disponible":formatFundamentalNumber(n,2);};
+        function renderWatchFundamentals(data, sourceCurrency, rates) {
+            const number = obj => yahooRawValue(obj);
+            const escape = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+            const money = obj => { const n=number(obj); if(n==null)return "No disponible"; try{return formatFundamentalNumber(convertToEUR(n,sourceCurrency||"EUR",rates),2)+" €";}catch(_){return formatFundamentalNumber(n,2)+" "+(sourceCurrency||"");} };
+            const pct = obj => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n*100,2)+"%"; };
+            const ratio = (obj,suffix="x") => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n,2)+(suffix?" "+suffix:""); };
+            const raw = obj => { const n=number(obj); return n==null?"No disponible":formatFundamentalNumber(n,2); };
             const valuation=[
                 ["Capitalización bursátil",money(data.price?.marketCap||data.summaryDetail?.marketCap)],
                 ["Valor de empresa (EV)",money(data.defaultKeyStatistics?.enterpriseValue)],
@@ -2305,15 +2307,69 @@
             const health=[
                 ["Efectivo y equivalentes",money(data.financialData?.totalCash)],
                 ["Deuda total",money(data.financialData?.totalDebt)],
-                ["Deuda / patrimonio",data.financialData?.debtToEquity?raw(data.financialData.debtToEquity)+"%":"No disponible"],
+                ["Deuda / patrimonio",data.financialData?.debtToEquity!=null?raw(data.financialData.debtToEquity)+"%":"No disponible"],
                 ["Flujo de caja libre",money(data.financialData?.freeCashflow)],
                 ["Flujo de caja operativo",money(data.financialData?.operatingCashflow)],
                 ["Ratio corriente",ratio(data.financialData?.currentRatio)],
                 ["Recomendación analistas",data.financialData?.recommendationKey?.fmt||data.financialData?.recommendationKey||"No disponible"]
             ];
             const groups=[["Valoración",valuation],["Crecimiento y rentabilidad",growth],["Salud financiera",health]];
-            const host=document.getElementById("watch-fundamentals-content");if(!host)return;
-            host.innerHTML=groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+title+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>'<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><dt class="text-xs text-slate-400">'+label+'</dt><dd class="text-sm font-bold text-slate-100 text-right">'+value+'</dd></div>').join("")+'</dl></div>').join("");
+            const host=document.getElementById("watch-fundamentals-content"); if(!host)return;
+            const metric=obj=>{const n=number(obj);return Number.isFinite(n)?n:null;};
+            const sector=String(data.assetProfile?.sector||"").toLowerCase();
+            const industry=String(data.assetProfile?.industry||"").toLowerCase();
+            const sectorLabel=data.assetProfile?.sector||"Sector no informado";
+            const profile=sector+" "+industry;
+            const isFinancial=/financial|bank|insurance|capital markets|credit|mortgage/.test(profile);
+            const isRealEstate=/real estate|reit/.test(profile);
+            const isUtility=/utilities|utility/.test(profile);
+            const isTech=/technology|software|semiconductor|internet|communication services/.test(profile);
+            const checks=[
+                {name:"Crecimiento de ingresos",value:metric(data.financialData?.revenueGrowth),weight:12,score:v=>v>0.15?1:v>0.05?0.75:v>=0?0.5:0,good:v=>v>0.05?"Ingresos creciendo":"Ingresos sin crecimiento positivo"},
+                {name:"Crecimiento de beneficios",value:metric(data.financialData?.earningsGrowth),weight:12,score:v=>v>0.15?1:v>0.05?0.75:v>=0?0.5:0,good:v=>v>0.05?"Beneficios creciendo":"Beneficios sin crecimiento positivo"},
+                {name:"Margen bruto",value:metric(data.financialData?.grossMargins),weight:10,score:v=>v>=0.4?1:v>=0.2?0.7:v>0?0.4:0,good:v=>v>=0.2?"Margen bruto positivo":"Margen bruto reducido o negativo"},
+                {name:"Margen operativo",value:metric(data.financialData?.operatingMargins),weight:10,score:v=>v>=0.2?1:v>=0.1?0.75:v>0?0.45:0,good:v=>v>=0.1?"Rentabilidad operativa positiva":"Margen operativo débil o negativo"},
+                {name:"Margen neto",value:metric(data.financialData?.profitMargins),weight:8,score:v=>v>=0.15?1:v>=0.05?0.7:v>0?0.4:0,good:v=>v>=0.05?"Margen neto positivo":"Margen neto reducido o negativo"},
+                {name:"ROE",value:metric(data.financialData?.returnOnEquity),weight:12,score:v=>v>=0.15?1:v>=0.08?0.7:v>0?0.4:0,good:v=>v>=0.08?"Buen retorno sobre patrimonio":"ROE bajo o negativo"},
+                {name:"ROA",value:metric(data.financialData?.returnOnAssets),weight:8,score:v=>v>=0.08?1:v>=0.03?0.7:v>0?0.4:0,good:v=>v>=0.03?"Activos rentables":"Rentabilidad de activos baja"},
+                {name:"Deuda / patrimonio",value:metric(data.financialData?.debtToEquity),weight:12,score:v=>v<=(isRealEstate?150:isUtility?180:50)?1:v<=(isRealEstate?250:isUtility?300:100)?0.7:v<=(isRealEstate?450:isUtility?500:200)?0.4:0,good:v=>v<=(isRealEstate?250:isUtility?300:100)?"Endeudamiento dentro de un rango sectorial orientativo":"Endeudamiento elevado para el perfil sectorial"},
+                {name:"Ratio corriente",value:metric(data.financialData?.currentRatio),weight:6,score:v=>v>=1.5?1:v>=1?0.7:v>=0.8?0.35:0,good:v=>v>=1?"Liquidez corriente razonable":"Liquidez a corto plazo ajustada"},
+                {name:"Flujo de caja libre",value:metric(data.financialData?.freeCashflow),weight:10,score:v=>v>0?1:0,good:v=>v>0?"Flujo de caja libre positivo":"Flujo de caja libre negativo"}
+            ];
+            if(isFinancial){
+                const excluded=new Set(["Margen bruto","Margen operativo","Deuda / patrimonio","Ratio corriente","Flujo de caja libre"]);
+                for(let i=checks.length-1;i>=0;i--)if(excluded.has(checks[i].name))checks.splice(i,1);
+                checks.find(x=>x.name==="ROE").weight=20; checks.find(x=>x.name==="ROA").weight=15; checks.find(x=>x.name==="Margen neto").weight=15;
+            }else if(isRealEstate){
+                checks.find(x=>x.name==="Ratio corriente").weight=2; checks.find(x=>x.name==="Deuda / patrimonio").weight=16; checks.find(x=>x.name==="Flujo de caja libre").weight=5;
+            }else if(isUtility){
+                checks.find(x=>x.name==="Deuda / patrimonio").weight=16; checks.find(x=>x.name==="Flujo de caja libre").weight=5; checks.find(x=>x.name==="Crecimiento de ingresos").weight=8;
+            }else if(isTech){
+                checks.find(x=>x.name==="Crecimiento de ingresos").weight=16; checks.find(x=>x.name==="Crecimiento de beneficios").weight=16; checks.find(x=>x.name==="ROE").weight=8;
+            }
+            const available=checks.filter(x=>x.value!==null);
+            const totalWeight=available.reduce((a,x)=>a+x.weight,0);
+            const score=totalWeight?Math.round(available.reduce((a,x)=>a+x.score(x.value)*x.weight,0)/totalWeight*100):null;
+            const level=available.length<4?"insufficient":score>=70?"solid":score>=45?"medium":"weak";
+            const themes={
+                solid:{title:"Fundamentales sólidos",border:"border-emerald-500/40",titleColor:"text-emerald-300",scoreColor:"text-emerald-300",desc:"Los indicadores disponibles muestran una base financiera generalmente favorable."},
+                medium:{title:"Fundamentales intermedios",border:"border-amber-500/40",titleColor:"text-amber-300",scoreColor:"text-amber-300",desc:"La empresa combina señales positivas con aspectos que conviene vigilar."},
+                weak:{title:"Fundamentales débiles",border:"border-rose-500/40",titleColor:"text-rose-300",scoreColor:"text-rose-300",desc:"Varios indicadores disponibles reflejan riesgos financieros o de rentabilidad."},
+                insufficient:{title:"Datos insuficientes",border:"border-slate-600",titleColor:"text-slate-200",scoreColor:"text-slate-200",desc:"No hay suficientes métricas para emitir una lectura responsable."}
+            };
+            const theme=themes[level];
+            const positive=available.filter(x=>x.score(x.value)>=0.7).map(x=>x.good(x.value));
+            const negative=available.filter(x=>x.score(x.value)<0.45).map(x=>x.good(x.value));
+            const pe=metric(data.summaryDetail?.trailingPE),forwardPe=metric(data.summaryDetail?.forwardPE),peg=metric(data.defaultKeyStatistics?.pegRatio);
+            const valuationNotes=[];
+            if(forwardPe!==null&&forwardPe>40)valuationNotes.push("PER estimado elevado (>40): las expectativas ya pueden estar reflejadas en el precio.");
+            if(pe!==null&&forwardPe!==null&&forwardPe>0&&forwardPe<pe)valuationNotes.push("El PER estimado es inferior al histórico; depende de que se cumplan las previsiones de beneficios.");
+            if(peg!==null&&peg>2)valuationNotes.push("PEG superior a 2: la valoración puede ser exigente frente al crecimiento esperado.");
+            if(peg!==null&&peg>0&&peg<=1)valuationNotes.push("PEG de 1 o inferior: valoración potencialmente más razonable frente al crecimiento estimado.");
+            const listHtml=(items,empty)=>items.length?items.slice(0,3).map(x=>"<li>"+escape(x)+"</li>").join(""):"<li>"+escape(empty)+"</li>";
+            const semaforoHtml='<div class="lg:col-span-3 rounded-xl border '+theme.border+' bg-slate-950/80 p-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs uppercase tracking-wider text-slate-400">Semáforo fundamental · orientativo</div><div class="mt-1 text-xs text-slate-400">'+escape(sectorLabel)+'</div><h4 class="mt-1 text-lg font-black '+theme.titleColor+'">'+theme.title+'</h4></div><div class="text-right"><div class="text-3xl font-black '+theme.scoreColor+'">'+(score===null?"—":score+"/100")+'</div><div class="text-xs text-slate-400">'+available.length+' de '+checks.length+' métricas disponibles</div></div></div><p class="mt-2 text-sm text-slate-300">'+theme.desc+'</p><div class="mt-4 grid gap-4 md:grid-cols-2"><div><div class="mb-2 text-xs font-bold uppercase text-emerald-300">Puntos favorables</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(positive,"No se detectan fortalezas claras entre los datos disponibles.")+'</ul></div><div><div class="mb-2 text-xs font-bold uppercase text-rose-300">Riesgos a vigilar</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(negative,"No aparecen alertas claras en las métricas disponibles.")+'</ul></div></div>'+(valuationNotes.length?'<div class="mt-4 border-t border-slate-800 pt-3"><div class="mb-2 text-xs font-bold uppercase text-amber-300">Valoración y expectativas (aparte del semáforo)</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+listHtml(valuationNotes,"")+'</ul></div>':'')+'<p class="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-500">Puntuación heurística basada únicamente en los datos disponibles de Yahoo Finance. No compara empresas del mismo sector, puede penalizar modelos de negocio con deuda estructural y no constituye recomendación de compra o venta. Contrasta siempre con informes recientes.</p></div>';
+            const groupsHtml=groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+escape(title)+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>'<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><dt class="text-xs text-slate-400">'+escape(label)+'</dt><dd class="text-sm font-bold text-slate-100 text-right">'+escape(value)+'</dd></div>').join("")+'</dl></div>').join("");
+            host.innerHTML=semaforoHtml+groupsHtml;
         }
         async function loadWatchFundamentals(){
             const item=watchlistData[watchDetailIndex];if(!item)return;
