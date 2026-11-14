@@ -2314,6 +2314,13 @@
             const groups=[["Valoración",valuation],["Crecimiento y rentabilidad",growth],["Salud financiera",health]];
             const host=document.getElementById("watch-fundamentals-content");if(!host)return;
             const metric=(obj)=>{const n=yahooRawValue(obj);return Number.isFinite(n)?n:null;};
+            const sector=String(data.assetProfile?.sector||"").toLowerCase();
+            const industry=String(data.assetProfile?.industry||"").toLowerCase();
+            const sectorLabel=data.assetProfile?.sector||"Sector no informado";
+            const isFinancial=/financial|bank|insurance|capital markets|credit|mortgage/.test(sector+" "+industry);
+            const isRealEstate=/real estate|reit/.test(sector+" "+industry);
+            const isUtility=/utilities|utility/.test(sector+" "+industry);
+            const isTech=/technology|software|semiconductor|internet|communication services/.test(sector+" "+industry);
             const checks=[
                 {name:"Crecimiento de ingresos",value:metric(data.financialData?.revenueGrowth),weight:12,score:v=>v>0.15?1:v>0.05?.75:v>=0?.5:0,good:v=>v>0.05?"Ingresos creciendo":"Ingresos sin crecimiento positivo"},
                 {name:"Crecimiento de beneficios",value:metric(data.financialData?.earningsGrowth),weight:12,score:v=>v>0.15?1:v>0.05?.75:v>=0?.5:0,good:v=>v>0.05?"Beneficios creciendo":"Beneficios sin crecimiento positivo"},
@@ -2322,10 +2329,29 @@
                 {name:"Margen neto",value:metric(data.financialData?.profitMargins),weight:8,score:v=>v>=.15?1:v>=.05?.7:v>0?.4:0,good:v=>v>=.05?"Margen neto positivo":"Margen neto reducido o negativo"},
                 {name:"ROE",value:metric(data.financialData?.returnOnEquity),weight:12,score:v=>v>=.15?1:v>=.08?.7:v>0?.4:0,good:v=>v>=.08?"Buen retorno sobre patrimonio":"ROE bajo o negativo"},
                 {name:"ROA",value:metric(data.financialData?.returnOnAssets),weight:8,score:v=>v>=.08?1:v>=.03?.7:v>0?.4:0,good:v=>v>=.03?"Activos rentables":"Rentabilidad de activos baja"},
-                {name:"Deuda / patrimonio",value:metric(data.financialData?.debtToEquity),weight:12,score:v=>v<=50?1:v<=100?.75:v<=200?.4:0,good:v=>v<=100?"Endeudamiento moderado":"Endeudamiento elevado"},
+                {name:"Deuda / patrimonio",value:metric(data.financialData?.debtToEquity),weight:12,score:v=>v<=(isRealEstate?150:isUtility?180:50)?1:v<=(isRealEstate?250:isUtility?300:100)?.7:v<=(isRealEstate?450:isUtility?500:200)?.4:0,good:v=>v<=(isRealEstate?250:isUtility?300:100)?"Endeudamiento dentro de un rango sectorial orientativo":"Endeudamiento elevado para el perfil sectorial"},
                 {name:"Ratio corriente",value:metric(data.financialData?.currentRatio),weight:6,score:v=>v>=1.5?1:v>=1?.7:v>=.8?.35:0,good:v=>v>=1?"Liquidez corriente razonable":"Liquidez a corto plazo ajustada"},
                 {name:"Flujo de caja libre",value:metric(data.financialData?.freeCashflow),weight:10,score:v=>v>0?1:0,good:v=>v>0?"Flujo de caja libre positivo":"Flujo de caja libre negativo"}
             ];
+            if(isFinancial){
+                const excluded=new Set(["Margen bruto","Margen operativo","Deuda / patrimonio","Ratio corriente","Flujo de caja libre"]);
+                checks.splice(0,checks.length,...checks.filter(x=>!excluded.has(x.name)));
+                checks.find(x=>x.name==="ROE").weight=20;
+                checks.find(x=>x.name==="ROA").weight=15;
+                checks.find(x=>x.name==="Margen neto").weight=15;
+            }else if(isRealEstate){
+                checks.find(x=>x.name==="Ratio corriente").weight=2;
+                checks.find(x=>x.name==="Deuda / patrimonio").weight=16;
+                checks.find(x=>x.name==="Flujo de caja libre").weight=5;
+            }else if(isUtility){
+                checks.find(x=>x.name==="Deuda / patrimonio").weight=16;
+                checks.find(x=>x.name==="Flujo de caja libre").weight=5;
+                checks.find(x=>x.name==="Crecimiento de ingresos").weight=8;
+            }else if(isTech){
+                checks.find(x=>x.name==="Crecimiento de ingresos").weight=16;
+                checks.find(x=>x.name==="Crecimiento de beneficios").weight=16;
+                checks.find(x=>x.name==="ROE").weight=8;
+            }
             const available=checks.filter(x=>x.value!==null);
             const totalWeight=available.reduce((a,x)=>a+x.weight,0);
             const score=totalWeight?Math.round(available.reduce((a,x)=>a+x.score(x.value)*x.weight,0)/totalWeight*100):null;
@@ -2339,7 +2365,7 @@
             if(peg!==null&&peg>2)valuationNotes.push("PEG superior a 2: la valoración puede ser exigente frente al crecimiento esperado.");
             if(peg!==null&&peg>0&&peg<=1)valuationNotes.push("PEG de 1 o inferior: valoración potencialmente más razonable frente al crecimiento estimado.");
             const list=(items,empty)=>items.length?items.slice(0,3).map(x=>'<li>'+x+'</li>').join(""):'<li>'+empty+'</li>';
-            const semaforoHtml='<div class="lg:col-span-3 rounded-xl border '+theme.borderClass+' bg-slate-950/80 p-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs uppercase tracking-wider text-slate-400">Semáforo fundamental · orientativo</div><h4 class="mt-1 text-lg font-black  '+theme.titleClass+'">'+theme.title+'</h4></div><div class="text-right"><div class="text-3xl font-black  '+theme.scoreClass+'">'+(score===null?"—":score+"/100")+'</div><div class="text-xs text-slate-400">'+available.length+' de '+checks.length+' métricas disponibles</div></div></div><p class="mt-2 text-sm text-slate-300">'+theme.desc+'</p><div class="mt-4 grid gap-4 md:grid-cols-2"><div><div class="mb-2 text-xs font-bold uppercase text-emerald-300">Puntos favorables</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(positive,"No se detectan fortalezas claras entre los datos disponibles.")+'</ul></div><div><div class="mb-2 text-xs font-bold uppercase text-rose-300">Riesgos a vigilar</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(negative,"No aparecen alertas claras en las métricas disponibles.")+'</ul></div></div>'+(valuationNotes.length?'<div class="mt-4 border-t border-slate-800 pt-3"><div class="mb-2 text-xs font-bold uppercase text-amber-300">Valoración y expectativas (aparte del semáforo)</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(valuationNotes,"Sin alertas de valoración.")+'</ul></div>':'')+'<p class="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-500">Puntuación heurística basada únicamente en los datos disponibles de Yahoo Finance. No compara empresas del mismo sector, puede penalizar modelos de negocio con deuda estructural y no constituye recomendación de compra o venta. Contrasta siempre con informes recientes.</p></div>';
+            const semaforoHtml='<div class="lg:col-span-3 rounded-xl border '+theme.borderClass+' bg-slate-950/80 p-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs uppercase tracking-wider text-slate-400">Semáforo fundamental · orientativo</div><div class="mt-1 text-xs text-slate-400">'+sectorLabel+</div><h4 class="mt-1 text-lg font-black  '+theme.titleClass+'">'+theme.title+'</h4></div><div class="text-right"><div class="text-3xl font-black  '+theme.scoreClass+'">'+(score===null?"—":score+"/100")+'</div><div class="text-xs text-slate-400">'+available.length+' de '+checks.length+' métricas disponibles</div></div></div><p class="mt-2 text-sm text-slate-300">'+theme.desc+'</p><div class="mt-4 grid gap-4 md:grid-cols-2"><div><div class="mb-2 text-xs font-bold uppercase text-emerald-300">Puntos favorables</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(positive,"No se detectan fortalezas claras entre los datos disponibles.")+'</ul></div><div><div class="mb-2 text-xs font-bold uppercase text-rose-300">Riesgos a vigilar</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(negative,"No aparecen alertas claras en las métricas disponibles.")+'</ul></div></div>'+(valuationNotes.length?'<div class="mt-4 border-t border-slate-800 pt-3"><div class="mb-2 text-xs font-bold uppercase text-amber-300">Valoración y expectativas (aparte del semáforo)</div><ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">'+list(valuationNotes,"Sin alertas de valoración.")+'</ul></div>':'')+'<p class="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-500">Puntuación heurística basada únicamente en los datos disponibles de Yahoo Finance. No compara empresas del mismo sector, puede penalizar modelos de negocio con deuda estructural y no constituye recomendación de compra o venta. Contrasta siempre con informes recientes.</p></div>';
             host.innerHTML=semaforoHtml+groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+title+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>'<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><dt class="text-xs text-slate-400">'+label+'</dt><dd class="text-sm font-bold text-slate-100 text-right">'+value+'</dd></div>').join("")+'</dl></div>').join("");
         }
         async function loadWatchFundamentals(){
