@@ -3811,22 +3811,69 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
 
         async function handleFirebaseLogin(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const btn = document.getElementById('fb-login-btn');
             const errEl = document.getElementById('fb-login-error');
-            const email = document.getElementById('fb-email').value.trim();
-            const password = document.getElementById('fb-password').value;
-            errEl.classList.add('hidden');
-            btn.disabled = true;
-            btn.textContent = 'Conectando...';
+            const emailEl = document.getElementById('fb-email');
+            const passwordEl = document.getElementById('fb-password');
+
+            const showLoginError = (message) => {
+                if (errEl) {
+                    errEl.textContent = message;
+                    errEl.classList.remove('hidden');
+                    errEl.style.display = 'block';
+                }
+                console.error('[MiCartera] Error de acceso Firebase:', message);
+            };
+
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+                errEl.style.display = '';
+            }
+            if (!emailEl || !passwordEl) {
+                showLoginError('No se encuentran los campos del formulario. Recarga la página (Ctrl+F5).');
+                return;
+            }
+            if (typeof firebase === 'undefined' || !fbAuth || typeof fbAuth.signInWithEmailAndPassword !== 'function') {
+                showLoginError('Firebase Authentication no se ha cargado correctamente. Comprueba la conexión y recarga la página.');
+                return;
+            }
+
+            const email = emailEl.value.trim();
+            const password = passwordEl.value;
+            if (!email || !password) {
+                showLoginError('Introduce tu correo electrónico y contraseña.');
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Conectando...';
+            }
+
+            let timeoutId;
             try {
-                await fbAuth.signInWithEmailAndPassword(email, password);
+                const signInPromise = fbAuth.signInWithEmailAndPassword(email, password);
+                const timeoutPromise = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        const timeoutError = new Error('Firebase no ha respondido en 20 segundos. Comprueba la conexión a Internet y que el dominio esté autorizado en Firebase.');
+                        timeoutError.code = 'auth/timeout';
+                        reject(timeoutError);
+                    }, 20000);
+                });
+                await Promise.race([signInPromise, timeoutPromise]);
+                // onAuthStateChanged es quien cierra el modal al confirmar la sesión.
             } catch (err) {
-                errEl.textContent = 'Error al iniciar sesión: ' + (err.message || 'Verifica correo y contraseña.');
-                errEl.classList.remove('hidden');
+                const code = err && err.code ? err.code : 'sin-código';
+                const message = err && err.message ? err.message : 'No se ha podido completar el inicio de sesión.';
+                showLoginError('No se ha podido iniciar sesión (' + code + '): ' + message);
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Entrar y sincronizar';
+                if (timeoutId) clearTimeout(timeoutId);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Entrar y sincronizar';
+                }
             }
         }
 
