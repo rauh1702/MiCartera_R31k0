@@ -473,11 +473,16 @@
                 </div>
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
-                        <button type="button" class="r31-nav-button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open text-amber-300"></i> Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
-                <button type="button" class="r31-nav-button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced text-cyan-300"></i> Comparativa</button>
-                        <button type="button" class="r31-nav-button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved text-amber-300"></i> Riesgo</button>
-                        <button type="button" class="r31-nav-button" onclick="showFinancialCalendarView()"><i class="fa-solid fa-calendar-days text-violet-300"></i> Eventos <span id="financial-event-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
-                <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
+                <div class="r31-nav-group">
+                    <button type="button" class="r31-nav-button" onclick="toggleMenuGroup('myPortfolioSubmenu', this)"><i class="fa-solid fa-chart-pie text-emerald-300"></i> Mycartera <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+                    <div id="myPortfolioSubmenu" class="menu-submenu r31-dropdown">
+                        <button type="button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced"></i>Comparativa</button>
+                        <button type="button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved"></i>Riesgo</button>
+                        <button type="button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line"></i>Rentabilidad</button>
+                        <button type="button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open"></i>Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
+                    </div>
+                </div>
+                <button type="button" class="r31-nav-button" onclick="showFinancialCalendarView()"><i class="fa-solid fa-calendar-days text-violet-300"></i> Eventos <span id="financial-event-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
                 <button type="button" id="strategies-menu-button" class="r31-nav-button" onclick="showStrategiesView()"><i class="fa-solid fa-chess-knight text-emerald-300"></i> Estrategias <span id="strategy-review-badge" hidden aria-label="Revisiones pendientes">0</span></button>
                 <button type="button" class="r31-nav-button r31-save-button" onclick="runMenuAction(manualSave)"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
             </nav>
