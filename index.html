@@ -473,6 +473,7 @@
                 </div>
                 <button type="button" class="r31-nav-button" onclick="showWatchlistView()"><i class="fa-solid fa-eye text-cyan-300"></i> Seguimiento</button>
                 <button type="button" class="r31-nav-button" onclick="showDailySummaryView()"><i class="fa-solid fa-chart-line text-cyan-300"></i> Resumen diario</button>
+                        <button type="button" class="r31-nav-button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced text-cyan-300"></i> Comparativa</button>
                         <button type="button" class="r31-nav-button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved text-amber-300"></i> Riesgo</button>
                         <button type="button" class="r31-nav-button" onclick="showFinancialCalendarView()"><i class="fa-solid fa-calendar-days text-violet-300"></i> Eventos <span id="financial-event-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
                 <button type="button" class="r31-nav-button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line text-emerald-300"></i> Rentabilidad</button>
@@ -807,6 +808,34 @@
         </section>
         </section>
 
+
+        <section id="benchmark-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">Rendimiento relativo · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Comparativa de mercado</h2><p class="text-sm text-slate-300 mt-1">Compara la evolución registrada de tu cartera con el S&amp;P 500 y el Nasdaq 100.</p></div>
+                <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-200"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+            </div>
+            <div class="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div><h3 class="font-bold text-white">Periodo comparable</h3><p id="benchmark-period" class="text-xs text-slate-400 mt-1">Se utilizarán las fechas con histórico disponible en tu cartera.</p></div>
+                    <button id="benchmark-refresh" type="button" onclick="refreshBenchmarkComparison()" class="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-2"></i>Actualizar comparativa</button>
+                </div>
+                <p id="benchmark-status" class="text-xs text-slate-300 mt-3" aria-live="polite">Pulsa «Actualizar comparativa» para consultar los datos históricos.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-2xl border border-emerald-500/20 bg-slate-900/80 p-4"><p class="text-xs font-bold uppercase text-slate-400">Mi cartera</p><p id="benchmark-portfolio-return" class="mt-2 text-2xl font-black text-white">—</p><p id="benchmark-portfolio-detail" class="mt-1 text-xs text-slate-400">—</p></div>
+                <div class="rounded-2xl border border-blue-500/20 bg-slate-900/80 p-4"><p class="text-xs font-bold uppercase text-slate-400">S&amp;P 500</p><p id="benchmark-sp-return" class="mt-2 text-2xl font-black text-white">—</p><p id="benchmark-sp-detail" class="mt-1 text-xs text-slate-400">—</p></div>
+                <div class="rounded-2xl border border-violet-500/20 bg-slate-900/80 p-4"><p class="text-xs font-bold uppercase text-slate-400">Nasdaq 100</p><p id="benchmark-nasdaq-return" class="mt-2 text-2xl font-black text-white">—</p><p id="benchmark-nasdaq-detail" class="mt-1 text-xs text-slate-400">—</p></div>
+            </div>
+            <section class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4"><div><h3 class="font-bold text-white">Evolución normalizada (base 100)</h3><p class="text-xs text-slate-400 mt-1">Todos comienzan en 100 en la primera fecha común.</p></div><span id="benchmark-outperformance" class="text-xs font-bold text-slate-300">Diferencia: —</span></div>
+                <div id="benchmark-chart-empty" class="rounded-xl border border-dashed border-slate-600 p-6 text-center text-sm text-slate-400">Todavía no hay datos suficientes para comparar.</div>
+                <div id="benchmark-chart-wrap" class="hidden h-80 relative"><canvas id="benchmarkChart"></canvas></div>
+            </section>
+            <div class="rounded-xl border border-amber-500/20 bg-amber-950/30 p-4 text-xs leading-relaxed text-amber-100">
+                <strong class="block mb-1">Cómo interpretar esta comparativa</strong>
+                La cartera se calcula a partir de los puntos de rentabilidad que has ido guardando en MiCartera. El porcentaje de la cartera es una aproximación basada en la rentabilidad acumulada registrada, no una rentabilidad ponderada por tiempo (TWR) ni una TIR; las compras adicionales pueden influir en ella. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos. La comparación empieza en tu primer punto histórico disponible: no se inventan datos anteriores.
+            </div>
+        </section>
 
         <section id="risk-analysis-view" class="hidden space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -2819,6 +2848,95 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if (expandedStrategyIds.has(id)) expandedStrategyIds.delete(id); else expandedStrategyIds.add(id);
             renderStrategies();
         }
+        const BENCHMARK_CACHE_KEY = 'micartera_r31k0_benchmark_cache_v1';
+        let benchmarkChartInstance = null;
+        let benchmarkComparisonRunning = false;
+
+        function showBenchmarkView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('benchmark-view').classList.remove('hidden');
+            document.getElementById('headerToolbar').classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
+            window.scrollTo({top:0,behavior:'smooth'});
+            if (readPerformanceHistory().length) refreshBenchmarkComparison(false);
+            else setBenchmarkStatus('Aún no tienes puntos guardados en Rentabilidad. La comparativa comenzará cuando exista histórico.');
+        }
+        function setBenchmarkStatus(message, isError=false) {
+            const el=document.getElementById('benchmark-status');
+            if(el){el.textContent=message;el.className='text-xs mt-3 '+(isError?'text-rose-300':'text-slate-300');}
+        }
+        function benchmarkFormatPct(value) {
+            return (value>0?'+':'')+value.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
+        }
+        function benchmarkSetMetric(id,value) {
+            const el=document.getElementById(id); if(!el)return;
+            el.textContent=benchmarkFormatPct(value);
+            el.className='mt-2 text-2xl font-black '+(value>0?'text-emerald-400':value<0?'text-rose-400':'text-white');
+        }
+        async function fetchYahooHistoricalCloses(symbol,startDate,endDate) {
+            const period1=Math.floor(new Date(startDate+'T00:00:00Z').getTime()/1000);
+            const period2=Math.floor(new Date(endDate+'T23:59:59Z').getTime()/1000)+86400;
+            const target=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+            const errors=[];
+            for(const makeProxyUrl of YAHOO_PROXIES){
+                try{
+                    const json=await fetchJsonWithTimeout(makeProxyUrl(target),14000);
+                    const result=json.chart?.result?.[0];
+                    if(!result)throw new Error(json.chart?.error?.description||'Sin datos históricos');
+                    const timestamps=result.timestamp||[];
+                    const closes=result.indicators?.quote?.[0]?.close||[];
+                    const rows=[];
+                    timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:new Date(ts*1000).toISOString().slice(0,10),close});});
+                    if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
+                    return rows;
+                }catch(error){errors.push(error?.message||'Error de conexión');}
+            }
+            throw new Error('No se pudo consultar '+symbol+': '+errors.join(' · '));
+        }
+        async function refreshBenchmarkComparison(showToastAfter=true) {
+            if(benchmarkComparisonRunning)return;
+            const history=readPerformanceHistory();
+            if(!history.length){setBenchmarkStatus('No hay histórico de rentabilidad. Guarda puntos desde la pantalla Rentabilidad.');return;}
+            const valid=history.filter(x=>Number.isFinite(Number(x.returnPct))).sort((a,b)=>a.date.localeCompare(b.date));
+            if(!valid.length)return;
+            benchmarkComparisonRunning=true;
+            const btn=document.getElementById('benchmark-refresh'); if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Consultando…';}
+            setBenchmarkStatus('Consultando cierres históricos del S&P 500 y Nasdaq 100…');
+            try{
+                const start=valid[0].date,end=valid[valid.length-1].date;
+                if(start===end){setBenchmarkStatus('Solo hay un día registrado. Guarda otro punto en una fecha posterior para poder comparar la evolución.');return;}
+                const [sp,nasdaq]=await Promise.all([fetchYahooHistoricalCloses('^GSPC',start,end),fetchYahooHistoricalCloses('^NDX',start,end)]);
+                const spMap=new Map(sp.map(x=>[x.date,x.close])), ndMap=new Map(nasdaq.map(x=>[x.date,x.close]));
+                const common=valid.map(p=>({date:p.date,portfolio:Number(p.returnPct),sp:spMap.get(p.date),nasdaq:ndMap.get(p.date)})).filter(p=>Number.isFinite(p.sp)&&Number.isFinite(p.nasdaq));
+                if(common.length<2){setBenchmarkStatus('No hay al menos dos fechas comunes entre tu histórico y los cierres de ambos índices. Guarda más puntos y vuelve a intentarlo.',true);return;}
+                const first=common[0];
+                const portfolioBase=1+first.portfolio/100;
+                if(!Number.isFinite(portfolioBase)||portfolioBase<=0){setBenchmarkStatus('El primer punto de rentabilidad de la cartera no permite normalizar la serie.',true);return;}
+                const series=[
+                    {label:'Mi cartera',data:common.map(p=>Number((100*(1+p.portfolio/100)/portfolioBase).toFixed(3))),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',borderWidth:3},
+                    {label:'S&P 500',data:common.map(p=>Number((100*p.sp/first.sp).toFixed(3))),borderColor:'#38bdf8',borderWidth:2},
+                    {label:'Nasdaq 100',data:common.map(p=>Number((100*p.nasdaq/first.nasdaq).toFixed(3))),borderColor:'#a78bfa',borderWidth:2}
+                ];
+                const final=common[common.length-1];
+                const returns=series.map(x=>(x.data[x.data.length-1]/100-1)*100);
+                benchmarkSetMetric('benchmark-portfolio-return',returns[0]);benchmarkSetMetric('benchmark-sp-return',returns[1]);benchmarkSetMetric('benchmark-nasdaq-return',returns[2]);
+                document.getElementById('benchmark-portfolio-detail').textContent=common.length+' puntos comparables';
+                document.getElementById('benchmark-sp-detail').textContent='Índice de precio · USD';
+                document.getElementById('benchmark-nasdaq-detail').textContent='Índice de precio · USD';
+                const best=Math.max(...returns),worst=Math.min(...returns),diff=returns[0]-Math.max(returns[1],returns[2]);
+                const diffEl=document.getElementById('benchmark-outperformance');
+                diffEl.textContent=(diff>=0?'Ventaja de la cartera: +':'Desventaja de la cartera: ')+Math.abs(diff).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' puntos';
+                diffEl.className='text-xs font-bold '+(diff>=0?'text-emerald-300':'text-rose-300');
+                document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+common.length+' fechas comunes';
+                document.getElementById('benchmark-chart-empty').classList.add('hidden');document.getElementById('benchmark-chart-wrap').classList.remove('hidden');
+                if(benchmarkChartInstance){benchmarkChartInstance.destroy();benchmarkChartInstance=null;}
+                benchmarkChartInstance=new Chart(document.getElementById('benchmarkChart').getContext('2d'),{type:'line',data:{labels:common.map(p=>new Date(p.date+'T12:00:00').toLocaleDateString('es-ES')),datasets:series.map(x=>({...x,fill:false,tension:.2,pointRadius:common.length>90?0:2,pointHoverRadius:5}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}}},scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{color:'rgba(148,163,184,.12)'}},y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString('es-ES')},grid:{color:'rgba(148,163,184,.12)'},title:{display:true,text:'Índice (base 100)',color:'#94a3b8'}}}}});
+                setBenchmarkStatus('Comparativa actualizada con cierres históricos de Yahoo Finance. Último dato disponible: '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+'.');
+                if(showToastAfter)showToast('Comparativa de mercado actualizada');
+            }catch(error){console.error('Error en comparativa benchmark:',error);setBenchmarkStatus('No se pudo completar la comparativa: '+(error.message||'fallo de conexión')+'. Puedes volver a intentarlo más tarde.',true);}
+            finally{benchmarkComparisonRunning=false;if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate mr-2"></i>Actualizar comparativa';}}
+        }
+
         function renderRiskBreakdown(containerId, rows, total, labelField) {
             const el = document.getElementById(containerId);
             if (!el) return;
@@ -3162,6 +3280,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('performance-view').classList.add('hidden');
             document.getElementById('risk-analysis-view').classList.add('hidden');
             document.getElementById('financial-calendar-view').classList.add('hidden');
+            document.getElementById('benchmark-view')?.classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
             window.scrollTo({top:0,behavior:'smooth'});
