@@ -1825,14 +1825,14 @@
             let data=null,lastError=null;
             for(const proxy of YAHOO_PROXIES){try{data=await fetchJsonWithTimeout(proxy(target),10000);break;}catch(err){lastError=err;}}
             if(seq!==assetSearchSequence || !box || !document.getElementById('searchInput').value.trim().toLowerCase().startsWith(q.toLowerCase()))return;
-            const quotes=(data?.quotes||[]).filter(x=>x.symbol && ['EQUITY','ETF','MUTUALFUND','INDEX'].includes(x.quoteType));
+            const quotes=(data?.quotes||[]).filter(x=>x.symbol && ['EQUITY','ETF','MUTUALFUND','INDEX','CRYPTOCURRENCY','CRYPTO'].includes(String(x.quoteType||'').toUpperCase()));
             if(!data){box.innerHTML=`<div class="p-4 text-sm text-rose-200">No se pudo consultar el buscador ahora. ${escapeStrategyHtml(lastError?.message||'')}</div>`;return;}
             if(!quotes.length){box.innerHTML='<div class="p-4 text-sm text-slate-200">No se han encontrado activos. Prueba con el nombre o ticker.</div>';return;}
             let rates={EUR:1}; try{rates=await getExchangeRates();}catch(e){}
             if(seq!==assetSearchSequence)return;
             box.innerHTML=quotes.slice(0,10).map((x,i)=>{const currency=x.currency||'—';let price=Number(x.regularMarketPrice);let eur='';try{if(Number.isFinite(price)&&price>0)eur=convertToEUR(price,currency,rates).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €';}catch(e){eur='Cambio no disponible';}
                 const name=escapeStrategyHtml(x.shortname||x.longname||x.symbol);const symbol=escapeStrategyHtml(x.symbol);const exchange=escapeStrategyHtml(x.exchange||x.exchDisp||'');const already=watchlistData.some(a=>a.symbol===x.symbol);
-                return `<div class="asset-search-result"><div class="min-w-0"><div class="font-extrabold truncate">${name}</div><small>${symbol} · ${exchange} · ${currency}</small><div class="text-sm font-bold text-cyan-200 mt-1">${eur||'Cotización no disponible'}</div></div><button type="button" onclick="addToWatchlist(${i})" ${already?'disabled':''}>${already?'Siguiendo':'Seguir'}</button></div>`;
+                return `<div class="asset-search-result"><div class="min-w-0"><div class="font-extrabold truncate">${name}</div><small>${x.quoteType==='CRYPTOCURRENCY'||x.quoteType==='CRYPTO'?'CRIPTOMONEDA · ':''}${symbol} · ${exchange} · ${currency}</small><div class="text-sm font-bold text-cyan-200 mt-1">${eur||'Cotización no disponible'}</div></div><button type="button" onclick="addToWatchlist(${i})" ${already?'disabled':''}>${already?'Siguiendo':'Seguir'}</button></div>`;
             }).join(''); window._lastAssetSearchResults=quotes.slice(0,10).map(x=>({...x}));
         }
         async function addToWatchlist(index){const x=window._lastAssetSearchResults?.[index];if(!x)return; if(watchlistData.some(a=>a.symbol===x.symbol)){showToast('Este activo ya está en seguimiento');return;} const item={symbol:x.symbol,name:x.shortname||x.longname||x.symbol,currency:x.currency||'EUR',exchange:x.exchange||x.exchDisp||'',priceEUR:null,changePct:null,addedAt:new Date().toISOString()};watchlistData.push(item);persistWatchlist();document.getElementById('asset-search-results').classList.add('hidden');showWatchlistView();await refreshOneWatch(item);showToast(`${item.name} añadido al seguimiento`);}
