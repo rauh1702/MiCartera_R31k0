@@ -145,7 +145,7 @@ export default {
       );
       yahooUrl.searchParams.set(
         "modules",
-        "price,summaryDetail,defaultKeyStatistics,financialData"
+        "price,summaryDetail,defaultKeyStatistics,financialData,assetProfile"
       );
       yahooUrl.searchParams.set("formatted", "true");
       yahooUrl.searchParams.set("crumb", crumb);
