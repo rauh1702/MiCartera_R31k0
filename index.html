@@ -1389,11 +1389,12 @@
             if (typeof persistStrategies === 'function') persistStrategies();
             const backup = {
                 app: 'MiCartera R31k0',
-                formatVersion: 2,
+                formatVersion: 3,
                 exportedAt: new Date().toISOString(),
                 assets: assetsData,
                 strategies: Array.isArray(strategiesData) ? strategiesData : [],
-                watchlist: Array.isArray(watchlistData) ? watchlistData : []
+                watchlist: Array.isArray(watchlistData) ? watchlistData : [],
+                performanceHistory: readPerformanceHistory()
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1429,6 +1430,9 @@
                         if (!Array.isArray(importedData) && Array.isArray(importedData.strategies)) {
                             strategiesData = importedData.strategies;
                             if (typeof persistStrategies === 'function') persistStrategies();
+                        }
+                        if (!Array.isArray(importedData) && Array.isArray(importedData.performanceHistory)) {
+                            localStorage.setItem(PERFORMANCE_HISTORY_KEY, JSON.stringify(importedData.performanceHistory));
                         }
                         recalculatePortfolioCalculations();
                         renderDashboard();
