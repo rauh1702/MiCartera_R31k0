@@ -3332,11 +3332,18 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 transactions.sort((a,b)=>a.date.localeCompare(b.date));
                 const start=transactions[0].date;
                 const today=localDateISO();
+                // Pedimos diez días naturales adicionales para disponer del último cierre
+                // anterior a la primera operación cuando esta cae en festivo o fin de semana.
+                // Ejemplo: la bolsa de Londres estuvo cerrada el 04/05/2026 y SSLN.L
+                // debe valorarse con el cierre anterior del 01/05/2026.
+                const historyStartDate=new Date(start+'T00:00:00Z');
+                historyStartDate.setUTCDate(historyStartDate.getUTCDate()-10);
+                const historyStart=historyStartDate.toISOString().slice(0,10);
                 // Resuelve cada activo con el primer ticker que cubra también su primera compra.
                 // Esto evita elegir una cotización reciente de una bolsa cuya ficha empezó más tarde.
                 const assetHistorical={};
                 await Promise.all(assets.map(async asset=>{
-                    assetHistorical[asset.name]=await fetchHistoricalAssetWithFallback(asset,start,today);
+                    assetHistorical[asset.name]=await fetchHistoricalAssetWithFallback(asset,historyStart,today);
                 }));
                 const currencies=[...new Set(assets.map(a=>String(assetHistorical[a.name].currency||'EUR')))];
                 const fxSymbols=[];
@@ -3345,7 +3352,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 if(currencies.includes('GBP')||currencies.includes('GBp')||currencies.includes('GBX'))fxSymbols.push('EURGBP=X');
                 const indexSymbols=['^GSPC','^NDX'];
                 const fxAndIndexes=[...new Set([...fxSymbols,...indexSymbols])];
-                const fetched=await fetchHistoricalBatch(fxAndIndexes,start,today);
+                const fetched=await fetchHistoricalBatch(fxAndIndexes,historyStart,today);
                 assets.forEach(asset=>{const chosen=assetHistorical[asset.name];fetched[chosen.symbol]=chosen.rows;});
                 const allSymbols=[...new Set([...assets.map(a=>assetHistorical[a.name].symbol),...fxAndIndexes])];
                 const coverage=allSymbols.map(symbol=>({symbol,rows:fetched[symbol]?.length||0,first:fetched[symbol]?.[0]?.date,last:fetched[symbol]?.[fetched[symbol].length-1]?.date}));
