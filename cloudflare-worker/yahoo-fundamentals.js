@@ -317,31 +317,54 @@ async function fetchArticleText(articleUrl) {
       signal: AbortSignal.timeout(7000)
     });
     if (!response.ok) return "";
-    const html = (await response.text()).slice(0, 350000);
+    const html = (await response.text()).slice(0, 900000);
     const candidates = [];
-    const metaPatterns = [
-      /<meta[^>]+(?:property|name)=["'](?:og:description|description|twitter:description)["'][^>]+content=["']([^"']+)["'][^>]*>/i,
-      /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:description|description|twitter:description)["'][^>]*>/i
-    ];
-    for (const pattern of metaPatterns) {
-      const match = html.match(pattern);
-      if (match?.[1]) candidates.push(match[1]);
-    }
-    const articleBody = html.match(/"articleBody"\s*:\s*"((?:\\\\.|[^"\\\\])*)"/i);
-    if (articleBody?.[1]) {
-      try { candidates.unshift(JSON.parse('"'+articleBody[1]+'"')); } catch {}
-    }
     const clean = value => String(value || "")
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
+      .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
+      .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, " ")
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;|&#160;/gi, " ")
       .replace(/&amp;/gi, "&")
       .replace(/&quot;/gi, '"')
       .replace(/&#39;|&apos;/gi, "'")
-      .replace(/\s+/g, " ")
+      .replace(/&#(\\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+      .replace(/\\s+/g, " ")
       .trim();
-    const text = candidates.map(clean).sort((a,b)=>b.length-a.length)[0] || "";
+
+    // Extrae metadatos aunque los atributos HTML estén en distinto orden.
+    for (const match of html.matchAll(/<meta\\b[^>]*>/gi)) {
+      const tag = match[0];
+      const key = (tag.match(/(?:name|property)=["']([^"']+)["']/i)?.[1] || "").toLowerCase();
+      const value = tag.match(/content=["']([^"']+)["']/i)?.[1];
+      if (value && /description|og:title|twitter:title/i.test(key)) candidates.push(value);
+    }
+
+    // JSON-LD puede contener varios bloques y estructuras anidadas.
+    for (const match of html.matchAll(/<script[^>]+type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi)) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        const visit = node => {
+          if (!node || typeof node !== "object") return;
+          if (typeof node.articleBody === "string") candidates.push(node.articleBody);
+          if (Array.isArray(node)) node.forEach(visit);
+          else Object.values(node).forEach(visit);
+        };
+        visit(parsed);
+      } catch {}
+    }
+
+    // Recupera párrafos de article/main cuando no hay metadatos suficientes.
+    const body = html.match(/<article\\b[\\s\\S]*?<\\/article>/i)?.[0] ||
+      html.match(/<main\\b[\\s\\S]*?<\\/main>/i)?.[0] || "";
+    if (body) {
+      const paragraphs = [...body.matchAll(/<p\\b[^>]*>([\\s\\S]*?)<\\/p>/gi)]
+        .map(match => clean(match[1]))
+        .filter(value => value.length > 45);
+      if (paragraphs.length) candidates.push(paragraphs.join(" "));
+    }
+    const text = candidates.map(clean).filter(Boolean).sort((a,b)=>b.length-a.length)[0] || "";
     return text.slice(0, 9000);
   } catch {
     return "";
@@ -353,7 +376,7 @@ async function summarizeNewsItem(env, item) {
   if (!env.AI || !env.NEWS_KV) {
     return { ...item, summary: existing, summaryAvailable: Boolean(existing), summaryLanguage: existing ? "source" : null };
   }
-  const cacheKey = "news:summary:" + [...new Uint8Array(
+  const cacheKey = "news:summary:v2:" + [...new Uint8Array(
     await crypto.subtle.digest("SHA-256", new TextEncoder().encode(item.url))
   )].map(byte => byte.toString(16).padStart(2,"0")).join("");
   const cached = await env.NEWS_KV.get(cacheKey);
@@ -401,7 +424,17 @@ async function summarizeNewsItem(env, item) {
     await env.NEWS_KV.put(cacheKey, JSON.stringify(enriched), { expirationTtl: cacheTtl });
     return { ...item, ...enriched };
   } catch (error) {
-    return { ...item, summary: existing, summaryAvailable: Boolean(existing), summaryLanguage: existing ? "source" : null };
+    // Un fallo puntual de extracción o IA no debe dejar la noticia sin resumen.
+    const fallback = hasArticleContent
+      ? "La fuente contiene información adicional, pero no se ha podido generar el resumen automático. Consulta el artículo original para conocer los detalles."
+      : "El titular informa de: " + String(item.title || "").trim() + " El resumen se basa únicamente en el titular; no se ha podido verificar más contenido de la fuente.";
+    return {
+      ...item,
+      summary: existing || fallback.slice(0, 650),
+      summaryAvailable: true,
+      summaryLanguage: existing ? "source" : "es",
+      summaryBasis: hasArticleContent ? "article-unprocessed" : "headline-fallback"
+    };
   }
 }
 
