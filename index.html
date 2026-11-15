@@ -3418,7 +3418,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     {label:'Nasdaq 100 · EUR',data:common.map(p=>Number((100*p.benchmark.nd/baseNd).toFixed(3))),borderColor:'#a78bfa',borderWidth:2,fill:false,tension:.2,pointRadius:0}
                 ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}}},scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{color:'rgba(148,163,184,.12)'}},y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString('es-ES')},grid:{color:'rgba(148,163,184,.12)'},title:{display:true,text:'Índice (base 100)',color:'#94a3b8'}}}}});
                 const coverageText=coverage.map(x=>x.symbol+': '+x.rows+' cierres').join(' · ');
-                setBenchmarkStatus('Reconstrucción completada. Las compras y ventas se han tratado como flujos de entrada/salida de la cartera invertida; el efectivo queda excluido. Cierres diarios sin dividendos. Cobertura: '+coverageText+'.');
+                setBenchmarkStatus('Reconstrucción completada. Las compras y ventas se han tratado como flujos de entrada/salida de la cartera invertida; el efectivo queda excluido. Se usan cierres diarios (las operaciones en festivos/fines de semana pasan a la siguiente sesión disponible), sin dividendos ni ajuste manual de acciones corporativas. Cobertura: '+coverageText+'.');
                 showToast('TWR histórico reconstruido desde tus operaciones');
             }catch(error){
                 console.error('Error reconstruyendo TWR histórico:',error);
