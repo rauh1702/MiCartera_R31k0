@@ -2423,16 +2423,19 @@
             const isRealEstate=/real estate|reit/.test(profile);
             const isUtility=/utilities|utility/.test(profile);
             const isTech=/technology|software|semiconductor|internet|communication services/.test(profile);
+            const isHealthcare=/healthcare|biotechnology|biotech|pharmaceutical|drug manufacturer|medical device/.test(profile);
+            const isEnergy=/energy|oil|gas|renewable|solar|wind/.test(profile);
+            const isIndustrial=/industrials|industrial|aerospace|defense|machinery|engineering|transportation/.test(profile);
             const checks=[
                 {name:"Crecimiento de ingresos",value:metric(data.financialData?.revenueGrowth),weight:12,score:v=>v>0.15?1:v>0.05?0.75:v>=0?0.5:0,good:v=>v>0.05?"Ingresos creciendo":"Ingresos sin crecimiento positivo"},
                 {name:"Crecimiento de beneficios",value:metric(data.financialData?.earningsGrowth),weight:12,score:v=>v>0.15?1:v>0.05?0.75:v>=0?0.5:0,good:v=>v>0.05?"Beneficios creciendo":"Beneficios sin crecimiento positivo"},
-                {name:"Margen bruto",value:metric(data.financialData?.grossMargins),weight:10,score:v=>v>=0.4?1:v>=0.2?0.7:v>0?0.4:0,good:v=>v>=0.2?"Margen bruto positivo":"Margen bruto reducido o negativo"},
-                {name:"Margen operativo",value:metric(data.financialData?.operatingMargins),weight:10,score:v=>v>=0.2?1:v>=0.1?0.75:v>0?0.45:0,good:v=>v>=0.1?"Rentabilidad operativa positiva":"Margen operativo débil o negativo"},
-                {name:"Margen neto",value:metric(data.financialData?.profitMargins),weight:8,score:v=>v>=0.15?1:v>=0.05?0.7:v>0?0.4:0,good:v=>v>=0.05?"Margen neto positivo":"Margen neto reducido o negativo"},
-                {name:"ROE",value:metric(data.financialData?.returnOnEquity),weight:12,score:v=>v>=0.15?1:v>=0.08?0.7:v>0?0.4:0,good:v=>v>=0.08?"Buen retorno sobre patrimonio":"ROE bajo o negativo"},
-                {name:"ROA",value:metric(data.financialData?.returnOnAssets),weight:8,score:v=>v>=0.08?1:v>=0.03?0.7:v>0?0.4:0,good:v=>v>=0.03?"Activos rentables":"Rentabilidad de activos baja"},
-                {name:"Deuda / patrimonio",value:metric(data.financialData?.debtToEquity),weight:12,score:v=>v<=(isRealEstate?150:isUtility?180:50)?1:v<=(isRealEstate?250:isUtility?300:100)?0.7:v<=(isRealEstate?450:isUtility?500:200)?0.4:0,good:v=>v<=(isRealEstate?250:isUtility?300:100)?"Endeudamiento dentro de un rango sectorial orientativo":"Endeudamiento elevado para el perfil sectorial"},
-                {name:"Ratio corriente",value:metric(data.financialData?.currentRatio),weight:6,score:v=>v>=1.5?1:v>=1?0.7:v>=0.8?0.35:0,good:v=>v>=1?"Liquidez corriente razonable":"Liquidez a corto plazo ajustada"},
+                {name:"Margen bruto",value:metric(data.financialData?.grossMargins),weight:10,score:v=>v>=(isTech?0.5:isHealthcare?0.35:0.4)?1:v>=(isTech?0.3:isHealthcare?0.2:0.2)?0.7:v>0?0.4:0,good:v=>v>=(isTech?0.3:0.2)?"Margen bruto positivo":"Margen bruto reducido o negativo"},
+                {name:"Margen operativo",value:metric(data.financialData?.operatingMargins),weight:10,score:v=>v>=(isTech?0.2:0.15)?1:v>=(isUtility||isEnergy?0.07:0.1)?0.75:v>0?0.45:0,good:v=>v>=(isUtility||isEnergy?0.07:0.1)?"Rentabilidad operativa positiva":"Margen operativo débil o negativo"},
+                {name:"Margen neto",value:metric(data.financialData?.profitMargins),weight:8,score:v=>v>=(isUtility||isEnergy?0.1:0.15)?1:v>=(isUtility||isEnergy?0.04:0.05)?0.7:v>0?0.4:0,good:v=>v>=(isUtility||isEnergy?0.04:0.05)?"Margen neto positivo":"Margen neto reducido o negativo"},
+                {name:"ROE",value:metric(data.financialData?.returnOnEquity),weight:12,score:v=>v>=(isFinancial?0.12:isRealEstate?0.08:0.15)?1:v>=(isFinancial?0.08:isRealEstate?0.04:0.08)?0.7:v>0?0.4:0,good:v=>v>=(isFinancial?0.08:isRealEstate?0.04:0.08)?"Buen retorno sobre patrimonio":"ROE bajo o negativo"},
+                {name:"ROA",value:metric(data.financialData?.returnOnAssets),weight:8,score:v=>v>=(isFinancial?0.015:isRealEstate||isUtility?0.05:0.08)?1:v>=(isFinancial?0.01:isRealEstate||isUtility?0.025:0.03)?0.7:v>0?0.4:0,good:v=>v>=(isFinancial?0.01:isRealEstate||isUtility?0.025:0.03)?"Activos rentables":"Rentabilidad de activos baja"},
+                {name:"Deuda / patrimonio",value:metric(data.financialData?.debtToEquity),weight:12,score:v=>v<=(isRealEstate?180:isUtility?220:isEnergy?160:50)?1:v<=(isRealEstate?300:isUtility?350:isEnergy?250:100)?0.7:v<=(isRealEstate?500:isUtility?550:isEnergy?400:200)?0.4:0,good:v=>v<=(isRealEstate?300:isUtility?350:isEnergy?250:100)?"Endeudamiento dentro de un rango sectorial orientativo":"Endeudamiento elevado para el perfil sectorial"},
+                {name:"Ratio corriente",value:metric(data.financialData?.currentRatio),weight:6,score:v=>v>=(isUtility||isEnergy?1.1:1.5)?1:v>=(isUtility||isEnergy?0.8:1)?0.7:v>=(isUtility||isEnergy?0.6:0.8)?0.35:0,good:v=>v>=(isUtility||isEnergy?0.8:1)?"Liquidez corriente razonable":"Liquidez a corto plazo ajustada"},
                 {name:"Flujo de caja libre",value:metric(data.financialData?.freeCashflow),weight:10,score:v=>v>0?1:0,good:v=>v>0?"Flujo de caja libre positivo":"Flujo de caja libre negativo"}
             ];
             if(isFinancial){
@@ -2440,11 +2443,15 @@
                 for(let i=checks.length-1;i>=0;i--)if(excluded.has(checks[i].name))checks.splice(i,1);
                 checks.find(x=>x.name==="ROE").weight=20; checks.find(x=>x.name==="ROA").weight=15; checks.find(x=>x.name==="Margen neto").weight=15;
             }else if(isRealEstate){
-                checks.find(x=>x.name==="Ratio corriente").weight=2; checks.find(x=>x.name==="Deuda / patrimonio").weight=16; checks.find(x=>x.name==="Flujo de caja libre").weight=5;
+                checks.find(x=>x.name==="Ratio corriente").weight=3; checks.find(x=>x.name==="Deuda / patrimonio").weight=18; checks.find(x=>x.name==="Flujo de caja libre").weight=5; checks.find(x=>x.name==="ROE").weight=8; checks.find(x=>x.name==="ROA").weight=5;
             }else if(isUtility){
-                checks.find(x=>x.name==="Deuda / patrimonio").weight=16; checks.find(x=>x.name==="Flujo de caja libre").weight=5; checks.find(x=>x.name==="Crecimiento de ingresos").weight=8;
+                checks.find(x=>x.name==="Deuda / patrimonio").weight=18; checks.find(x=>x.name==="Flujo de caja libre").weight=5; checks.find(x=>x.name==="Crecimiento de ingresos").weight=8; checks.find(x=>x.name==="Crecimiento de beneficios").weight=8;
             }else if(isTech){
-                checks.find(x=>x.name==="Crecimiento de ingresos").weight=16; checks.find(x=>x.name==="Crecimiento de beneficios").weight=16; checks.find(x=>x.name==="ROE").weight=8;
+                checks.find(x=>x.name==="Crecimiento de ingresos").weight=16; checks.find(x=>x.name==="Crecimiento de beneficios").weight=16; checks.find(x=>x.name==="ROE").weight=8; checks.find(x=>x.name==="Margen bruto").weight=12; checks.find(x=>x.name==="Flujo de caja libre").weight=12;
+            }else if(isHealthcare){
+                checks.find(x=>x.name==="Crecimiento de ingresos").weight=15; checks.find(x=>x.name==="Crecimiento de beneficios").weight=15; checks.find(x=>x.name==="Flujo de caja libre").weight=12; checks.find(x=>x.name==="Deuda / patrimonio").weight=10;
+            }else if(isEnergy||isIndustrial){
+                checks.find(x=>x.name==="Deuda / patrimonio").weight=14; checks.find(x=>x.name==="Flujo de caja libre").weight=12; checks.find(x=>x.name==="Crecimiento de ingresos").weight=12; checks.find(x=>x.name==="Crecimiento de beneficios").weight=12;
             }
             const available=checks.filter(x=>x.value!==null);
             const totalWeight=available.reduce((a,x)=>a+x.weight,0);
