@@ -141,7 +141,7 @@ function getNewsRelevance(item, symbol) {
     .toLowerCase();
 
   const aliases = NEWS_ALIASES[symbol] || [];
-  const escaped = symbol.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
+  const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\  const escaped = symbol.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");");
   const tickerPattern = new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i");
 
   const matches = value =>
