@@ -501,6 +501,60 @@ export default {
     }
 
     /*
+     * Histórico de mercado para la comparativa y la reconstrucción TWR.
+     * Yahoo exige una sesión válida; se reutiliza el handshake cookie + crumb.
+     */
+    if (url.pathname === "/chart" && request.method === "GET") {
+      const symbol = (url.searchParams.get("symbol") || "").trim();
+      const period1 = Number(url.searchParams.get("period1"));
+      const period2 = Number(url.searchParams.get("period2"));
+      if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol) ||
+          !Number.isSafeInteger(period1) || !Number.isSafeInteger(period2) ||
+          period1 <= 0 || period2 <= period1) {
+        return json({ error: "Parámetros de histórico no válidos." }, 400, origin);
+      }
+
+      try {
+        const { cookies, crumb } = await fetchYahooSession();
+        const yahooUrl = new URL(
+          "https://query1.finance.yahoo.com/v8/finance/chart/" +
+          encodeURIComponent(symbol)
+        );
+        yahooUrl.searchParams.set("period1", String(period1));
+        yahooUrl.searchParams.set("period2", String(period2));
+        yahooUrl.searchParams.set("interval", "1d");
+        yahooUrl.searchParams.set("events", "history");
+        yahooUrl.searchParams.set("crumb", crumb);
+
+        const upstream = await fetch(yahooUrl.toString(), {
+          headers: {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json,text/plain,*/*",
+            "Cookie": cookies,
+            "Referer": "https://finance.yahoo.com/"
+          },
+          redirect: "manual",
+          cf: { cacheTtl: 0, cacheEverything: false }
+        });
+        const body = await upstream.text();
+        if (!upstream.ok) {
+          return json({ error: "Yahoo Finance respondió HTTP " + upstream.status + ".", stage: "chart" }, 502, origin);
+        }
+        let parsed;
+        try { parsed = JSON.parse(body); }
+        catch {
+          return json({ error: "Yahoo devolvió una respuesta histórica que no es JSON.", stage: "chart" }, 502, origin);
+        }
+        if (parsed?.chart?.error) {
+          return json({ error: parsed.chart.error.description || "Yahoo rechazó el histórico.", stage: "chart" }, 502, origin);
+        }
+        return json(parsed, 200, origin);
+      } catch (error) {
+        return json({ error: String(error?.message || error), stage: "chart-session" }, 502, origin);
+      }
+    }
+
+    /*
      * RUTA ORIGINAL DE FUNDAMENTALES.
      * Se conserva el flujo cookie + crumb y la validación de respuesta JSON.
      */
