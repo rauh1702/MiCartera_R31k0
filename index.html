@@ -2540,34 +2540,44 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     const meta = result?.meta;
                     const closes = result?.indicators?.quote?.[0]?.close || [];
                     const timestamps = result?.timestamp || [];
+                    // Normaliza y ordena las velas para no depender del orden recibido
+                    // ni de entradas incompletas del histórico.
                     const validCloses = closes.map((value, index) => ({
                         value: Number(value),
                         time: Number(timestamps[index]) || null
-                    })).filter(row => Number.isFinite(row.value) && row.value > 0);
-                    const lastClose = validCloses.length ? validCloses[validCloses.length - 1].value : null;
+                    })).filter(row => Number.isFinite(row.value) && row.value > 0 && row.time)
+                      .sort((a, b) => a.time - b.time);
+                    const lastCandle = validCloses.length ? validCloses[validCloses.length - 1] : null;
+                    const previousCandle = validCloses.length > 1 ? validCloses[validCloses.length - 2] : null;
                     const marketState = String(meta?.marketState || "").toUpperCase();
-                    const marketClosed = marketState === "CLOSED";
-                    // Cuando el mercado está cerrado (incluidos fines de semana), el precio
-                    // vigente es el último cierre diario y la variación se calcula contra
-                    // la vela inmediatamente anterior. Yahoo puede devolver previousClose
-                    // igual al último precio en días sin sesión, lo que falsea un 0,00 %.
-                    const price = Number(marketClosed ? (lastClose ?? meta?.regularMarketPrice) : (meta?.regularMarketPrice ?? lastClose));
+                    // Tras el cierre regular, también durante el after-hours, la variación
+                    // diaria se fija con las dos últimas velas cerradas. Así no depende de
+                    // previousClose, que Yahoo puede repetir o dejar desfasado en festivos.
+                    const useClosedCandles = ["CLOSED", "POST", "POSTPOST"].includes(marketState);
+                    const metaPrice = Number(meta?.regularMarketPrice);
+                    const metaPreviousClose = Number(meta?.previousClose);
+                    const priceCandidate = useClosedCandles
+                        ? (lastCandle?.value ?? metaPrice)
+                        : (Number.isFinite(metaPrice) && metaPrice > 0 ? metaPrice : lastCandle?.value);
+                    const price = Number(priceCandidate);
                     if (!Number.isFinite(price) || price <= 0) throw new Error(json.chart?.error?.description || "Yahoo no devolvió un precio válido");
 
-                    // Durante una sesión abierta se usa previousClose de Yahoo. Con el
-                    // mercado cerrado se priorizan las dos últimas velas diarias válidas.
                     let previousClose = null;
-                    if (marketClosed && validCloses.length > 1) {
-                        previousClose = validCloses[validCloses.length - 2].value;
-                    } else {
-                        previousClose = Number(meta?.previousClose) || null;
-                        if (!previousClose && validCloses.length > 1) {
-                            previousClose = validCloses[validCloses.length - 2].value;
-                        }
+                    if (useClosedCandles && previousCandle) {
+                        previousClose = previousCandle.value;
+                    } else if (Number.isFinite(metaPreviousClose) && metaPreviousClose > 0) {
+                        previousClose = metaPreviousClose;
+                    } else if (previousCandle) {
+                        previousClose = previousCandle.value;
                     }
-                    // No usamos chartPreviousClose como último recurso: puede referirse
-                    // al inicio del rango histórico o repetir el último cierre en fin de semana.
-                    return { symbol, price, previousClose, currency: meta?.currency || "EUR", marketTime: meta?.regularMarketTime || null, marketState };
+                    // No usamos chartPreviousClose: puede referirse al inicio del rango
+                    // histórico y producir variaciones falsas, especialmente en festivos.
+                    return {
+                        symbol, price, previousClose,
+                        currency: meta?.currency || "EUR",
+                        marketTime: meta?.regularMarketTime || lastCandle?.time || null,
+                        marketState
+                    };
                 } catch (error) {
                     errors.push(error?.message || "Error de conexión");
                     console.warn(`Intermediario de cotización fallido para ${symbol}:`, error);
@@ -2606,9 +2616,12 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
         }
 
         function convertToEUR(price, currency, rates) {
-            if (currency === "GBp" || currency === "GBX") return price / 100 * (rates.GBP || 1);
+            if (currency === "GBp" || currency === "GBX") {
+                if (!(Number(rates?.GBP) > 0)) throw new Error("No hay tipo de cambio GBP/EUR disponible");
+                return price / 100 * rates.GBP;
+            }
             if (currency === "EUR") return price;
-            if (rates[currency]) return price * rates[currency];
+            if (Number(rates?.[currency]) > 0) return price * rates[currency];
             throw new Error(`Divisa no soportada o sin tipo de cambio: ${currency}`);
         }
 
