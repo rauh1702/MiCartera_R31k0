@@ -2531,7 +2531,7 @@
 function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
         async function yahooChart(symbol) {
-            const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
+            const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1mo&interval=1d`;
             const errors = [];
             for (const makeProxyUrl of YAHOO_PROXIES) {
                 try {
@@ -2614,18 +2614,24 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
 
         async function fetchAssetQuote(asset, rates) {
             const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
-            let lastError;
+            let lastError, bestQuote = null;
             for (const symbol of symbols) {
                 try {
                     const quote = await yahooChart(symbol);
                     const eurPrice = convertToEUR(quote.price, quote.currency, rates);
                     const previousCloseEUR = quote.previousClose ? convertToEUR(quote.previousClose, quote.currency, rates) : null;
-                    return { price: Number(eurPrice.toFixed(4)), previousCloseEUR: previousCloseEUR ? Number(previousCloseEUR.toFixed(4)) : null, symbol, currency: quote.currency };
+                    const candidate = { price: Number(eurPrice.toFixed(4)), previousCloseEUR: previousCloseEUR ? Number(previousCloseEUR.toFixed(4)) : null, symbol, currency: quote.currency };
+                    // Algunos símbolos alternativos del ETC devuelven precio, pero no
+                    // suficiente histórico para calcular la sesión anterior. Probar el
+                    // siguiente ticker antes de aceptar una cotización sin variación diaria.
+                    if (candidate.previousCloseEUR !== null) return candidate;
+                    bestQuote = bestQuote || candidate;
                 } catch (error) {
                     lastError = error;
                     console.warn(`Falló ${asset.name} con ${symbol}:`, error.message);
                 }
             }
+            if (bestQuote) return bestQuote;
             throw lastError || new Error("No hay símbolos configurados");
         }
 
