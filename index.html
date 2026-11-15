@@ -2539,10 +2539,34 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     const result = json.chart?.result?.[0];
                     const meta = result?.meta;
                     const closes = result?.indicators?.quote?.[0]?.close || [];
-                    const lastClose = [...closes].reverse().find(value => Number.isFinite(value) && value > 0);
+                    const timestamps = result?.timestamp || [];
+                    const validCloses = closes.map((value, index) => ({
+                        value: Number(value),
+                        time: Number(timestamps[index]) || null
+                    })).filter(row => Number.isFinite(row.value) && row.value > 0);
+                    const lastClose = validCloses.length ? validCloses[validCloses.length - 1].value : null;
                     const price = Number(meta?.regularMarketPrice ?? lastClose);
                     if (!Number.isFinite(price) || price <= 0) throw new Error(json.chart?.error?.description || "Yahoo no devolvió un precio válido");
-                    return { symbol, price, previousClose: Number(meta?.chartPreviousClose ?? meta?.previousClose) || null, currency: meta?.currency || "EUR", marketTime: meta?.regularMarketTime || null };
+
+                    // Para la variación diaria necesitamos el cierre de la sesión anterior,
+                    // no chartPreviousClose: ese campo puede corresponder al inicio del rango
+                    // solicitado (5 días) y no necesariamente al día hábil anterior.
+                    let previousClose = Number(meta?.previousClose) || null;
+                    if (!previousClose && validCloses.length) {
+                        const marketTime = Number(meta?.regularMarketTime) || null;
+                        const marketDay = marketTime ? new Date(marketTime * 1000).toISOString().slice(0, 10) : null;
+                        const lastRow = validCloses[validCloses.length - 1];
+                        const lastRowDay = lastRow.time ? new Date(lastRow.time * 1000).toISOString().slice(0, 10) : null;
+                        const lastRowIsCurrentSession = Boolean(marketDay && lastRowDay && marketDay === lastRowDay);
+                        if (lastRowIsCurrentSession && validCloses.length > 1) {
+                            previousClose = validCloses[validCloses.length - 2].value;
+                        } else {
+                            previousClose = lastRow.value;
+                        }
+                    }
+                    // Último recurso para respuestas sin velas históricas.
+                    if (!previousClose) previousClose = Number(meta?.chartPreviousClose) || null;
+                    return { symbol, price, previousClose, currency: meta?.currency || "EUR", marketTime: meta?.regularMarketTime || null };
                 } catch (error) {
                     errors.push(error?.message || "Error de conexión");
                     console.warn(`Intermediario de cotización fallido para ${symbol}:`, error);
