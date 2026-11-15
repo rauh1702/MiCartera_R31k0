@@ -3456,6 +3456,12 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 if(common.length<2)throw new Error('No hay dos fechas comunes entre cartera e índices.');
                 const first=common[0],last=common[common.length-1];
 
+                const returns=[
+                    (last.index/first.index-1)*100,
+                    (last.benchmark.sp/first.benchmark.sp-1)*100,
+                    (last.benchmark.nd/first.benchmark.nd-1)*100
+                ];
+                try{
                 // Auditoría independiente: cada compra/venta se aplica en la primera
                 // sesión de SU propio activo igual o posterior a la fecha registrada.
                 const mappedTransactions=transactions.map((tx,sequence)=>{
@@ -3529,11 +3535,15 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     daily:alignedAuditSeries
                 };
                 renderHistoricalAudit(historicalAuditData);
-                const returns=[
-                    (last.index/first.index-1)*100,
-                    (last.benchmark.sp/first.benchmark.sp-1)*100,
-                    (last.benchmark.nd/first.benchmark.nd-1)*100
-                ];
+                }catch(auditError){
+                    console.error('Error en auditoría TWR (la reconstrucción principal continuará):',auditError);
+                    const auditPanel=document.getElementById('benchmark-audit-panel');
+                    const auditSummary=document.getElementById('benchmark-audit-summary');
+                    if(auditSummary)auditSummary.innerHTML='<div class="rounded-xl border border-rose-500/40 bg-rose-950/30 p-3 sm:col-span-3"><p class="font-bold text-rose-300">No se pudo completar la auditoría alternativa</p><p id="benchmark-audit-error" class="mt-1 text-sm text-rose-200"></p><p class="mt-2 text-xs text-slate-400">La reconstrucción principal y sus comparativas no se ven afectadas.</p></div>';
+                    const auditErrorText=document.getElementById('benchmark-audit-error');if(auditErrorText)auditErrorText.textContent=auditError?.message||'Error desconocido';
+                    if(auditPanel)auditPanel.classList.remove('hidden');
+                }
+
                 benchmarkSetMetric('benchmark-portfolio-return',returns[0]);
                 benchmarkSetMetric('benchmark-sp-return',returns[1]);
                 benchmarkSetMetric('benchmark-nasdaq-return',returns[2]);
