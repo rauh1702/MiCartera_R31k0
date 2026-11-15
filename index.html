@@ -3388,6 +3388,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     const usdPerEur=historicalLastOnOrBefore(latestRows['EURUSD=X'],date);
                     if(sp>0&&nd>0&&usdPerEur>0)benchmarks.push({date,sp:sp/usdPerEur,nd:nd/usdPerEur});
                 }
+                if(txCursor<transactions.length)throw new Error('Hay operaciones posteriores al último cierre histórico disponible ('+transactions[txCursor].date+'). No se ha calculado una rentabilidad incompleta.');
                 if(portfolio.length<2)throw new Error('Solo hay una valoración diaria disponible; no se puede calcular el TWR.');
                 const benchmarkByDate=new Map(benchmarks.map(b=>[b.date,b]));
                 const common=portfolio.map(p=>({ ...p,benchmark:benchmarkByDate.get(p.date)})).filter(p=>p.benchmark);
