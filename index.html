@@ -3412,6 +3412,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     return {...tx,sequence,effectiveDate:session.date,shiftDays:Math.round((b-a)/86400000)};
                 }).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='Venta'?-1:1)||a.sequence-b.sequence);
                 const portfolio=[],benchmarks=[];
+                // El índice parte del capital externo realmente invertido, no del valor
+                // de cierre del primer día. Así se incluye la variación entre ejecución
+                // de la primera compra y cierre de esa sesión.
                 let previousValue=null,index=100,txCursor=0,cashBalance=0;
                 for(const date of dates){
                     let externalFlow=0;
@@ -3459,7 +3462,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     const totalValue=marketValue+cashBalance;
                     if(!(totalValue>0))continue;
                     if(previousValue===null){
-                        index=100;
+                        if(!(externalFlow>0))throw new Error('No se puede establecer el capital inicial del TWR el '+date+': no hay una compra financiada con dinero externo.');
+                        index=100*totalValue/externalFlow;
                     }else{
                         const factor=(totalValue-externalFlow)/previousValue;
                         if(!Number.isFinite(factor)||factor<=0)throw new Error('No se puede encadenar el TWR el '+date+'. Comprueba operaciones y cotizaciones.');
@@ -3480,7 +3484,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const first=common[0],last=common[common.length-1];
 
                 const returns=[
-                    (last.index/first.index-1)*100,
+                    (last.index/100-1)*100,
                     (last.benchmark.sp/first.benchmark.sp-1)*100,
                     (last.benchmark.nd/first.benchmark.nd-1)*100
                 ];
@@ -3523,7 +3527,12 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         const value=marketValue+cash;
                         if(!(value>0))continue;
                         let dailyPct=null;
-                        if(previous!==null){
+                        if(previous===null){
+                            if(!(externalFlow>0))throw new Error('No se puede establecer el capital inicial de auditoría TWR el '+date+'.');
+                            const factor=value/externalFlow;
+                            if(!Number.isFinite(factor)||factor<=0)throw new Error('Factor inicial TWR no válido en auditoría para '+date+'.');
+                            dailyPct=(factor-1)*100;indexAudit*=factor;
+                        }else{
                             const factor=(value-externalFlow)/previous;
                             if(!Number.isFinite(factor)||factor<=0)throw new Error('Factor TWR no válido en auditoría para '+date+'.');
                             dailyPct=(factor-1)*100;indexAudit*=factor;
@@ -3539,7 +3548,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const alignedCommon=alignedAuditSeries.map(p=>({p,benchmark:benchmarkByDate.get(p.date)})).filter(x=>x.benchmark);
                 if(alignedCommon.length<2)throw new Error('No hay fechas comunes suficientes para auditar el TWR alineado.');
                 const alignedFirst=alignedCommon[0],alignedLast=alignedCommon[alignedCommon.length-1];
-                const alignedReturn=(alignedLast.p.index/alignedFirst.p.index-1)*100;
+                const alignedReturn=(alignedLast.p.index/100-1)*100;
                 const assetReturns=assets.map(asset=>{
                     const historical=assetHistorical[asset.name],rows=latestRows[historical.symbol];
                     const firstTx=transactions.filter(tx=>tx.assetName===asset.name).sort((a,b)=>a.date.localeCompare(b.date))[0];
@@ -3551,7 +3560,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     return {name:asset.name,symbol:historical.symbol,firstDate:firstRow.date,lastDate:lastRow.date,returnPct:(endEur/startEur-1)*100};
                 });
                 const originalAlignedCommon=originalAuditSeries.map(p=>({p,benchmark:benchmarkByDate.get(p.date)})).filter(x=>x.benchmark);
-                const originalAuditReturn=originalAlignedCommon.length>1?(originalAlignedCommon[originalAlignedCommon.length-1].p.index/originalAlignedCommon[0].p.index-1)*100:returns[0];
+                const originalAuditReturn=originalAlignedCommon.length>0?(originalAlignedCommon[originalAlignedCommon.length-1].p.index/100-1)*100:returns[0];
                 historicalAuditData={
                     originalReturn:originalAuditReturn,alignedReturn,
                     assetReturns,
@@ -3580,7 +3589,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(last.date+'T12:00:00').toLocaleDateString('es-ES')+' · reconstrucción histórica';
                 document.getElementById('benchmark-chart-empty').classList.add('hidden');document.getElementById('benchmark-chart-wrap').classList.remove('hidden');
                 if(benchmarkChartInstance){benchmarkChartInstance.destroy();benchmarkChartInstance=null;}
-                const baseSp=first.benchmark.sp,baseNd=first.benchmark.nd,basePortfolio=first.index;
+                const baseSp=first.benchmark.sp,baseNd=first.benchmark.nd,basePortfolio=100;
                 const labels=common.map(p=>new Date(p.date+'T12:00:00').toLocaleDateString('es-ES'));
                 benchmarkChartInstance=new Chart(document.getElementById('benchmarkChart').getContext('2d'),{type:'line',data:{labels,datasets:[
                     {label:'Mi cartera · TWR reconstruido',data:common.map(p=>Number((100*p.index/basePortfolio).toFixed(3))),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',borderWidth:3,fill:false,tension:.2,pointRadius:common.length>90?0:2},
