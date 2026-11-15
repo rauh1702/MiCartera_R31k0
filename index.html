@@ -3337,20 +3337,24 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const coverage=allSymbols.map(symbol=>({symbol,rows:fetched[symbol].length,first:fetched[symbol][0]?.date,last:fetched[symbol][fetched[symbol].length-1]?.date}));
                 const bad=coverage.filter(x=>x.rows<2);
                 if(bad.length)throw new Error('Histórico insuficiente para: '+bad.map(x=>x.symbol).join(', ')+'. No se ha calculado una rentabilidad parcial.');
-                const txByDate=new Map();
-                transactions.forEach(tx=>{if(!txByDate.has(tx.date))txByDate.set(tx.date,[]);txByDate.get(tx.date).push(tx);});
-                const assetByName=new Map(assets.map(a=>[a.name,a]));
                 const held=new Map(assets.map(a=>[a.name,0]));
-                const dates=historicalWeekdays(start,today);
-                const portfolio=[],benchmarks=[];
-                let previousValue=null,index=100,firstDate=null;
                 const latestRows={};
-                allSymbols.forEach(symbol=>{latestRows[symbol]=fetched[symbol].slice().sort((a,b)=>a.date.localeCompare(b.date));});
+                const tradingDates=new Set();
+                allSymbols.forEach(symbol=>{
+                    latestRows[symbol]=fetched[symbol].slice().sort((a,b)=>a.date.localeCompare(b.date));
+                    latestRows[symbol].forEach(row=>{if(row.date>=start&&row.date<=today)tradingDates.add(row.date);});
+                });
+                const dates=[...tradingDates].sort();
+                const portfolio=[],benchmarks=[];
+                let previousValue=null,index=100,txCursor=0;
                 for(const date of dates){
-                    for(const tx of txByDate.get(date)||[]){
+                    const appliedTransactions=[];
+                    while(txCursor<transactions.length&&transactions[txCursor].date<=date){
+                        const tx=transactions[txCursor++];
                         const old=held.get(tx.assetName)||0;
-                        if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La venta del '+date+' en '+tx.assetName+' supera las acciones acumuladas.');
+                        if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La venta del '+tx.date+' en '+tx.assetName+' supera las acciones acumuladas.');
                         held.set(tx.assetName,Math.max(0,old+(tx.type==='Compra'?tx.qty:-tx.qty)));
+                        appliedTransactions.push(tx);
                     }
                     let marketValue=0,missing=[];
                     for(const asset of assets){
@@ -3380,8 +3384,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     }
                     if(missing.length)throw new Error('No hay cotización histórica disponible para '+missing.join(', ')+' el '+date+'.');
                     if(!(marketValue>0))continue;
-                    const dayTransactions=txByDate.get(date)||[];
-                    const netFlow=dayTransactions.reduce((sum,tx)=>sum+(tx.type==='Compra'?1:-1)*(tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm)),0);
+                    const netFlow=appliedTransactions.reduce((sum,tx)=>sum+(tx.type==='Compra'?1:-1)*(tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm)),0);
                     if(previousValue===null){
                         firstDate=date;index=100;
                     }else{
@@ -3397,7 +3400,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     if(sp>0&&nd>0&&usdPerEur>0)benchmarks.push({date,sp:sp/usdPerEur,nd:nd/usdPerEur});
                 }
                 if(portfolio.length<2)throw new Error('Solo hay una valoración diaria disponible; no se puede calcular el TWR.');
-                const common=portfolio.map(p=>({ ...p,benchmark:benchmarks.find(b=>b.date===p.date)})).filter(p=>p.benchmark);
+                const benchmarkByDate=new Map(benchmarks.map(b=>[b.date,b]));
+                const common=portfolio.map(p=>({ ...p,benchmark:benchmarkByDate.get(p.date)})).filter(p=>p.benchmark);
                 if(common.length<2)throw new Error('No hay dos fechas comunes entre cartera e índices.');
                 const first=common[0],last=common[common.length-1];
                 const returns=[
