@@ -156,7 +156,7 @@ function getNewsRelevance(item, symbol) {
     ? title.indexOf(aliasInTitle.toLowerCase())
     : (tickerInTitle ? title.search(tickerPattern) : -1);
   const prefix = position >= 0 ? title.slice(0, position).trim() : title;
-  const multiCompany = /\b(vs\.?|versus|and|with|alongside|like|including|compared with)\b|,/.test(title);
+  const multiCompany = /\b(vs\.?|versus|and|alongside|including|compared with)\b|;/.test(title);
   const direct = position >= 0 && prefix.length < 24 && !multiCompany;
 
   return direct ? "direct" : "related";
