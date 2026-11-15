@@ -875,10 +875,10 @@
                 <div id="benchmark-chart-wrap" class="hidden h-80 relative"><canvas id="benchmarkChart"></canvas></div>
             </section>
             <section class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-5 space-y-3">
-                <div><h3 class="font-bold text-white">Flujos externos de dinero</h3><p class="text-xs text-slate-400 mt-1">Registra aportaciones y retiradas de efectivo hacia/desde la cartera. No registres aquí compras o ventas de activos si el dinero permanece dentro de la cartera.</p></div>
+                <div><h3 class="font-bold text-white">Flujos externos de dinero</h3><p class="text-xs text-slate-400 mt-1">Este apartado solo registra dinero que entra desde tu banco o sale de tus inversiones hacia tu banco. Las compras y ventas de activos no se registran aquí: son movimientos internos.</p></div>
                 <form id="benchmark-flow-form" onsubmit="saveBenchmarkFlow(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
                     <label class="text-xs text-slate-300">Fecha<input id="benchmark-flow-date" type="date" required class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"></label>
-                    <label class="text-xs text-slate-300">Movimiento<select id="benchmark-flow-type" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"><option value="contribution">Aportación</option><option value="withdrawal">Retirada</option></select></label>
+                    <label class="text-xs text-slate-300">Movimiento<select id="benchmark-flow-type" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"><option value="contribution">Dinero nuevo del banco invertido</option><option value="withdrawal">Dinero retirado al banco</option></select></label>
                     <label class="text-xs text-slate-300">Importe (€)<input id="benchmark-flow-amount" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white" placeholder="100,00"></label>
                     <button type="submit" class="self-end rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-2 text-sm font-bold text-white">Añadir flujo</button>
                 </form>
@@ -886,7 +886,7 @@
             </section>
             <div class="rounded-xl border border-amber-500/20 bg-amber-950/30 p-4 text-xs leading-relaxed text-amber-100">
                 <strong class="block mb-1">Cómo interpretar esta comparativa</strong>
-                La rentabilidad de la cartera se calcula mediante TWR encadenado usando las valoraciones históricas guardadas y los flujos externos registrados. El cálculo comienza desde la línea base que se establece al activar por primera vez el seguimiento; no se reconstruye el histórico anterior. Registra las aportaciones y retiradas en esta pantalla. El valor de cartera usa las posiciones valoradas por MiCartera y no incluye efectivo no invertido. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos.
+                MiCartera solo contabiliza activos invertidos, no efectivo. Registra una aportación únicamente cuando incorporas dinero nuevo desde tu banco y lo inviertes en activos. Si vendes un activo y reinviertes el importe en otro, no registres ningún flujo. Si tras vender transfieres una parte o todo el dinero a tu banco, registra únicamente la cantidad realmente retirada y la fecha en que salió de tus inversiones. Las compras y ventas internas no son flujos externos. El TWR ajusta las valoraciones históricas por esos movimientos para medir el rendimiento de las inversiones. El seguimiento comienza en la línea base indicada; no reconstruye el histórico anterior. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos.
             </div>
         </section>
 
@@ -3248,9 +3248,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function calculatePortfolioTwr(history) {
             const points=history.filter(x=>Number.isFinite(Number(x.marketValue))&&Number(x.marketValue)>=0).sort((a,b)=>a.date.localeCompare(b.date));
             if(points.length<2)return null;
+            // Solo se ajustan flujos externos reales: dinero nuevo invertido o dinero retirado al banco.
+            // Compras/ventas entre activos son movimientos internos y nunca deben registrarse aquí.
             const flows=readBenchmarkFlows();
-            const byDate=new Map();
-            flows.forEach(f=>byDate.set(f.date,(byDate.get(f.date)||0)+(f.type==='contribution'?1:-1)*Number(f.amount)));
             let index=100, valid=0;
             const series=[{date:points[0].date,index}];
             for(let i=1;i<points.length;i++){
