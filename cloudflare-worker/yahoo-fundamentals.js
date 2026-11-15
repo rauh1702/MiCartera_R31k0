@@ -148,16 +148,27 @@ function getNewsRelevance(item, symbol) {
 
   if (!matches(title) && !matches(body)) return null;
 
-  // "Directa" si la empresa es el foco inicial del titular. Si aparece
-  // junto a otras compañías o como referencia secundaria, queda "relacionada".
+  // Empresas del mismo sector que suelen aparecer en titulares comparativos.
+  // Una conjunción como "and" no implica por sí sola que haya varias empresas.
+  const OTHER_COMPANY_NAMES = [
+    "unusual machines", "red cat", "aerovironment", "kratos defense",
+    "draganfly", "teledyne", "lockheed martin", "northrop grumman",
+    "elbit systems", "parrot"
+  ];
+
+  // "Directa" si la empresa es el foco inicial del titular.
+  // Solo pasa a "related" si hay una comparación explícita o se menciona
+  // otra compañía identificable; comas, punto y coma o conjunciones no bastan.
   const aliasInTitle = aliases.find(alias => title.includes(alias.toLowerCase()));
   const tickerInTitle = tickerPattern.test(title);
   const position = aliasInTitle
     ? title.indexOf(aliasInTitle.toLowerCase())
     : (tickerInTitle ? title.search(tickerPattern) : -1);
   const prefix = position >= 0 ? title.slice(0, position).trim() : title;
-  const multiCompany = /\b(vs\.?|versus|and|alongside|including|compared with)\b|;/.test(title);
-  const direct = position >= 0 && prefix.length < 24 && !multiCompany;
+  const explicitComparison = /\b(vs\.?|versus|compared with)\b/i.test(title);
+  const otherCompanyMention = OTHER_COMPANY_NAMES.some(name => title.includes(name));
+  const direct = position >= 0 && prefix.length < 24 &&
+    !explicitComparison && !otherCompanyMention;
 
   return direct ? "direct" : "related";
 }
