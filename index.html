@@ -3437,25 +3437,32 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 url=>workerBase+'/chart?symbol='+encodeURIComponent(symbol)+'&period1='+period1+'&period2='+period2+'&_='+Date.now(),
                 ...YAHOO_PROXIES
             ];
-            for(const makeUrl of sources){
-                try{
-                    const json=await fetchJsonWithTimeout(makeUrl(target),20000);
-                    const result=json.chart?.result?.[0];
-                    if(!result)throw new Error(json.chart?.error?.description||json.error||'Sin datos históricos');
-                    const timestamps=result.timestamp||[];
-                    const closes=result.indicators?.quote?.[0]?.close||[];
-                    const timezone=result.meta?.exchangeTimezoneName||'UTC';
-                    const dateInExchange=(timestamp)=>{
-                        const parts=new Intl.DateTimeFormat('en-GB',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(timestamp*1000));
-                        const get=type=>parts.find(part=>part.type===type)?.value||'';
-                        return get('year')+'-'+get('month')+'-'+get('day');
-                    };
-                    const rows=[];
-                    timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});});
-                    if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
-                    rows.currency=result.meta?.currency||null;
-                    return rows;
-                }catch(error){errors.push(error?.message||'Error de conexión');}
+            for(let sourceIndex=0;sourceIndex<sources.length;sourceIndex++){
+                const makeUrl=sources[sourceIndex];
+                // Reintentar una vez el Worker ante fallos transitorios; proxies solo como respaldo.
+                const attempts=sourceIndex===0?2:1;
+                for(let attempt=0;attempt<attempts;attempt++){
+                    try{
+                        const json=await fetchJsonWithTimeout(makeUrl(target),30000);
+                        const result=json.chart?.result?.[0];
+                        if(!result)throw new Error(json.chart?.error?.description||json.error||'Sin datos históricos');
+                        const timestamps=result.timestamp||[];
+                        const closes=result.indicators?.quote?.[0]?.close||[];
+                        const timezone=result.meta?.exchangeTimezoneName||'UTC';
+                        const dateInExchange=(timestamp)=>{
+                            const parts=new Intl.DateTimeFormat('en-GB',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(timestamp*1000));
+                            const get=type=>parts.find(part=>part.type===type)?.value||'';
+                            return get('year')+'-'+get('month')+'-'+get('day');
+                        };
+                        const rows=[];
+                        timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});});
+                        if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
+                        rows.currency=result.meta?.currency||null;
+                        return rows;
+                    }catch(error){
+                        errors.push((sourceIndex===0?'Worker':'Respaldo '+sourceIndex)+(attempt?' (reintento)':'')+': '+(error?.message||'Error de conexión'));
+                    }
+                }
             }
             throw new Error('No se pudo consultar '+symbol+': '+errors.join(' · '));
         }
@@ -3517,14 +3524,11 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         async function fetchHistoricalBatch(symbols,start,end){
             const output={};
-            let next=0;
-            const workers=Array.from({length:Math.min(4,symbols.length)},async()=>{
-                while(next<symbols.length){
-                    const symbol=symbols[next++];
-                    output[symbol]=await fetchYahooHistoricalCloses(symbol,start,end);
-                }
-            });
-            await Promise.all(workers);
+            // Yahoo/Cloudflare pueden limitar consultas simultáneas con sesiones independientes.
+            // Ejecutarlas en serie evita que índices y divisas se pisen entre sí.
+            for(const symbol of symbols){
+                output[symbol]=await fetchYahooHistoricalCloses(symbol,start,end);
+            }
             return output;
         }
         async function fetchHistoricalAssetWithFallback(asset,start,end){
