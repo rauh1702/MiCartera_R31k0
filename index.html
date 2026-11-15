@@ -1406,6 +1406,7 @@
         const STORAGE_KEY = 'portfolio_control_acciones_v3';
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
         const BENCHMARK_FLOWS_KEY = 'micartera_r31k0_benchmark_flows_v1';
+        const BENCHMARK_TWR_START_KEY = 'micartera_r31k0_benchmark_twr_start_v1';
         const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
         const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
         const FINANCIAL_BROWSER_NOTIFIED_KEY = 'micartera_r31k0_financial_browser_notified_v1';
@@ -3267,9 +3268,20 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         async function refreshBenchmarkComparison(showToastAfter=true) {
             if(benchmarkComparisonRunning)return;
             renderBenchmarkFlows();
-            const history=readPerformanceHistory();
-            const valid=history.filter(x=>Number.isFinite(Number(x.marketValue))).sort((a,b)=>a.date.localeCompare(b.date));
-            if(valid.length<2){setBenchmarkStatus('Necesitas al menos dos valoraciones históricas con valor de mercado para calcular el TWR.');return;}
+            let history=readPerformanceHistory();
+            if(!localStorage.getItem(BENCHMARK_TWR_START_KEY)){
+                savePerformanceSnapshot(false);
+                history=readPerformanceHistory();
+                const baseline=history.filter(x=>Number.isFinite(Number(x.marketValue))).sort((a,b)=>a.date.localeCompare(b.date)).slice(-1)[0];
+                if(!baseline){setBenchmarkStatus('No se ha podido establecer una valoración inicial. Comprueba que tienes posiciones valoradas.');return;}
+                localStorage.setItem(BENCHMARK_TWR_START_KEY,baseline.date);
+                setBenchmarkStatus('Seguimiento TWR iniciado el '+new Date(baseline.date+'T12:00:00').toLocaleDateString('es-ES')+'. Guarda nuevas valoraciones en días posteriores para empezar la comparación.');
+                renderBenchmarkFlows();
+                return;
+            }
+            const twrStart=localStorage.getItem(BENCHMARK_TWR_START_KEY);
+            const valid=history.filter(x=>x.date>=twrStart&&Number.isFinite(Number(x.marketValue))).sort((a,b)=>a.date.localeCompare(b.date));
+            if(valid.length<2){setBenchmarkStatus('Seguimiento TWR iniciado el '+new Date(twrStart+'T12:00:00').toLocaleDateString('es-ES')+'. Necesitas una valoración posterior para calcular la rentabilidad.');return;}
             benchmarkComparisonRunning=true;
             const btn=document.getElementById('benchmark-refresh'); if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Consultando…';}
             setBenchmarkStatus('Consultando cierres históricos del S&P 500 y Nasdaq 100…');
@@ -3289,8 +3301,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const portfolioBase=twrMap.get(comparable[0].date);
                 const series=[
                     {label:'Mi cartera · TWR',data:comparable.map(p=>Number((100*twrMap.get(p.date)/portfolioBase).toFixed(3))),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',borderWidth:3},
-                    {label:'S&P 500',data:common.map(p=>Number((100*p.sp/first.sp).toFixed(3))),borderColor:'#38bdf8',borderWidth:2},
-                    {label:'Nasdaq 100',data:common.map(p=>Number((100*p.nasdaq/first.nasdaq).toFixed(3))),borderColor:'#a78bfa',borderWidth:2}
+                    {label:'S&P 500',data:comparable.map(p=>Number((100*p.sp/comparable[0].sp).toFixed(3))),borderColor:'#38bdf8',borderWidth:2},
+                    {label:'Nasdaq 100',data:comparable.map(p=>Number((100*p.nasdaq/comparable[0].nasdaq).toFixed(3))),borderColor:'#a78bfa',borderWidth:2}
                 ];
                 const final=comparable[comparable.length-1];
                 const returns=series.map(x=>(x.data[x.data.length-1]/100-1)*100);
@@ -3302,7 +3314,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const diffEl=document.getElementById('benchmark-outperformance');
                 diffEl.textContent=(diff>=0?'Ventaja de la cartera: +':'Desventaja de la cartera: ')+Math.abs(diff).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' puntos';
                 diffEl.className='text-xs font-bold '+(diff>=0?'text-emerald-300':'text-rose-300');
-                document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+common.length+' fechas comunes';
+                document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+comparable.length+' fechas comunes';
                 document.getElementById('benchmark-chart-empty').classList.add('hidden');document.getElementById('benchmark-chart-wrap').classList.remove('hidden');
                 if(benchmarkChartInstance){benchmarkChartInstance.destroy();benchmarkChartInstance=null;}
                 benchmarkChartInstance=new Chart(document.getElementById('benchmarkChart').getContext('2d'),{type:'line',data:{labels:comparable.map(p=>new Date(p.date+'T12:00:00').toLocaleDateString('es-ES')),datasets:series.map(x=>({...x,fill:false,tension:.2,pointRadius:comparable.length>90?0:2,pointHoverRadius:5}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}}},scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{color:'rgba(148,163,184,.12)'}},y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString('es-ES')},grid:{color:'rgba(148,163,184,.12)'},title:{display:true,text:'Índice (base 100)',color:'#94a3b8'}}}}});
