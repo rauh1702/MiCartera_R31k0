@@ -3399,9 +3399,10 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 });
                 const dates=[...tradingDates].sort();
                 // Cada operación se aplica en la primera sesión disponible de su propio activo.
-                // La métrica solicitada mide exclusivamente el capital que está invertido:
-                // las ventas salen de la cartera invertida y las compras vuelven a entrar.
-                // El efectivo parado entre ambas operaciones queda fuera de la valoración.
+                // Las ventas generan caja interna de la cartera. Esa caja sigue siendo
+                // patrimonio invertido y se incluye en la valoración hasta su reinversión.
+                // Solo las compras que exceden esa caja representan aportaciones externas;
+                // el efectivo externo que aún no se ha invertido nunca entra en el cálculo.
                 const mappedTransactions=transactions.map((tx,sequence)=>{
                     const symbol=assetHistorical[tx.assetName].symbol;
                     const session=(latestRows[symbol]||[]).find(row=>row.date>=tx.date);
@@ -3410,7 +3411,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     return {...tx,sequence,effectiveDate:session.date,shiftDays:Math.round((b-a)/86400000)};
                 }).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='Venta'?-1:1)||a.sequence-b.sequence);
                 const portfolio=[],benchmarks=[];
-                let previousValue=null,index=100,txCursor=0;
+                let previousValue=null,index=100,txCursor=0,cashBalance=0;
                 for(const date of dates){
                     let externalFlow=0;
                     while(txCursor<mappedTransactions.length&&mappedTransactions[txCursor].effectiveDate<=date){
@@ -3418,10 +3419,13 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         const old=held.get(tx.assetName)||0;
                         if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La venta del '+tx.date+' en '+tx.assetName+' supera las acciones acumuladas.');
                         held.set(tx.assetName,Math.max(0,old+(tx.type==='Compra'?tx.qty:-tx.qty)));
-                        // Convención de cartera invertida: compra = entrada de capital;
-                        // venta = salida de capital. No se conserva caja en la valoración.
-                        const operationValue=tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm);
-                        externalFlow+=(tx.type==='Compra'?1:-1)*operationValue;
+                        if(tx.type==='Venta'){
+                            cashBalance+=Math.max(0,tx.qty*tx.price-tx.comm);
+                        }else{
+                            const purchaseCost=tx.qty*tx.price+tx.comm;
+                            externalFlow+=Math.max(0,purchaseCost-cashBalance);
+                            cashBalance=Math.max(0,cashBalance-purchaseCost);
+                        }
                     }
                     let marketValue=0,missing=[];
                     for(const asset of assets){
@@ -3451,7 +3455,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         marketValue+=qty*eur;
                     }
                     if(missing.length)throw new Error('No hay cotización histórica disponible para '+missing.join(', ')+' el '+date+'.');
-                    const totalValue=marketValue;
+                    const totalValue=marketValue+cashBalance;
                     if(!(totalValue>0))continue;
                     if(previousValue===null){
                         index=100;
@@ -3493,16 +3497,20 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     const queue=aligned?mappedTransactions:transactions.map((tx,sequence)=>({...tx,sequence,effectiveDate:tx.date}))
                         .sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='Venta'?-1:1)||a.sequence-b.sequence);
                     const heldAudit=new Map(assets.map(a=>[a.name,0]));
-                    const result=[];let cursor=0,previous=null,indexAudit=100;
+                    const result=[];let cursor=0,previous=null,indexAudit=100,cash=0;
                     for(const date of dates){
                         let externalFlow=0;
                         while(cursor<queue.length&&queue[cursor].effectiveDate<=date){
                             const tx=queue[cursor++],old=heldAudit.get(tx.assetName)||0;
                             if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La auditoría detecta una venta anterior a la compra efectiva en '+tx.assetName+' ('+tx.date+' → '+(tx.effectiveDate||tx.date)+').');
                             heldAudit.set(tx.assetName,Math.max(0,old+(tx.type==='Compra'?tx.qty:-tx.qty)));
-                            // Misma convención que el cálculo principal: caja no invertida excluida.
-                            const operationValue=tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm);
-                            externalFlow+=(tx.type==='Compra'?1:-1)*operationValue;
+                            if(tx.type==='Venta'){
+                                cash+=Math.max(0,tx.qty*tx.price-tx.comm);
+                            }else{
+                                const cost=tx.qty*tx.price+tx.comm;
+                                externalFlow+=Math.max(0,cost-cash);
+                                cash=Math.max(0,cash-cost);
+                            }
                         }
                         let marketValue=0;
                         for(const asset of assets){
@@ -3511,7 +3519,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                             if(!(native>0))throw new Error('Falta precio de '+asset.name+' en auditoría para '+date+'.');
                             marketValue+=qty*toEurAt(native,String(historical.currency||'EUR'),date);
                         }
-                        const value=marketValue;
+                        const value=marketValue+cash;
                         if(!(value>0))continue;
                         let dailyPct=null;
                         if(previous!==null){
