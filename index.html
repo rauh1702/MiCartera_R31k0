@@ -2550,10 +2550,10 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     const lastCandle = validCloses.length ? validCloses[validCloses.length - 1] : null;
                     const previousCandle = validCloses.length > 1 ? validCloses[validCloses.length - 2] : null;
                     const marketState = String(meta?.marketState || "").toUpperCase();
-                    // Tras el cierre regular, también durante el after-hours, la variación
-                    // diaria se fija con las dos últimas velas cerradas. Así no depende de
-                    // previousClose, que Yahoo puede repetir o dejar desfasado en festivos.
-                    const useClosedCandles = ["CLOSED", "POST", "POSTPOST"].includes(marketState);
+                    // Con el mercado cerrado (fines de semana y festivos incluidos), la variación
+                    // se fija con las dos últimas velas diarias. En PRE/REGULAR/POST
+                    // se conserva el precio y previousClose oficiales de la sesión actual.
+                    const useClosedCandles = marketState === "CLOSED";
                     const metaPrice = Number(meta?.regularMarketPrice);
                     const metaPreviousClose = Number(meta?.previousClose);
                     const priceCandidate = useClosedCandles
