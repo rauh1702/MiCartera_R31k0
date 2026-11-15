@@ -1334,7 +1334,7 @@
                     </div>
                 </div>
 
-                <div class="pt-3 border-t border-slate-200 flex gap-3">
+                <div class="pt-3 border-t border-slate-200 flex gap-3 sticky bottom-0 bg-white pb-1">
                     <button type="button" onclick="closeTransactionModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition">
                         Cancelar
                     </button>
@@ -1347,9 +1347,9 @@
     </div>
 
     <!-- Modal for Adding New Asset -->
-    <div id="newAssetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div class="p-5 bg-slate-900 text-white flex justify-between items-center">
+    <div id="newAssetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
                 <h3 class="text-lg font-bold flex items-center gap-2">
                     <i class="fa-solid fa-folder-plus text-blue-400"></i> Añadir Nuevo Activo
                 </h3>
@@ -1358,14 +1358,14 @@
                 </button>
             </div>
             
-            <form onsubmit="handleNewAssetSubmit(event)" class="p-6 space-y-4">
+            <form onsubmit="handleNewAssetSubmit(event)" class="p-4 space-y-3 overflow-y-auto overscroll-contain min-h-0">
                 <div class="rounded-xl border border-blue-200 bg-blue-50 p-3 space-y-2">
                     <label for="na-search" class="text-xs font-bold text-slate-700 block">Buscar activo por ticker, ISIN o nombre</label>
                     <div class="flex gap-2">
                         <input type="search" id="na-search" placeholder="Ej.: TSLA, US88160R1014 o Tesla" class="min-w-0 flex-1 text-sm p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchNewAsset();}">
                         <button type="button" onclick="searchNewAsset()" class="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-magnifying-glass mr-1"></i>Buscar</button>
                     </div>
-                    <div id="na-search-results" class="hidden max-h-48 overflow-y-auto space-y-2"></div>
+                    <div id="na-search-results" class="hidden max-h-32 overflow-y-auto space-y-2"></div>
                     <p class="text-[10px] text-slate-500">Busca en Yahoo Finance. Selecciona un resultado para completar los datos del activo.</p>
                 </div>
                 <div>
