@@ -3221,6 +3221,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     const rows=[];
                     timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});});
                     if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
+                    // Conserva la divisa real del histórico: puede diferir de la cotización
+                    // que la aplicación utilizó para el precio actual del activo.
+                    rows.currency=result.meta?.currency||null;
                     return rows;
                 }catch(error){errors.push(error?.message||'Error de conexión');}
             }
@@ -3293,6 +3296,21 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             await Promise.all(workers);
             return output;
         }
+        async function fetchHistoricalAssetWithFallback(asset,start,end){
+            const mapped=YAHOO_SYMBOLS[String(asset.name||'').toUpperCase()]||[];
+            const candidates=[...new Set([...mapped,asset.yahooTicker,asset.ticker].filter(Boolean))];
+            const firstOperation=(asset.history||[]).map(tx=>String(tx.date||'').slice(0,10)).filter(x=>/^\\d{4}-\\d{2}-\\d{2}$/.test(x)).sort()[0]||start;
+            const failures=[];
+            for(const symbol of candidates){
+                try{
+                    const rows=await fetchYahooHistoricalCloses(symbol,start,end);
+                    if(rows.length<2)throw new Error('menos de dos cierres');
+                    if(rows[0].date>firstOperation)throw new Error('el histórico empieza '+rows[0].date+', después de la primera operación '+firstOperation);
+                    return {symbol,rows,currency:rows.currency||asset.priceCurrency||'EUR'};
+                }catch(error){failures.push(symbol+': '+(error?.message||'sin datos'));}
+            }
+            throw new Error('Histórico insuficiente para '+asset.name+'. Símbolos probados: '+(failures.join(' · ')||'ninguno configurado'));
+        }
         async function rebuildHistoricalPortfolioTwr(){
             if(historicalRebuildRunning)return;
             const button=document.getElementById('benchmark-rebuild');
@@ -3314,16 +3332,23 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 transactions.sort((a,b)=>a.date.localeCompare(b.date));
                 const start=transactions[0].date;
                 const today=localDateISO();
-                const symbols=[...new Set(assets.map(a=>a.yahooTicker||a.ticker).filter(Boolean))];
-                if(symbols.length!==assets.length)throw new Error('Algún activo no tiene ticker Yahoo configurado.');
-                const currencies=[...new Set(assets.map(a=>String(a.priceCurrency||'EUR')))];
+                // Resuelve cada activo con el primer ticker que cubra también su primera compra.
+                // Esto evita elegir una cotización reciente de una bolsa cuya ficha empezó más tarde.
+                const assetHistorical={};
+                await Promise.all(assets.map(async asset=>{
+                    assetHistorical[asset.name]=await fetchHistoricalAssetWithFallback(asset,start,today);
+                }));
+                const currencies=[...new Set(assets.map(a=>String(assetHistorical[a.name].currency||'EUR')))];
                 const fxSymbols=[];
                 if(currencies.includes('USD'))fxSymbols.push('EURUSD=X');
                 if(currencies.includes('SEK'))fxSymbols.push('EURSEK=X');
                 if(currencies.includes('GBP')||currencies.includes('GBp')||currencies.includes('GBX'))fxSymbols.push('EURGBP=X');
-                const allSymbols=[...new Set([...symbols,...fxSymbols,'^GSPC','^NDX'])];
-                const fetched=await fetchHistoricalBatch(allSymbols,start,today);
-                const coverage=allSymbols.map(symbol=>({symbol,rows:fetched[symbol].length,first:fetched[symbol][0]?.date,last:fetched[symbol][fetched[symbol].length-1]?.date}));
+                const indexSymbols=['^GSPC','^NDX'];
+                const fxAndIndexes=[...new Set([...fxSymbols,...indexSymbols])];
+                const fetched=await fetchHistoricalBatch(fxAndIndexes,start,today);
+                assets.forEach(asset=>{const chosen=assetHistorical[asset.name];fetched[chosen.symbol]=chosen.rows;});
+                const allSymbols=[...new Set([...assets.map(a=>assetHistorical[a.name].symbol),...fxAndIndexes])];
+                const coverage=allSymbols.map(symbol=>({symbol,rows:fetched[symbol]?.length||0,first:fetched[symbol]?.[0]?.date,last:fetched[symbol]?.[fetched[symbol].length-1]?.date}));
                 const bad=coverage.filter(x=>x.rows<2);
                 if(bad.length)throw new Error('Histórico insuficiente para: '+bad.map(x=>x.symbol).join(', ')+'. No se ha calculado una rentabilidad parcial.');
                 const held=new Map(assets.map(a=>[a.name,0]));
@@ -3349,10 +3374,11 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     for(const asset of assets){
                         const qty=held.get(asset.name)||0;
                         if(qty<=0)continue;
-                        const symbol=asset.yahooTicker||asset.ticker;
+                        const historical=assetHistorical[asset.name];
+                        const symbol=historical.symbol;
                         const native=historicalLastOnOrBefore(latestRows[symbol],date);
                         if(!(native>0)){missing.push(asset.name);continue;}
-                        const currency=String(asset.priceCurrency||'EUR');
+                        const currency=String(historical.currency||'EUR');
                         let eur=native;
                         if(currency==='USD'){
                             const rate=historicalLastOnOrBefore(latestRows['EURUSD=X'],date);
