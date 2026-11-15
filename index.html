@@ -886,7 +886,7 @@
             </section>
             <div class="rounded-xl border border-amber-500/20 bg-amber-950/30 p-4 text-xs leading-relaxed text-amber-100">
                 <strong class="block mb-1">Cómo interpretar esta comparativa</strong>
-                La cartera se calcula a partir de los puntos de rentabilidad que has ido guardando en MiCartera. El porcentaje de la cartera es una aproximación basada en la rentabilidad acumulada registrada, no una rentabilidad ponderada por tiempo (TWR) ni una TIR; las compras adicionales pueden influir en ella. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos. La comparación empieza en tu primer punto histórico disponible: no se inventan datos anteriores.
+                La rentabilidad de la cartera se calcula mediante TWR encadenado usando las valoraciones históricas guardadas y los flujos externos registrados. El cálculo comienza desde la línea base que se establece al activar por primera vez el seguimiento; no se reconstruye el histórico anterior. Registra las aportaciones y retiradas en esta pantalla. El valor de cartera usa las posiciones valoradas por MiCartera y no incluye efectivo no invertido. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos.
             </div>
         </section>
 
@@ -3256,7 +3256,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             for(let i=1;i<points.length;i++){
                 const prev=Number(points[i-1].marketValue),current=Number(points[i].marketValue);
                 if(prev<=0)continue;
-                const flow=byDate.get(points[i].date)||0;
+                const flow=flows.filter(f=>f.date>points[i-1].date&&f.date<=points[i].date).reduce((sum,f)=>sum+(f.type==='contribution'?1:-1)*Number(f.amount),0);
                 const daily=(current-flow)/prev;
                 if(!Number.isFinite(daily)||daily<0)continue;
                 index*=daily; valid++;
