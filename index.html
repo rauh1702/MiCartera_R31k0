@@ -3375,7 +3375,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     if(!(marketValue>0))continue;
                     const netFlow=appliedTransactions.reduce((sum,tx)=>sum+(tx.type==='Compra'?1:-1)*(tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm)),0);
                     if(previousValue===null){
-                        firstDate=date;index=100;
+                        index=100;
                     }else{
                         const factor=(marketValue-netFlow)/previousValue;
                         if(!Number.isFinite(factor)||factor<=0)throw new Error('No se puede encadenar el TWR el '+date+'. Comprueba operaciones y cotizaciones.');
