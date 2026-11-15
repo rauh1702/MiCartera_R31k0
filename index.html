@@ -2346,7 +2346,7 @@
                 return `<div class="asset-search-result"><div class="min-w-0"><div class="font-extrabold truncate">${name}</div><small>${x.quoteType==='CRYPTOCURRENCY'||x.quoteType==='CRYPTO'?'CRIPTOMONEDA · ':''}${symbol} · ${exchange} · ${currency}</small><div class="text-sm font-bold text-cyan-200 mt-1">${eur||'Cotización no disponible'}</div></div><button type="button" onclick="addToWatchlist(${i})" ${already?'disabled':''}>${already?'Siguiendo':'Seguir'}</button></div>`;
             }).join(''); window._lastAssetSearchResults=quotes.slice(0,10).map(x=>({...x}));
         }
-        async function addToWatchlist(index){const x=window._lastAssetSearchResults?.[index];if(!x)return; if(watchlistData.some(a=>a.symbol===x.symbol)){showToast('Este activo ya está en seguimiento');return;} const item={symbol:x.symbol,name:x.shortname||x.longname||x.symbol,currency:x.currency||'EUR',exchange:x.exchange||x.exchDisp||'',priceEUR:null,changePct:null,addedAt:new Date().toISOString()};watchlistData.push(item);persistWatchlist();document.getElementById('asset-search-results').classList.add('hidden');showWatchlistView();await refreshOneWatch(item);await refreshAssetNews(true);showToast(`${item.name} añadido al seguimiento y registrado para noticias`);}
+        async function addToWatchlist(index){const x=window._lastAssetSearchResults?.[index];if(!x)return; if(watchlistData.some(a=>a.symbol===x.symbol)){showToast('Este activo ya está en seguimiento');return;} const item={symbol:x.symbol,name:x.shortname||x.longname||x.symbol,quoteType:x.quoteType||'',currency:x.currency||'EUR',exchange:x.exchange||x.exchDisp||'',priceEUR:null,changePct:null,addedAt:new Date().toISOString()};watchlistData.push(item);persistWatchlist();document.getElementById('asset-search-results').classList.add('hidden');showWatchlistView();await refreshOneWatch(item);await refreshAssetNews(true);showToast(`${item.name} añadido al seguimiento y registrado para noticias`);}
         async function refreshOneWatch(item,rates){try{const q=await yahooChart(item.symbol);rates=rates||await getExchangeRates();const previous=Number(item.priceEUR)||0;const price=Number(convertToEUR(q.price,q.currency,rates).toFixed(4));item.priceEUR=price;item.currency=q.currency;item.changePct=q.previousClose?((q.price-q.previousClose)/q.previousClose)*100:null;item.lastUpdate=new Date().toISOString();if(previous>0){const buy=Number(item.targetBuyPrice)||0,sell=Number(item.targetSellPrice)||0;if(buy>0){if(price>buy)item.targetBuyAlerted=false;else if(previous>buy&&price<=buy&&!item.targetBuyAlerted){item.targetBuyAlerted=true;sendWatchTargetAlert(item,'buy',buy,price);}}if(sell>0){if(price<sell)item.targetSellAlerted=false;else if(previous<sell&&price>=sell&&!item.targetSellAlerted){item.targetSellAlerted=true;sendWatchTargetAlert(item,'sell',sell,price);}}}}catch(e){item.error=e.message||'Cotización no disponible';}}
         function sendWatchTargetAlert(item,kind,target,price){const msg=item.name+(kind==='buy'?' ha bajado hasta ':' ha subido hasta ')+price.toLocaleString('es-ES',{maximumFractionDigits:4})+' €. Objetivo: '+target.toLocaleString('es-ES',{maximumFractionDigits:4})+' €.';recordPriceAlert(item,kind,target,price,'seguimiento');showToast(msg);if('Notification'in window&&Notification.permission==='granted'){try{new Notification('MiCartera R31k0 · Objetivo alcanzado',{body:msg,tag:'watch-target-'+kind+'-'+item.symbol});}catch(e){console.warn(e);}}}
         function targetDistanceText(price,target){if(!(Number(price)>0)||!(Number(target)>0))return '—';const d=Number(target)-Number(price),p=d/Number(price)*100;return `${d>=0?'+':''}${d.toLocaleString('es-ES',{maximumFractionDigits:4})} € (${p>=0?'+':''}${p.toFixed(2)}%)`;}
@@ -2413,8 +2413,12 @@
                 ticker: symbol,
                 yahooTicker: symbol,
                 isin: isin || '-',
-                category: sectors[0] || 'Otras Actuaciones',
-                assetType: assetTypes[0] || 'OTROS',
+                category: String(item.quoteType || '').toUpperCase() === 'ETF' || String(item.quoteType || '').toUpperCase() === 'MUTUALFUND'
+                    ? (sectors.find(x => /ETF/i.test(x)) || 'Otras Actuaciones')
+                    : 'Otras Actuaciones',
+                assetType: String(item.quoteType || '').toUpperCase() === 'ETF' || String(item.quoteType || '').toUpperCase() === 'MUTUALFUND'
+                    ? (assetTypes.find(x => /ETF/i.test(x)) || 'OTROS')
+                    : 'OTROS',
                 currentPrice: Number(item.priceEUR) || 0,
                 color: '#3b82f6',
                 history: [],
