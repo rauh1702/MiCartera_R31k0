@@ -3480,13 +3480,6 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 try{
                 // Auditoría independiente: cada compra/venta se aplica en la primera
                 // sesión de SU propio activo igual o posterior a la fecha registrada.
-                const mappedTransactions=transactions.map((tx,sequence)=>{
-                    const symbol=assetHistorical[tx.assetName].symbol;
-                    const session=(latestRows[symbol]||[]).find(row=>row.date>=tx.date);
-                    if(!session)throw new Error('No se encuentra una sesión posterior para la operación de '+tx.assetName+' del '+tx.date+'.');
-                    const a=new Date(tx.date+'T00:00:00Z'),b=new Date(session.date+'T00:00:00Z');
-                    return {...tx,sequence,effectiveDate:session.date,shiftDays:Math.round((b-a)/86400000)};
-                }).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||a.sequence-b.sequence);
                 const toEurAt=(native,currency,date)=>{
                     if(currency==='EUR')return native;
                     if(currency==='USD'){const rate=historicalLastOnOrBefore(latestRows['EURUSD=X'],date);if(!(rate>0))throw new Error('Falta EUR/USD en auditoría para '+date);return native/rate;}
