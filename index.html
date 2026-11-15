@@ -938,6 +938,11 @@
                     <div id="watch-fundamentals-content" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
                     <p class="text-[11px] text-slate-500">Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>
                 </section>
+                <section class="rounded-2xl border border-violet-500/30 bg-slate-900 p-4 sm:p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-extrabold text-white text-lg"><i class="fa-solid fa-calendar-days text-violet-300 mr-2"></i>Próximos eventos</h3><p class="text-xs text-slate-400 mt-1">Resultados y acontecimientos vinculados a este activo.</p></div><button type="button" onclick="openWatchFinancialEvent()" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-plus mr-1"></i>Añadir evento</button></div>
+                    <div id="watch-detail-events" class="space-y-2"><p class="text-sm text-slate-400">Cargando eventos…</p></div>
+                    <div class="flex justify-end"><button type="button" onclick="showFinancialCalendarView()" class="text-xs font-bold text-violet-300 hover:text-violet-200">Abrir calendario completo <i class="fa-solid fa-arrow-right ml-1"></i></button></div>
+                </section>
                 <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100"><strong>Importante:</strong> los indicadores fundamentales son datos descriptivos, no recomendaciones de compra o venta. Comprueba siempre la fecha de los últimos resultados y los informes oficiales de la empresa.</div>
             </section>
         </section>
@@ -2272,8 +2277,40 @@
 
         let watchDetailChart = null, watchDetailIndex = null, watchDetailRange = "year";
         let watchDetailRequestId = 0;
+
+        function renderWatchDetailEvents(){
+            const box=document.getElementById('watch-detail-events'), item=watchlistData[watchDetailIndex];
+            if(!box)return;
+            if(!item){box.innerHTML='<p class="text-sm text-slate-400">No hay activo seleccionado.</p>';return;}
+            const name=String(item.name||item.symbol||'').toLowerCase(), symbol=String(item.symbol||'').toLowerCase(), today=financialTodayISO();
+            const events=(Array.isArray(financialEventsData)?financialEventsData:[]).filter(e=>{
+                const asset=String(e.asset||'').toLowerCase(), sourceSymbol=String(e.sourceSymbol||'').toLowerCase();
+                return (asset&&asset===name)||(sourceSymbol&&sourceSymbol===symbol);
+            }).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||(a.time||'').localeCompare(b.time||''));
+            const upcoming=events.filter(e=>e.date>=today);
+            const past=events.filter(e=>e.date<today).slice(-2).reverse();
+            const shown=upcoming.slice(0,6);
+            if(!shown.length&&!past.length){box.innerHTML='<div class="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-400">No hay eventos registrados para este activo. Puedes añadir uno manualmente.</div>';return;}
+            const card=e=>'<article class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800/70 p-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="text-xs font-black text-violet-300">'+escapeHtml(new Date(e.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}))+'</span><span class="rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-200">'+escapeHtml(e.type||'Otro')+'</span>'+(e.source==='yahoo'?'<span class="text-[10px] text-amber-300">Estimación Yahoo</span>':'')+'</div><p class="mt-1 text-sm font-bold text-white">'+escapeHtml(e.title||'Evento')+'</p>'+(e.notes?'<p class="mt-1 text-xs text-slate-400">'+escapeHtml(e.notes)+'</p>':'')+'</div>'+(e.source==='yahoo'?'<span class="text-[10px] text-slate-500">Automático</span>':'<button type="button" onclick="editWatchFinancialEvent(\''+String(e.id).replace(/'/g,'\\\\\\\'')+'\')" class="text-xs font-bold text-cyan-300">Editar</button>')+'</article>';
+            box.innerHTML=(shown.length?shown.map(card).join(''):'<p class="text-sm text-slate-400">No hay próximos eventos.</p>')+(past.length?'<p class="pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Eventos pasados recientes</p>'+past.map(card).join(''):'');
+        }
+        function openWatchFinancialEvent(){
+            const item=watchlistData[watchDetailIndex]; if(!item)return;
+            showFinancialCalendarView();
+            openFinancialEventModal();
+            const select=document.getElementById('financial-event-asset');
+            if(![...select.options].some(o=>o.value===item.name))select.add(new Option(item.name+' ('+item.symbol+')',item.name));
+            select.value=item.name||'';
+            document.getElementById('financial-event-type').value='Resultados';
+            document.getElementById('financial-event-title').value='Publicación de resultados · '+(item.name||item.symbol);
+        }
+        function editWatchFinancialEvent(id){
+            showFinancialCalendarView();
+            editFinancialEvent(id);
+        }
+
         function closeWatchDetail(){if(watchDetailChart){watchDetailChart.destroy();watchDetailChart=null;}watchDetailIndex=null;document.getElementById("watch-detail-view")?.classList.add("hidden");document.getElementById("watchlist-list")?.classList.remove("hidden");document.getElementById("watchlist-empty")?.classList.remove("hidden");}
-        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";await setWatchChartRange("year");loadWatchFundamentals();window.scrollTo({top:0,behavior:"smooth"});}
+        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";renderWatchDetailEvents();await setWatchChartRange("year");loadWatchFundamentals();window.scrollTo({top:0,behavior:"smooth"});}
         function setWatchChartRange(range){watchDetailRange=range;document.querySelectorAll(".watch-range-btn").forEach(b=>b.classList.toggle("active",b.dataset.range===range));return loadWatchDetail();}
         async function fetchWatchHistory(symbol,range){const params={day:"range=1d&interval=5m",week:"range=5d&interval=15m",month:"range=1mo&interval=1d",year:"range=1y&interval=1d"};const target="https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+(params[range]||params.year)+"&_="+Date.now();const errors=[];for(const makeProxyUrl of YAHOO_PROXIES){try{const json=await fetchJsonWithTimeout(makeProxyUrl(target),12000);const result=json.chart?.result?.[0];if(!result)throw new Error(json.chart?.error?.description||"Sin histórico disponible");const quote=result.indicators?.quote?.[0]||{};const timestamps=result.timestamp||[];const closes=quote.close||[];const rows=[];for(let i=0;i<timestamps.length;i++){const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({time:timestamps[i],close,volume:Number(quote.volume?.[i])||0});}if(!rows.length)throw new Error("Yahoo no devolvió precios históricos");return {rows,currency:result.meta?.currency||"EUR",meta:result.meta||{}};}catch(e){errors.push(e.message||"Error de conexión");}}throw new Error("No se pudo cargar el histórico: "+errors.join(" · "));}
         let watchFundamentalsRequestId=0;
@@ -3394,7 +3431,10 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         function populateFinancialEventAssets() {
             const select=document.getElementById('financial-event-asset'), current=select.value;
-            select.innerHTML='<option value="">General / mercado</option>'+assetsData.map(a=>'<option value="'+escapeHtml(a.name)+'">'+escapeHtml(a.name+(a.ticker?' ('+a.ticker+')':''))+'</option>').join('');
+            const names=new Map();
+            assetsData.forEach(a=>{if(a.name)names.set(a.name,a.name+(a.ticker?' ('+a.ticker+')':''));});
+            (Array.isArray(watchlistData)?watchlistData:[]).forEach(a=>{if(a.name&&!names.has(a.name))names.set(a.name,a.name+' ('+(a.symbol||'seguimiento')+')');});
+            select.innerHTML='<option value="">General / mercado</option>'+[...names].map(([value,label])=>'<option value="'+escapeHtml(value)+'">'+escapeHtml(label)+'</option>').join('');
             if([...select.options].some(o=>o.value===current)) select.value=current;
         }
         function showFinancialCalendarView() {
@@ -3431,7 +3471,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if(!item.title||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)){showToast('Revisa el nombre y la fecha del evento','fa-circle-exclamation');return;}
             const index=financialEventsData.findIndex(e=>e.id===id);
             if(index>=0) financialEventsData[index]=item; else financialEventsData.push(item);
-            persistFinancialEvents(); closeFinancialEventModal(); renderFinancialCalendar(); checkFinancialEventReminders(); showToast(index>=0?'Evento actualizado':'Evento añadido al calendario');
+            persistFinancialEvents(); closeFinancialEventModal(); renderFinancialCalendar(); renderWatchDetailEvents(); checkFinancialEventReminders(); showToast(index>=0?'Evento actualizado':'Evento añadido al calendario');
         }
         function editFinancialEvent(id) {
             const e=financialEventsData.find(x=>x.id===id); if(!e)return;
@@ -3452,7 +3492,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function deleteFinancialEvent(id) {
             const e=financialEventsData.find(x=>x.id===id); if(!e)return;
             if(!confirm('¿Eliminar el evento «'+e.title+'»?'))return;
-            financialEventsData=financialEventsData.filter(x=>x.id!==id); persistFinancialEvents(); renderFinancialCalendar(); showToast('Evento eliminado');
+            financialEventsData=financialEventsData.filter(x=>x.id!==id); persistFinancialEvents(); renderFinancialCalendar(); renderWatchDetailEvents(); showToast('Evento eliminado');
         }
         function renderFinancialEventCard(e) {
             const days=financialDaysUntil(e.date), date=new Date(e.date+'T00:00:00');
