@@ -139,36 +139,55 @@ function getNewsRelevance(item, symbol) {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+
   const aliases = NEWS_ALIASES[symbol] || [];
-  const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escaped = symbol.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
   const tickerPattern = new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i");
+
   const matches = value =>
     aliases.some(alias => value.includes(alias.toLowerCase())) ||
     tickerPattern.test(value);
 
   if (!matches(title) && !matches(body)) return null;
 
-  // Empresas del mismo sector que suelen aparecer en titulares comparativos.
-  // Una conjunción como "and" no implica por sí sola que haya varias empresas.
   const OTHER_COMPANY_NAMES = [
-    "unusual machines", "red cat", "aerovironment", "kratos defense",
-    "draganfly", "teledyne", "lockheed martin", "northrop grumman",
-    "elbit systems", "parrot"
+    "unusual machines",
+    "red cat",
+    "aerovironment",
+    "kratos defense",
+    "draganfly",
+    "teledyne",
+    "lockheed martin",
+    "northrop grumman",
+    "elbit systems",
+    "parrot"
   ];
 
-  // "Directa" si la empresa es el foco inicial del titular.
-  // Solo pasa a "related" si hay una comparación explícita o se menciona
-  // otra compañía identificable; comas, punto y coma o conjunciones no bastan.
-  const aliasInTitle = aliases.find(alias => title.includes(alias.toLowerCase()));
+  const aliasInTitle = aliases.find(alias =>
+    title.includes(alias.toLowerCase())
+  );
+
   const tickerInTitle = tickerPattern.test(title);
+
   const position = aliasInTitle
     ? title.indexOf(aliasInTitle.toLowerCase())
     : (tickerInTitle ? title.search(tickerPattern) : -1);
-  const prefix = position >= 0 ? title.slice(0, position).trim() : title;
-  const explicitComparison = /\b(vs\.?|versus|compared with)\b/i.test(title);
-  const otherCompanyMention = OTHER_COMPANY_NAMES.some(name => title.includes(name));
-  const direct = position >= 0 && prefix.length < 24 &&
-    !explicitComparison && !otherCompanyMention;
+
+  const prefix = position >= 0
+    ? title.slice(0, position).trim()
+    : title;
+
+  const explicitComparison =
+    /\b(vs\.?|versus|compared with)\b/i.test(title);
+
+  const otherCompanyMention = OTHER_COMPANY_NAMES.some(name =>
+    title.includes(name)
+  );
+
+  const direct = position >= 0 &&
+    prefix.length < 24 &&
+    !explicitComparison &&
+    !otherCompanyMention;
 
   return direct ? "direct" : "related";
 }
