@@ -124,11 +124,30 @@ function classifyNewsImpact(text) {
   return positives > negatives ? "positive" : negatives > positives ? "negative" : "neutral";
 }
 
+function newsMentionsSymbol(item, symbol) {
+  const related = Array.isArray(item.relatedTickers) ? item.relatedTickers : [];
+  const relatedSymbols = related
+    .map(value => typeof value === "string" ? value : value?.symbol)
+    .filter(Boolean)
+    .map(value => String(value).trim().toUpperCase());
+
+  // Yahoo suele indicar explícitamente los tickers relacionados con cada noticia.
+  if (relatedSymbols.includes(symbol)) return true;
+
+  // Como respaldo, aceptamos una mención literal del ticker en el titular o resumen.
+  // No asociamos una noticia solo porque Yahoo la haya devuelto en la búsqueda.
+  const text = [item.title, item.summary, item.description]
+    .filter(Boolean)
+    .join(" ");
+  const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i").test(text);
+}
+
 async function fetchYahooNews(symbol) {
   const yahooUrl = new URL("https://query1.finance.yahoo.com/v1/finance/search");
   yahooUrl.searchParams.set("q", symbol);
   yahooUrl.searchParams.set("quotesCount", "0");
-  yahooUrl.searchParams.set("newsCount", "12");
+  yahooUrl.searchParams.set("newsCount", "20");
   yahooUrl.searchParams.set("listsCount", "0");
 
   const response = await fetch(yahooUrl.toString(), {
@@ -145,6 +164,7 @@ async function fetchYahooNews(symbol) {
 
   const payload = await response.json();
   return (payload.news || [])
+    .filter(item => newsMentionsSymbol(item, symbol))
     .map(item => {
       const title = item.title || "Noticia sin titular";
       const summary = String(item.summary || item.description || title).slice(0, 650);
