@@ -1,9 +1,9 @@
 /**
- * MiCartera R31k0 — Yahoo Finance fundamentals bridge
+ * MiCartera R31k0 — Yahoo Finance fundamentals bridge + asset news
  *
- * Deploy as a Cloudflare Worker. It performs the Yahoo cookie + crumb
- * handshake server-side, then requests quoteSummary in the same session.
- * It deliberately accepts only a ticker symbol, never an arbitrary URL.
+ * Conserva el handshake original de Yahoo (cookie + crumb) para /fundamentals.
+ * Añade noticias, almacenamiento KV y actualización programada mediante Cron.
+ * Solo acepta símbolos bursátiles; nunca URLs arbitrarias.
  */
 
 const ALLOWED_ORIGINS = new Set([
@@ -17,7 +17,7 @@ const USER_AGENT =
 
 function corsHeaders(origin) {
   const headers = {
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
@@ -66,6 +66,7 @@ function mergeCookies(existing, response) {
   return [...map.entries()].map(([k, v]) => k + "=" + v).join("; ");
 }
 
+/* Handshake original de Yahoo: se mantiene para no alterar fundamentales. */
 async function fetchYahooSession() {
   const common = {
     headers: {
@@ -104,8 +105,241 @@ async function fetchYahooSession() {
   return { cookies, crumb };
 }
 
+/* Clasificación automática orientativa; no constituye recomendación financiera. */
+function classifyNewsImpact(text) {
+  const value = String(text || "").toLowerCase();
+  const positive = [
+    "beats estimates", "record revenue", "raises guidance", "contract win",
+    "awarded contract", "approval", "partnership", "supera previsiones",
+    "récord de ingresos", "eleva previsiones", "contrato", "aprobación", "alianza"
+  ];
+  const negative = [
+    "misses estimates", "cuts guidance", "downgrade", "dilution",
+    "share offering", "investigation", "lawsuit", "delay", "loss widens",
+    "incumple previsiones", "recorta previsiones", "ampliación de capital",
+    "investigación", "demanda", "retraso", "pérdidas"
+  ];
+  const positives = positive.filter(word => value.includes(word)).length;
+  const negatives = negative.filter(word => value.includes(word)).length;
+  return positives > negatives ? "positive" : negatives > positives ? "negative" : "neutral";
+}
+
+const NEWS_ALIASES = {
+  AAPL: ["apple"],
+  ONDS: ["ondas", "ondas holdings"],
+  OTLK: ["outlook therapeutics"],
+  "SIVE.ST": ["sivers", "sivers semiconductors"],
+  "IDR.MC": ["indra", "indra sistemas"],
+  ELTX: ["elicio", "elicio therapeutics"]
+};
+
+function getNewsRelevance(item, symbol, companyName = "") {
+  const title = String(item.title || "").toLowerCase();
+  const body = [item.summary, item.description]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const dynamicName = String(companyName || "").trim().toLowerCase();
+  const aliases = [...new Set([
+    ...(NEWS_ALIASES[symbol] || []),
+    ...(dynamicName && dynamicName !== symbol.toLowerCase() ? [dynamicName] : [])
+  ])];
+  const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const tickerPattern = new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i");
+
+  const matches = value =>
+    aliases.some(alias => value.includes(alias.toLowerCase())) ||
+    tickerPattern.test(value);
+
+  if (!matches(title) && !matches(body)) return null;
+
+  const OTHER_COMPANY_NAMES = [
+    "unusual machines",
+    "red cat",
+    "aerovironment",
+    "kratos defense",
+    "draganfly",
+    "teledyne",
+    "lockheed martin",
+    "northrop grumman",
+    "elbit systems",
+    "parrot"
+  ];
+
+  const aliasInTitle = aliases.find(alias =>
+    title.includes(alias.toLowerCase())
+  );
+
+  const tickerInTitle = tickerPattern.test(title);
+
+  const position = aliasInTitle
+    ? title.indexOf(aliasInTitle.toLowerCase())
+    : (tickerInTitle ? title.search(tickerPattern) : -1);
+
+  const prefix = position >= 0
+    ? title.slice(0, position).trim()
+    : title;
+
+  const explicitComparison =
+    /\b(vs\.?|versus|compared with)\b/i.test(title);
+
+  const otherCompanyMention = OTHER_COMPANY_NAMES.some(name =>
+    title.includes(name)
+  );
+
+  const direct = position >= 0 &&
+    prefix.length < 24 &&
+    !explicitComparison &&
+    !otherCompanyMention;
+
+  return direct ? "direct" : "related";
+}
+
+async function fetchYahooNews(symbol, companyName = "") {
+  // Yahoo puede encontrar resultados por ticker o por nombre de empresa.
+  // El nombre se registra dinámicamente al añadir activos desde MiCartera.
+  const dynamicName = String(companyName || "").trim();
+  const aliases = NEWS_ALIASES[symbol] || [];
+  const searchTerms = [...new Set([symbol, dynamicName, ...aliases]
+    .map(term => String(term || "").trim())
+    .filter(Boolean))];
+  const collected = new Map();
+
+  for (const term of searchTerms) {
+    const yahooUrl = new URL("https://query1.finance.yahoo.com/v1/finance/search");
+    yahooUrl.searchParams.set("q", term);
+    yahooUrl.searchParams.set("quotesCount", "0");
+    yahooUrl.searchParams.set("newsCount", "20");
+    yahooUrl.searchParams.set("listsCount", "0");
+
+    const response = await fetch(yahooUrl.toString(), {
+      headers: {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json,text/plain,*/*"
+      },
+      cf: { cacheTtl: 0, cacheEverything: false }
+    });
+
+    if (!response.ok) {
+      throw new Error("Yahoo news respondió HTTP " + response.status + " al buscar " + term);
+    }
+
+    const payload = await response.json();
+    for (const item of (payload.news || [])) {
+      const link = item.link || item.canonicalUrl?.url || "";
+      const id = item.uuid || link || item.title || "";
+      if (id && !collected.has(id)) collected.set(id, item);
+    }
+  }
+
+  return [...collected.values()]
+    .map(item => {
+      const relevance = getNewsRelevance(item, symbol, dynamicName);
+      if (!relevance) return null;
+
+      const title = item.title || "Noticia sin titular";
+      const suppliedSummary = item.summary || item.description || "";
+      const summary = String(suppliedSummary).slice(0, 650);
+      const link = item.link || item.canonicalUrl?.url || "";
+      const timestamp = Number(item.providerPublishTime) || 0;
+      return {
+        id: item.uuid || link,
+        title,
+        summary,
+        summaryAvailable: Boolean(summary),
+        relevance,
+        url: link,
+        publisher: item.publisher || "Yahoo Finance",
+        publishedAt: timestamp ? new Date(timestamp * 1000).toISOString() : null,
+        symbols: [symbol],
+        impact: classifyNewsImpact(title + " " + summary)
+      };
+    })
+    .filter(item => item && item.url);
+}
+function normalizeSymbols(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(
+    value
+      .map(item => String(item || "").trim().toUpperCase())
+      .filter(symbol => /^[A-Z0-9.^=_-]{1,32}$/.test(symbol))
+  )].slice(0, 40);
+}
+
+function normalizeNewsAssets(value) {
+  if (!Array.isArray(value)) return [];
+  const bySymbol = new Map();
+  for (const raw of value) {
+    const item = typeof raw === "string" ? { symbol: raw } : (raw || {});
+    const symbol = String(item.symbol || item.ticker || "").trim().toUpperCase();
+    if (!/^[A-Z0-9.^=_-]{1,32}$/.test(symbol)) continue;
+    const name = String(item.name || item.companyName || "").trim().slice(0, 120);
+    const previous = bySymbol.get(symbol);
+    bySymbol.set(symbol, {
+      symbol,
+      name: name || previous?.name || symbol
+    });
+  }
+  return [...bySymbol.values()].slice(0, 40);
+}
+
+async function getRegisteredAssets(env) {
+  if (!env.NEWS_KV) throw new Error("Falta configurar el binding NEWS_KV.");
+  const storedAssets = await env.NEWS_KV.get("news:assets");
+  if (storedAssets) {
+    try {
+      return normalizeNewsAssets(JSON.parse(storedAssets));
+    } catch {}
+  }
+  // Compatibilidad con el registro anterior, que solo guardaba tickers.
+  const storedSymbols = await env.NEWS_KV.get("news:symbols");
+  if (!storedSymbols) return [];
+  try {
+    return normalizeNewsAssets(JSON.parse(storedSymbols));
+  } catch {
+    return [];
+  }
+}
+
+async function refreshNews(env, assetsOrSymbols) {
+  if (!env.NEWS_KV) throw new Error("Falta configurar el binding NEWS_KV.");
+
+  const assets = normalizeNewsAssets(assetsOrSymbols);
+  const merged = new Map();
+  for (const asset of assets) {
+    const { symbol, name } = asset;
+    try {
+      const news = await fetchYahooNews(symbol, name);
+      for (const item of news) {
+        const existing = merged.get(item.url);
+        if (existing) {
+          existing.symbols.push(symbol);
+        } else {
+          merged.set(item.url, item);
+        }
+      }
+    } catch (error) {
+      // Un ticker sin respuesta no debe impedir consultar los demás.
+    }
+  }
+
+  const items = [...merged.values()]
+    .map(item => ({ ...item, symbols: [...new Set(item.symbols)] }))
+    .sort((a, b) => (b.publishedAt || "").localeCompare(a.publishedAt || ""))
+    .slice(0, 250);
+
+  const result = {
+    items,
+    updatedAt: new Date().toISOString()
+  };
+
+  await env.NEWS_KV.put("news:latest", JSON.stringify(result));
+  return result;
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin") || "";
 
@@ -120,76 +354,160 @@ export default {
       return json({ error: "Origen no permitido." }, 403, origin);
     }
 
-    if (request.method !== "GET") {
-      return json({ error: "Método no permitido." }, 405, origin);
+    if (url.pathname === "/health" && request.method === "GET") {
+      return json({ ok: true, service: "MiCartera Yahoo fundamentals + news" }, 200, origin);
     }
 
-    if (url.pathname === "/health") {
-      return json({ ok: true, service: "MiCartera Yahoo fundamentals bridge" }, 200, origin);
-    }
-
-    if (url.pathname !== "/fundamentals") {
-      return json({ error: "Ruta no encontrada. Usa /fundamentals?symbol=AAPL" }, 404, origin);
-    }
-
-    const symbol = (url.searchParams.get("symbol") || "").trim();
-    if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) {
-      return json({ error: "Símbolo vacío o no válido." }, 400, origin);
-    }
-
-    try {
-      const { cookies, crumb } = await fetchYahooSession();
-      const yahooUrl = new URL(
-        "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
-        encodeURIComponent(symbol)
-      );
-      yahooUrl.searchParams.set(
-        "modules",
-        "price,summaryDetail,defaultKeyStatistics,financialData,assetProfile"
-      );
-      yahooUrl.searchParams.set("formatted", "true");
-      yahooUrl.searchParams.set("crumb", crumb);
-
-      const upstream = await fetch(yahooUrl.toString(), {
-        headers: {
-          "User-Agent": USER_AGENT,
-          "Accept": "application/json,text/plain,*/*",
-          "Cookie": cookies,
-          "Referer": "https://finance.yahoo.com/"
-        },
-        redirect: "manual",
-        cf: { cacheTtl: 0, cacheEverything: false }
-      });
-
-      const body = await upstream.text();
-      if (!upstream.ok) {
-        return json({
-          error: "Yahoo Finance respondió HTTP " + upstream.status + ".",
-          stage: "quoteSummary"
-        }, 502, origin);
+    /*
+     * RUTA ORIGINAL DE FUNDAMENTALES.
+     * Se conserva el flujo cookie + crumb y la validación de respuesta JSON.
+     */
+    if (url.pathname === "/fundamentals" && request.method === "GET") {
+      const symbol = (url.searchParams.get("symbol") || "").trim();
+      if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) {
+        return json({ error: "Símbolo vacío o no válido." }, 400, origin);
       }
 
-      let parsed;
       try {
-        parsed = JSON.parse(body);
-      } catch {
-        return json({ error: "Yahoo devolvió una respuesta que no es JSON.", stage: "quoteSummary" }, 502, origin);
-      }
+        const { cookies, crumb } = await fetchYahooSession();
+        const yahooUrl = new URL(
+          "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
+          encodeURIComponent(symbol)
+        );
+        yahooUrl.searchParams.set(
+          "modules",
+          "price,summaryDetail,defaultKeyStatistics,financialData,assetProfile"
+        );
+        yahooUrl.searchParams.set("formatted", "true");
+        yahooUrl.searchParams.set("crumb", crumb);
 
-      const apiError = parsed?.quoteSummary?.error;
-      if (apiError) {
+        const upstream = await fetch(yahooUrl.toString(), {
+          headers: {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json,text/plain,*/*",
+            "Cookie": cookies,
+            "Referer": "https://finance.yahoo.com/"
+          },
+          redirect: "manual",
+          cf: { cacheTtl: 0, cacheEverything: false }
+        });
+
+        const body = await upstream.text();
+        if (!upstream.ok) {
+          return json({
+            error: "Yahoo Finance respondió HTTP " + upstream.status + ".",
+            stage: "quoteSummary"
+          }, 502, origin);
+        }
+
+        let parsed;
+        try {
+          parsed = JSON.parse(body);
+        } catch {
+          return json({
+            error: "Yahoo devolvió una respuesta que no es JSON.",
+            stage: "quoteSummary"
+          }, 502, origin);
+        }
+
+        const apiError = parsed?.quoteSummary?.error;
+        if (apiError) {
+          return json({
+            error: apiError.description || apiError.code || "Yahoo rechazó la consulta.",
+            stage: "quoteSummary"
+          }, 502, origin);
+        }
+
+        return json(parsed, 200, origin);
+      } catch (error) {
         return json({
-          error: apiError.description || apiError.code || "Yahoo rechazó la consulta.",
-          stage: "quoteSummary"
+          error: String(error?.message || error),
+          stage: "session"
         }, 502, origin);
       }
-
-      return json(parsed, 200, origin);
-    } catch (error) {
-      return json({
-        error: String(error?.message || error),
-        stage: "session"
-      }, 502, origin);
     }
+
+    /* Registro dinámico de activos: ticker y nombre de empresa. */
+    if (url.pathname === "/symbols" && request.method === "POST") {
+      if (!env?.NEWS_KV) {
+        return json({ error: "Falta configurar el binding NEWS_KV." }, 503, origin);
+      }
+      const body = await request.json().catch(() => ({}));
+      const assets = normalizeNewsAssets(
+        Array.isArray(body.assets) ? body.assets : body.symbols
+      );
+      const symbols = assets.map(asset => asset.symbol);
+      await env.NEWS_KV.put("news:assets", JSON.stringify(assets));
+      await env.NEWS_KV.put("news:symbols", JSON.stringify(symbols));
+      return json({ ok: true, count: assets.length, symbols: symbols.length }, 200, origin);
+    }
+
+    /* Actualización inmediata solicitada desde la aplicación. */
+    if (url.pathname === "/refresh" && request.method === "POST") {
+      if (!env?.NEWS_KV) {
+        return json({ error: "Falta configurar el binding NEWS_KV." }, 503, origin);
+      }
+      const body = await request.json().catch(() => ({}));
+      const assets = normalizeNewsAssets(
+        Array.isArray(body.assets) && body.assets.length
+          ? body.assets
+          : (Array.isArray(body.symbols) && body.symbols.length
+            ? body.symbols
+            : await getRegisteredAssets(env))
+      );
+      if (!assets.length) {
+        return json({ error: "No hay activos registrados para actualizar." }, 400, origin);
+      }
+      try {
+        const result = await refreshNews(env, assets);
+        return json({
+          ok: true,
+          count: result.items.length,
+          updatedAt: result.updatedAt
+        }, 200, origin);
+      } catch (error) {
+        return json({ error: String(error?.message || error) }, 502, origin);
+      }
+    }
+
+    /* Lectura del último conjunto de noticias guardado. */
+    if (url.pathname === "/news" && request.method === "GET") {
+      if (!env?.NEWS_KV) {
+        return json({ error: "Falta configurar el binding NEWS_KV." }, 503, origin);
+      }
+      const stored = await env.NEWS_KV.get("news:latest");
+      let result = { items: [], updatedAt: null };
+      if (stored) {
+        try {
+          result = JSON.parse(stored);
+        } catch {
+          return json({ error: "El almacenamiento de noticias contiene datos no válidos." }, 500, origin);
+        }
+      }
+      const wanted = (url.searchParams.get("symbols") || "")
+        .split(",")
+        .map(symbol => symbol.trim().toUpperCase())
+        .filter(Boolean);
+      const items = wanted.length
+        ? (result.items || []).filter(item =>
+            (item.symbols || []).some(symbol => wanted.includes(String(symbol).toUpperCase()))
+          )
+        : (result.items || []);
+      return json({ ...result, items }, 200, origin);
+    }
+
+    return json({
+      error: "Ruta no encontrada. Usa /fundamentals?symbol=AAPL, /symbols, /refresh o /news."
+    }, 404, origin);
+  },
+
+  /* Cloudflare Cron Trigger: ejecuta la recogida aunque la app esté cerrada. */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil((async () => {
+      const assets = await getRegisteredAssets(env);
+      if (assets.length) {
+        await refreshNews(env, assets);
+      }
+    })());
   }
 };
