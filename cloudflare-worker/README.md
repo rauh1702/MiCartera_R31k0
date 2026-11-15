@@ -1,45 +1,22 @@
-# Puente de fundamentales de Yahoo Finance (Cloudflare Worker)
+# Worker de MiCartera R31k0: fundamentales y noticias programadas
 
-Este pequeño servicio permite que MiCartera consulte los fundamentales de Yahoo Finance
-sin depender de proxies CORS públicos. El Worker realiza en una misma petición el
-intercambio de cookie de sesión + crumb y la llamada a `quoteSummary`.
+## Activación de noticias (necesaria una sola vez)
+1. En Cloudflare abre Workers & Pages y selecciona el Worker que ya usa la app.
+2. Sustituye su código por `yahoo-fundamentals.js` y despliega.
+3. En Settings → Bindings, crea un binding KV con nombre de variable `NEWS_KV` y un namespace nuevo (por ejemplo `micartera-news`).
+4. En Settings → Triggers → Cron Triggers, añade `0 * * * *` para ejecutar cada hora.
+5. Comprueba `/health`; debe responder `{"ok":true,...}`.
 
-## 1. Desplegar
+La app registra automáticamente los tickers de cartera y seguimiento al abrirse. Cloudflare guarda esa lista en KV y el Cron actualiza noticias cada hora aunque la app esté cerrada. «Actualizar ahora» fuerza una consulta manual.
 
-1. Entra en tu panel de Cloudflare y abre **Workers & Pages**.
-2. Crea un Worker nuevo (por ejemplo, `micartera-yahoo-fundamentals`).
-3. Abre **Edit code** y sustituye el contenido por el de
-   `cloudflare-worker/yahoo-fundamentals.js`.
-4. Guarda y despliega.
-5. Copia el dominio asignado, por ejemplo `https://nombre.nombre-cuenta.workers.dev`.
+## Rutas
+- GET `/health`
+- GET `/fundamentals?symbol=AAPL` (se conserva el servicio anterior)
+- POST `/symbols` con JSON `{"symbols":["AAPL","ONDS"]}`
+- POST `/refresh` para forzar consulta inmediata
+- GET `/news?symbols=AAPL,ONDS`
 
-No necesitas introducir claves API, contraseñas ni cookies de Yahoo.
+## Limitaciones
+Las noticias se obtienen del buscador de Yahoo Finance; su cobertura y disponibilidad pueden cambiar. El resumen es extractivo, basado en el texto breve suministrado por Yahoo, no un resumen generado tras leer el artículo completo. La clasificación positiva/negativa/neutral es heurística por palabras clave y orientativa, no una recomendación de inversión. Se conservan hasta 250 noticias, deduplicadas por URL.
 
-## 2. Comprobar el servicio
-
-Abre estas direcciones sustituyendo el dominio por el tuyo:
-
-- `https://TU-WORKER.workers.dev/health` — debe devolver `{"ok":true,...}`.
-- `https://TU-WORKER.workers.dev/fundamentals?symbol=AAPL` — debe devolver JSON con
-  `quoteSummary.result`, o un error indicando la fase exacta que Yahoo ha rechazado.
-
-Prueba después un ticker real de tu lista de Seguimiento.
-
-## 3. Conectar MiCartera
-
-Todavía no se ha cambiado la aplicación principal ni sus datos. Primero hay que comprobar
-que el Worker devuelve fundamentales correctamente desde tu cuenta/región. Cuando me
-pases la URL `workers.dev` y confirmemos la prueba, conectaré el panel existente a ese
-servicio sin tocar operaciones, posiciones ni el almacenamiento local.
-
-## Seguridad y límites
-
-- El Worker solo acepta un símbolo bursátil validado; no es un proxy de URL arbitraria.
-- CORS solo permite el origen de GitHub Pages de MiCartera y localhost para pruebas.
-  CORS no es autenticación: el endpoint sigue siendo accesible mediante clientes que no
-  envían cabecera Origin. Conviene activar una regla de rate limiting en Cloudflare si
-  se publica para uso continuado.
-- No publiques cookies, crumbs ni credenciales. El servicio los obtiene y usa en memoria
-  durante cada petición; no los devuelve ni los almacena.
-- Yahoo Finance no ofrece una API pública documentada y puede cambiar o bloquear este
-  acceso en cualquier momento. El Worker no garantiza cobertura para todos los activos.
+Los endpoints de noticias no requieren credenciales: solo se envían símbolos, nunca cantidades, posiciones ni importes. CORS limita el uso desde navegadores a GitHub Pages y localhost, pero no bloquea clientes directos. Configura rate limiting en Cloudflare si fuera necesario.
