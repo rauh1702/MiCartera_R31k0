@@ -988,6 +988,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div><p class="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Agenda de mercado · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Calendario financiero</h2><p class="text-sm text-slate-300 mt-1">Organiza resultados, presentaciones, juntas y otras fechas importantes de tus inversiones.</p></div>
                 <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="enableFinancialNotifications()" id="financial-notification-enable" class="rounded-xl border border-emerald-500/50 bg-emerald-950/40 px-4 py-2.5 text-sm font-bold text-emerald-200"><i class="fa-solid fa-bell mr-2"></i>Activar avisos</button>
                     <button type="button" onclick="openFinancialEventModal()" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-plus mr-2"></i>Añadir evento</button>
                     <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
                 </div>
@@ -1032,13 +1033,14 @@
                     <span><i class="inline-block h-2 w-2 rounded-full bg-violet-500 mr-1"></i>Resultados</span><span><i class="inline-block h-2 w-2 rounded-full bg-blue-500 mr-1"></i>Presentaciones</span><span><i class="inline-block h-2 w-2 rounded-full bg-amber-500 mr-1"></i>Dividendos / juntas</span><span><i class="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-1"></i>Otros</span>
                 </div>
                 <p id="financial-calendar-sync-status" class="mt-3 text-[11px] text-slate-500" aria-live="polite">Los resultados automáticos se consultan al abrir la aplicación.</p>
+                <p id="financial-notification-status" class="mt-1 text-[11px] text-slate-500" aria-live="polite">Los avisos del navegador están desactivados.</p>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h3 id="financial-calendar-selected-label" class="font-extrabold text-slate-900">Eventos del día</h3><p class="text-xs text-slate-500 mt-1">Los eventos automáticos se identifican como estimaciones de Yahoo Finance.</p></div><span id="financial-calendar-selected-count" class="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-800">0 eventos</span></div>
                 <div id="financial-calendar-day-events" class="space-y-3"></div>
                 <p id="financial-calendar-day-empty" class="hidden rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">No hay eventos para este día.</p>
             </div>
-            <p class="text-[11px] text-slate-400">Las fechas automáticas de resultados proceden del calendario de Yahoo Finance y son orientativas: pueden faltar, cambiar o no estar confirmadas por la empresa. Yahoo no ofrece una API pública oficial y esta consulta puede dejar de funcionar. Para dividendos, presentaciones y otros eventos, conserva la introducción manual y verifica siempre la fuente oficial. Los recordatorios funcionan mientras la aplicación está abierta.</p>
+            <p class="text-[11px] text-slate-400">Las fechas automáticas de resultados proceden del calendario de Yahoo Finance y son orientativas: pueden faltar, cambiar o no estar confirmadas por la empresa. Yahoo no ofrece una API pública oficial y esta consulta puede dejar de funcionar. Para dividendos, presentaciones y otros eventos, conserva la introducción manual y verifica siempre la fuente oficial. Los avisos del navegador y los recordatorios funcionan mientras la aplicación está abierta; no son notificaciones en segundo plano.</p>
         </section>
 
         <!-- Estrategias: interfaz independiente -->
@@ -1395,6 +1397,8 @@
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
         const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
         const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
+        const FINANCIAL_BROWSER_NOTIFIED_KEY = 'micartera_r31k0_financial_browser_notified_v1';
+        let financialBrowserNotified = new Set();
         const INVESTMENT_JOURNAL_KEY = 'micartera_r31k0_investment_journal_v1';
         let investmentJournalData = [];
         const investmentJournalNotified = new Set();
@@ -3391,6 +3395,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function loadFinancialEvents() {
             try { const data = JSON.parse(localStorage.getItem(FINANCIAL_EVENTS_KEY) || '[]'); financialEventsData = Array.isArray(data) ? data : []; }
             catch (_) { financialEventsData = []; }
+            try { const sent=JSON.parse(localStorage.getItem(FINANCIAL_BROWSER_NOTIFIED_KEY)||'[]'); financialBrowserNotified=new Set(Array.isArray(sent)?sent:[]); }
+            catch (_) { financialBrowserNotified=new Set(); }
+            updateFinancialNotificationUI();
             updateFinancialEventBadge();
             checkFinancialEventReminders();
         }
@@ -3415,11 +3422,46 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if(badge){badge.textContent=count>99?'99+':String(count);badge.hidden=count===0;badge.title=count?count+' evento(s) en ventana de aviso':'Sin avisos próximos';}
             const due=document.getElementById('financial-event-due-count'); if(due) due.textContent=count;
         }
+        function updateFinancialNotificationUI(){
+            const button=document.getElementById('financial-notification-enable');
+            const status=document.getElementById('financial-notification-status');
+            if(!button||!status)return;
+            if(!('Notification' in window)){button.disabled=true;button.textContent='Avisos no compatibles';status.textContent='Este navegador no admite notificaciones web.';return;}
+            const permission=Notification.permission;
+            if(permission==='granted'){button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Avisos activados';button.classList.add('opacity-70');status.textContent='Notificaciones del navegador activadas. La aplicación debe permanecer abierta.';}
+            else if(permission==='denied'){button.innerHTML='<i class="fa-solid fa-bell-slash mr-2"></i>Avisos bloqueados';button.disabled=true;status.textContent='El navegador ha bloqueado los avisos. Puedes permitirlos desde los ajustes del sitio.';}
+            else{button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Activar avisos';status.textContent='Los avisos del navegador están desactivados.';}
+        }
+        async function enableFinancialNotifications(){
+            if(!('Notification' in window)){showToast('Este navegador no admite notificaciones web');updateFinancialNotificationUI();return;}
+            try{
+                const permission=await Notification.requestPermission();
+                updateFinancialNotificationUI();
+                if(permission==='granted'){showToast('Avisos del navegador activados','fa-bell');sendDueFinancialBrowserNotifications();}
+                else if(permission==='denied')showToast('El navegador ha bloqueado los avisos','fa-bell-slash');
+            }catch(error){showToast('No se pudo activar el permiso de notificaciones');}
+        }
+        function sendFinancialBrowserNotification(e,days){
+            if(!('Notification' in window)||Notification.permission!=='granted')return;
+            const key=String(e.id)+'|'+financialTodayISO();
+            if(financialBrowserNotified.has(key))return;
+            const when=days===0?'Hoy':days===1?'Mañana':'En '+days+' días';
+            try{
+                const n=new Notification('MiCartera R31k0 · '+when,{body:(e.asset?e.asset+' · ':'')+(e.title||'Evento financiero'),tag:key});
+                n.onclick=()=>{window.focus();showFinancialCalendarView();n.close();};
+                financialBrowserNotified.add(key);
+                localStorage.setItem(FINANCIAL_BROWSER_NOTIFIED_KEY,JSON.stringify([...financialBrowserNotified].slice(-300)));
+            }catch(error){}
+        }
+        function sendDueFinancialBrowserNotifications(){
+            financialEventsData.forEach(e=>{const days=financialDaysUntil(e.date),lead=Number(e.reminderDays||0);if(days>=0&&days<=lead)sendFinancialBrowserNotification(e,days);});
+        }
         function checkFinancialEventReminders() {
             const today=financialTodayISO();
             financialEventsData.forEach(e=>{
                 const days=financialDaysUntil(e.date), lead=Number(e.reminderDays||0);
                 if(days>=0 && days<=lead){
+                    sendFinancialBrowserNotification(e,days);
                     const key=e.id+'|'+today;
                     if(!financialEventNotified.has(key)){
                         financialEventNotified.add(key);
@@ -3427,6 +3469,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     }
                 }
             });
+            updateFinancialNotificationUI();
             updateFinancialEventBadge();
         }
         function populateFinancialEventAssets() {
