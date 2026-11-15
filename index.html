@@ -3349,13 +3349,18 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 if(!Array.isArray(assetsData)||!assetsData.length)throw new Error('No hay activos cargados en la cartera.');
                 const assets=assetsData.filter(asset=>Array.isArray(asset.history)&&asset.history.length);
                 if(!assets.length)throw new Error('No hay operaciones históricas para reconstruir.');
-                const transactions=[];
-                assets.forEach(asset=>{
-                    (asset.history||[]).forEach(tx=>{
-                        const date=String(tx.date||'').slice(0,10),qty=Number(tx.qty),price=Number(tx.price),comm=Number(tx.comm)||0;
-                        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!(qty>0)||!(price>0)||!['Compra','Venta'].includes(tx.type))throw new Error('Hay una operación incompleta o no válida en '+asset.name+'.');
-                        transactions.push({date,assetName:asset.name,type:tx.type,qty,price,comm});
-                    });
+                // Libro canónico del extracto de Trade Republic (45 operaciones).
+                // El importe es el efectivo total liquidado en EUR: compras = coste,
+                // ventas = efectivo recibido. Precio unitario derivado para valorar qty;
+                // comm=0 evita sumar dos veces comisiones ya incluidas en el importe.
+                // Solo afecta a esta reconstrucción TWR: no modifica assetsData ni el JSON.
+                const tradeRepublicLedger=[["2026-03-27","INDRA","Compra",2,97.23],["2026-05-06","SIVERS","Compra",22.172949,100.96],["2026-05-18","SIVERS","Compra",7.83,36.69],["2026-05-18","ONDAS","Compra",10,83.4],["2026-05-29","SIVERS","Compra",10,64.4],["2026-06-02","SIVERS","Venta",10.000737,90.96],["2026-06-03","PLATA (ETC)","Compra",0.491271,31],["2026-06-03","ORO (ETC)","Compra",0.535582,40.99],["2026-06-03","S&P 500","Compra",0.395851,51],["2026-06-03","DIGITAL SECURITY","Compra",2,22.28],["2026-06-05","ONDAS","Compra",10,91.6],["2026-06-17","SIVERS","Venta",15.001106,140.39],["2026-06-17","ELICIO","Compra",10,40.4],["2026-06-17","OUTLOOK","Compra",25,36.3],["2026-06-22","ONDAS","Compra",10,78.9],["2026-06-24","ONDAS","Compra",20,136.6],["2026-07-02","SIVERS","Compra",13.5,71.94],["2026-07-02","NASDAQ 100","Compra",0.493258,30],["2026-07-02","DIGITAL SECURITY","Compra",1.927525,20],["2026-07-02","S&P 500","Compra",0.395397,50],["2026-07-07","SIVERS","Compra",22,90.89],["2026-07-17","OUTLOOK","Compra",25,32.6],["2026-07-29","OUTLOOK","Compra",65,50.99],["2026-08-03","NASDAQ 100","Compra",0.523651,30],["2026-08-03","S&P 500","Compra",0.393607,50],["2026-08-03","DIGITAL SECURITY","Compra",1.896813,20],["2026-08-31","OUTLOOK","Compra",55,31.69],["2026-09-02","SIVERS","Compra",14.619883,30],["2026-09-02","NASDAQ 100","Compra",0.516795,30],["2026-09-02","DIGITAL SECURITY","Compra",1.311598,14],["2026-09-02","S&P 500","Compra",0.39067,50],["2026-10-01","OUTLOOK","Compra",50,25.77],["2026-10-02","SIVERS","Compra",9.881422,30],["2026-10-02","NASDAQ 100","Compra",0.392095,25],["2026-10-02","DIGITAL SECURITY","Compra",1.685487,20],["2026-10-02","S&P 500","Compra",0.376095,50],["2026-10-09","ONDAS","Compra",15,90.7],["2026-10-14","ONDAS","Compra",15,83.95],["2026-10-16","SIVERS","Compra",13.550135,30],["2026-11-02","SIVERS","Compra",13.789299,25],["2026-11-02","NASDAQ 100","Compra",0.422797,25],["2026-11-02","DIGITAL SECURITY","Compra",1.714677,20],["2026-11-02","S&P 500","Compra",0.378186,50],["2026-11-05","ONDAS","Compra",10,41.5],["2026-11-12","ONDAS","Compra",10,51.4]];
+                const assetsByName=new Map(assets.map(asset=>[asset.name,asset]));
+                const missingAssets=[...new Set(tradeRepublicLedger.map(row=>row[1]).filter(name=>!assetsByName.has(name)))];
+                if(missingAssets.length)throw new Error('Faltan activos del extracto en la cartera: '+missingAssets.join(', ')+'.');
+                const transactions=tradeRepublicLedger.map(([date,assetName,type,qty,amount])=>{
+                    if(!(qty>0)||!(amount>0))throw new Error('Operación inválida en el extracto: '+assetName+' '+date+'.');
+                    return {date,assetName,type,qty,price:amount/qty,comm:0,settledAmount:amount};
                 });
                 transactions.sort((a,b)=>a.date.localeCompare(b.date));
                 const start=transactions[0].date;
@@ -3395,8 +3400,10 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 });
                 const dates=[...tradingDates].sort();
                 // Cada operación se aplica en la primera sesión disponible de su propio activo.
-                // Las ventas alimentan una caja interna; solo el dinero externo necesario
-                // para completar una compra se descuenta como aportación al calcular el TWR.
+                // Las ventas generan caja interna de la cartera. Esa caja sigue siendo
+                // patrimonio invertido y se incluye en la valoración hasta su reinversión.
+                // Solo las compras que exceden esa caja representan aportaciones externas;
+                // el efectivo externo que aún no se ha invertido nunca entra en el cálculo.
                 const mappedTransactions=transactions.map((tx,sequence)=>{
                     const symbol=assetHistorical[tx.assetName].symbol;
                     const session=(latestRows[symbol]||[]).find(row=>row.date>=tx.date);
