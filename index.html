@@ -3276,21 +3276,10 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         // Reconstrucción histórica independiente: utiliza operaciones y cierres diarios,
         // sin modificar operaciones, posiciones, copias JSON ni el histórico TWR existente.
         let historicalRebuildRunning=false;
-        let historicalRebuildChart=null;
         function historicalLastOnOrBefore(rows,date){
             let found=null;
             for(const row of rows||[]){if(row.date>date)break;found=row.close;}
             return found;
-        }
-        function historicalWeekdays(start,end){
-            const dates=[];
-            const cursor=new Date(start+'T12:00:00Z');
-            const finish=new Date(end+'T12:00:00Z');
-            while(cursor<=finish){
-                dates.push(cursor.toISOString().slice(0,10));
-                cursor.setUTCDate(cursor.getUTCDate()+1);
-            }
-            return dates;
         }
         async function fetchHistoricalBatch(symbols,start,end){
             const output={};
