@@ -124,21 +124,26 @@ function classifyNewsImpact(text) {
   return positives > negatives ? "positive" : negatives > positives ? "negative" : "neutral";
 }
 
+const NEWS_ALIASES = {
+  AAPL: ["apple"],
+  ONDS: ["ondas", "ondas holdings"],
+  OTLK: ["outlook therapeutics"],
+  "SIVE.ST": ["sivers", "sivers semiconductors"],
+  "IDR.MC": ["indra", "indra sistemas"],
+  ELTX: ["elicio", "elicio therapeutics"]
+};
+
 function newsMentionsSymbol(item, symbol) {
-  const related = Array.isArray(item.relatedTickers) ? item.relatedTickers : [];
-  const relatedSymbols = related
-    .map(value => typeof value === "string" ? value : value?.symbol)
-    .filter(Boolean)
-    .map(value => String(value).trim().toUpperCase());
-
-  // Yahoo suele indicar explícitamente los tickers relacionados con cada noticia.
-  if (relatedSymbols.includes(symbol)) return true;
-
-  // Como respaldo, aceptamos una mención literal del ticker en el titular o resumen.
-  // No asociamos una noticia solo porque Yahoo la haya devuelto en la búsqueda.
+  // La búsqueda de Yahoo puede devolver noticias generales aunque relatedTickers
+  // incluya el símbolo. Exigimos una mención explícita en el contenido editorial.
   const text = [item.title, item.summary, item.description]
     .filter(Boolean)
-    .join(" ");
+    .join(" ")
+    .toLowerCase();
+
+  const aliases = NEWS_ALIASES[symbol] || [];
+  if (aliases.some(alias => text.includes(alias.toLowerCase()))) return true;
+
   const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i").test(text);
 }
