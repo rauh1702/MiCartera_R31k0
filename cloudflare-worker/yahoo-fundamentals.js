@@ -133,19 +133,33 @@ const NEWS_ALIASES = {
   ELTX: ["elicio", "elicio therapeutics"]
 };
 
-function newsMentionsSymbol(item, symbol) {
-  // La búsqueda de Yahoo puede devolver noticias generales aunque relatedTickers
-  // incluya el símbolo. Exigimos una mención explícita en el contenido editorial.
-  const text = [item.title, item.summary, item.description]
+function getNewsRelevance(item, symbol) {
+  const title = String(item.title || "").toLowerCase();
+  const body = [item.summary, item.description]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
-
   const aliases = NEWS_ALIASES[symbol] || [];
-  if (aliases.some(alias => text.includes(alias.toLowerCase()))) return true;
-
   const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i").test(text);
+  const tickerPattern = new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i");
+  const matches = value =>
+    aliases.some(alias => value.includes(alias.toLowerCase())) ||
+    tickerPattern.test(value);
+
+  if (!matches(title) && !matches(body)) return null;
+
+  // "Directa" si la empresa es el foco inicial del titular. Si aparece
+  // junto a otras compañías o como referencia secundaria, queda "relacionada".
+  const aliasInTitle = aliases.find(alias => title.includes(alias.toLowerCase()));
+  const tickerInTitle = tickerPattern.test(title);
+  const position = aliasInTitle
+    ? title.indexOf(aliasInTitle.toLowerCase())
+    : (tickerInTitle ? title.search(tickerPattern) : -1);
+  const prefix = position >= 0 ? title.slice(0, position).trim() : title;
+  const multiCompany = /\\b(vs\\.?|versus|and|with|alongside|like|including|compared with)\\b|,/.test(title);
+  const direct = position >= 0 && prefix.length < 24 && !multiCompany;
+
+  return direct ? "direct" : "related";
 }
 
 async function fetchYahooNews(symbol) {
@@ -169,16 +183,21 @@ async function fetchYahooNews(symbol) {
 
   const payload = await response.json();
   return (payload.news || [])
-    .filter(item => newsMentionsSymbol(item, symbol))
     .map(item => {
+      const relevance = getNewsRelevance(item, symbol);
+      if (!relevance) return null;
+
       const title = item.title || "Noticia sin titular";
-      const summary = String(item.summary || item.description || title).slice(0, 650);
+      const suppliedSummary = item.summary || item.description || "";
+      const summary = String(suppliedSummary).slice(0, 650);
       const link = item.link || item.canonicalUrl?.url || "";
       const timestamp = Number(item.providerPublishTime) || 0;
       return {
         id: item.uuid || link,
         title,
         summary,
+        summaryAvailable: Boolean(summary),
+        relevance,
         url: link,
         publisher: item.publisher || "Yahoo Finance",
         publishedAt: timestamp ? new Date(timestamp * 1000).toISOString() : null,
@@ -186,7 +205,7 @@ async function fetchYahooNews(symbol) {
         impact: classifyNewsImpact(title + " " + summary)
       };
     })
-    .filter(item => item.url);
+    .filter(item => item && item.url);
 }
 
 function normalizeSymbols(value) {
