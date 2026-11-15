@@ -883,7 +883,7 @@
                 <div id="benchmark-audit-summary" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
                 <div><h4 class="font-bold text-white mb-2">Rentabilidad por activo (solo variación del precio en EUR)</h4><div class="overflow-x-auto"><table class="w-full text-xs min-w-[620px]"><thead class="text-slate-400"><tr><th class="text-left p-2">Activo</th><th class="text-left p-2">Ticker</th><th class="text-right p-2">Primera sesión</th><th class="text-right p-2">Última sesión</th><th class="text-right p-2">Variación</th></tr></thead><tbody id="benchmark-audit-assets" class="text-slate-200"></tbody></table></div></div>
                 <div><h4 class="font-bold text-white mb-2">Operaciones: fecha registrada frente a sesión efectiva</h4><p class="text-xs text-slate-400 mb-2">La fecha efectiva es la primera sesión disponible del mercado de ese activo igual o posterior a la fecha de la operación.</p><div class="max-h-80 overflow-auto rounded-lg border border-slate-700"><table class="w-full text-xs min-w-[700px]"><thead class="sticky top-0 bg-slate-800 text-slate-300"><tr><th class="text-left p-2">Activo</th><th class="text-left p-2">Tipo</th><th class="text-right p-2">Fecha registrada</th><th class="text-right p-2">Sesión efectiva</th><th class="text-right p-2">Desplazamiento</th><th class="text-right p-2">Cantidad</th><th class="text-right p-2">Flujo (€)</th></tr></thead><tbody id="benchmark-audit-transactions" class="text-slate-200"></tbody></table></div></div>
-                <details class="rounded-lg border border-slate-700 p-3"><summary class="cursor-pointer text-sm font-bold text-white">Evolución diaria del TWR alineado por mercado</summary><div class="mt-3 max-h-96 overflow-auto"><table class="w-full text-xs min-w-[520px]"><thead class="sticky top-0 bg-slate-800 text-slate-300"><tr><th class="text-left p-2">Fecha</th><th class="text-right p-2">Valor cartera (€)</th><th class="text-right p-2">Flujo neto (€)</th><th class="text-right p-2">Rentab. diaria</th><th class="text-right p-2">Índice TWR</th></tr></thead><tbody id="benchmark-audit-daily" class="text-slate-200"></tbody></table></div></details>
+                <details class="rounded-lg border border-slate-700 p-3"><summary class="cursor-pointer text-sm font-bold text-white">Evolución diaria del TWR alineado por mercado</summary><div class="mt-3 max-h-96 overflow-auto"><table class="w-full text-xs min-w-[520px]"><thead class="sticky top-0 bg-slate-800 text-slate-300"><tr><th class="text-left p-2">Fecha</th><th class="text-right p-2">Valor cartera (€)</th><th class="text-right p-2">Aportación externa (€)</th><th class="text-right p-2">Rentab. diaria</th><th class="text-right p-2">Índice TWR</th></tr></thead><tbody id="benchmark-audit-daily" class="text-slate-200"></tbody></table></div></details>
             </section>
             <section class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-5 space-y-3">
                 <div><h3 class="font-bold text-white">Flujos externos de dinero</h3><p class="text-xs text-slate-400 mt-1">Este apartado solo registra dinero que entra desde tu banco o sale de tus inversiones hacia tu banco. Las compras y ventas de activos no se registran aquí: son movimientos internos.</p></div>
@@ -3330,8 +3330,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
             const card=(label,value,sub)=>'<div class="rounded-xl border border-slate-700 bg-slate-800/80 p-3"><p class="text-xs text-slate-400">'+label+'</p><p class="mt-1 text-xl font-black text-white">'+value+'</p><p class="mt-1 text-xs text-slate-400">'+sub+'</p></div>';
             document.getElementById('benchmark-audit-summary').innerHTML=
-                card('TWR mostrado actualmente',pct(audit.originalReturn),'Método anterior · fecha global de mercado')+
-                card('TWR con sesión propia',pct(audit.alignedReturn),'Operaciones aplicadas en la sesión del activo')+
+                card('TWR por fecha registrada',pct(audit.originalReturn),'Caja de ventas incluida · fecha global')+
+                card('TWR alineado por mercado',pct(audit.alignedReturn),'Caja de ventas incluida · sesión propia')+
                 card('Diferencia entre métodos',pct(audit.alignedReturn-audit.originalReturn),'Puntos porcentuales de rentabilidad');
             document.getElementById('benchmark-audit-assets').innerHTML=audit.assetReturns.map(a=>'<tr class="border-t border-slate-700"><td class="p-2 font-semibold">'+safe(a.name)+'</td><td class="p-2">'+safe(a.symbol)+'</td><td class="p-2 text-right">'+safe(a.firstDate)+'</td><td class="p-2 text-right">'+safe(a.lastDate)+'</td><td class="p-2 text-right font-bold '+(a.returnPct>=0?'text-emerald-300':'text-rose-300')+'">'+pct(a.returnPct)+'</td></tr>').join('');
             document.getElementById('benchmark-audit-transactions').innerHTML=audit.transactions.map(t=>'<tr class="border-t border-slate-700"><td class="p-2">'+safe(t.assetName)+'</td><td class="p-2">'+safe(t.type)+'</td><td class="p-2 text-right">'+safe(t.date)+'</td><td class="p-2 text-right">'+safe(t.effectiveDate)+'</td><td class="p-2 text-right '+(t.shiftDays?'text-amber-300':'text-slate-400')+'">'+(t.shiftDays?('+'+t.shiftDays+' días'):'0 días')+'</td><td class="p-2 text-right">'+Number(t.qty).toLocaleString('es-ES',{maximumFractionDigits:4})+'</td><td class="p-2 text-right">'+money(t.flow)+'</td></tr>').join('');
@@ -3394,16 +3394,32 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     latestRows[symbol].forEach(row=>{if(row.date>=start&&row.date<=today)tradingDates.add(row.date);});
                 });
                 const dates=[...tradingDates].sort();
+                // Cada operación se aplica en la primera sesión disponible de su propio activo.
+                // Las ventas alimentan una caja interna; solo el dinero externo necesario
+                // para completar una compra se descuenta como aportación al calcular el TWR.
+                const mappedTransactions=transactions.map((tx,sequence)=>{
+                    const symbol=assetHistorical[tx.assetName].symbol;
+                    const session=(latestRows[symbol]||[]).find(row=>row.date>=tx.date);
+                    if(!session)throw new Error('No se encuentra una sesión posterior para la operación de '+tx.assetName+' del '+tx.date+'.');
+                    const a=new Date(tx.date+'T00:00:00Z'),b=new Date(session.date+'T00:00:00Z');
+                    return {...tx,sequence,effectiveDate:session.date,shiftDays:Math.round((b-a)/86400000)};
+                }).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='Venta'?-1:1)||a.sequence-b.sequence);
                 const portfolio=[],benchmarks=[];
-                let previousValue=null,index=100,txCursor=0;
+                let previousValue=null,index=100,txCursor=0,cashBalance=0;
                 for(const date of dates){
-                    const appliedTransactions=[];
-                    while(txCursor<transactions.length&&transactions[txCursor].date<=date){
-                        const tx=transactions[txCursor++];
+                    let externalFlow=0;
+                    while(txCursor<mappedTransactions.length&&mappedTransactions[txCursor].effectiveDate<=date){
+                        const tx=mappedTransactions[txCursor++];
                         const old=held.get(tx.assetName)||0;
                         if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La venta del '+tx.date+' en '+tx.assetName+' supera las acciones acumuladas.');
                         held.set(tx.assetName,Math.max(0,old+(tx.type==='Compra'?tx.qty:-tx.qty)));
-                        appliedTransactions.push(tx);
+                        if(tx.type==='Venta'){
+                            cashBalance+=Math.max(0,tx.qty*tx.price-tx.comm);
+                        }else{
+                            const purchaseCost=tx.qty*tx.price+tx.comm;
+                            externalFlow+=Math.max(0,purchaseCost-cashBalance);
+                            cashBalance=Math.max(0,cashBalance-purchaseCost);
+                        }
                     }
                     let marketValue=0,missing=[];
                     for(const asset of assets){
@@ -3433,23 +3449,23 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         marketValue+=qty*eur;
                     }
                     if(missing.length)throw new Error('No hay cotización histórica disponible para '+missing.join(', ')+' el '+date+'.');
-                    if(!(marketValue>0))continue;
-                    const netFlow=appliedTransactions.reduce((sum,tx)=>sum+(tx.type==='Compra'?1:-1)*(tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm)),0);
+                    const totalValue=marketValue+cashBalance;
+                    if(!(totalValue>0))continue;
                     if(previousValue===null){
                         index=100;
                     }else{
-                        const factor=(marketValue-netFlow)/previousValue;
+                        const factor=(totalValue-externalFlow)/previousValue;
                         if(!Number.isFinite(factor)||factor<=0)throw new Error('No se puede encadenar el TWR el '+date+'. Comprueba operaciones y cotizaciones.');
                         index*=factor;
                     }
-                    portfolio.push({date,value:marketValue,index});
-                    previousValue=marketValue;
+                    portfolio.push({date,value:totalValue,index});
+                    previousValue=totalValue;
                     const sp=historicalLastOnOrBefore(latestRows['^GSPC'],date);
                     const nd=historicalLastOnOrBefore(latestRows['^NDX'],date);
                     const usdPerEur=historicalLastOnOrBefore(latestRows['EURUSD=X'],date);
                     if(sp>0&&nd>0&&usdPerEur>0)benchmarks.push({date,sp:sp/usdPerEur,nd:nd/usdPerEur});
                 }
-                if(txCursor<transactions.length)throw new Error('Hay operaciones posteriores al último cierre histórico disponible ('+transactions[txCursor].date+'). No se ha calculado una rentabilidad incompleta.');
+                if(txCursor<mappedTransactions.length)throw new Error('Hay operaciones posteriores al último cierre histórico disponible ('+mappedTransactions[txCursor].date+'). No se ha calculado una rentabilidad incompleta.');
                 if(portfolio.length<2)throw new Error('Solo hay una valoración diaria disponible; no se puede calcular el TWR.');
                 const benchmarkByDate=new Map(benchmarks.map(b=>[b.date,b]));
                 const common=portfolio.map(p=>({ ...p,benchmark:benchmarkByDate.get(p.date)})).filter(p=>p.benchmark);
@@ -3479,32 +3495,40 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     throw new Error('Divisa no contemplada en auditoría: '+currency);
                 };
                 const runAuditSeries=aligned=>{
-                    const queue=aligned?mappedTransactions:transactions;
+                    const queue=aligned?mappedTransactions:transactions.map((tx,sequence)=>({...tx,sequence,effectiveDate:tx.date}))
+                        .sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)||a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='Venta'?-1:1)||a.sequence-b.sequence);
                     const heldAudit=new Map(assets.map(a=>[a.name,0]));
-                    const result=[];let cursor=0,previous=null,indexAudit=100;
+                    const result=[];let cursor=0,previous=null,indexAudit=100,cash=0;
                     for(const date of dates){
-                        let flow=0;
-                        while(cursor<queue.length&&(aligned?queue[cursor].effectiveDate:queue[cursor].date)<=date){
+                        let externalFlow=0;
+                        while(cursor<queue.length&&queue[cursor].effectiveDate<=date){
                             const tx=queue[cursor++],old=heldAudit.get(tx.assetName)||0;
                             if(tx.type==='Venta'&&tx.qty>old+1e-7)throw new Error('La auditoría detecta una venta anterior a la compra efectiva en '+tx.assetName+' ('+tx.date+' → '+(tx.effectiveDate||tx.date)+').');
                             heldAudit.set(tx.assetName,Math.max(0,old+(tx.type==='Compra'?tx.qty:-tx.qty)));
-                            flow+=(tx.type==='Compra'?1:-1)*(tx.qty*tx.price+(tx.type==='Compra'?tx.comm:-tx.comm));
+                            if(tx.type==='Venta'){
+                                cash+=Math.max(0,tx.qty*tx.price-tx.comm);
+                            }else{
+                                const cost=tx.qty*tx.price+tx.comm;
+                                externalFlow+=Math.max(0,cost-cash);
+                                cash=Math.max(0,cash-cost);
+                            }
                         }
-                        let value=0;
+                        let marketValue=0;
                         for(const asset of assets){
                             const qty=heldAudit.get(asset.name)||0;if(qty<=0)continue;
                             const historical=assetHistorical[asset.name],native=historicalLastOnOrBefore(latestRows[historical.symbol],date);
                             if(!(native>0))throw new Error('Falta precio de '+asset.name+' en auditoría para '+date+'.');
-                            value+=qty*toEurAt(native,String(historical.currency||'EUR'),date);
+                            marketValue+=qty*toEurAt(native,String(historical.currency||'EUR'),date);
                         }
+                        const value=marketValue+cash;
                         if(!(value>0))continue;
                         let dailyPct=null;
                         if(previous!==null){
-                            const factor=(value-flow)/previous;
+                            const factor=(value-externalFlow)/previous;
                             if(!Number.isFinite(factor)||factor<=0)throw new Error('Factor TWR no válido en auditoría para '+date+'.');
                             dailyPct=(factor-1)*100;indexAudit*=factor;
                         }
-                        result.push({date,value,flow,dailyPct,index:indexAudit});
+                        result.push({date,value,flow:externalFlow,dailyPct,index:indexAudit});
                         previous=value;
                     }
                     if(cursor<queue.length)throw new Error('Quedan operaciones fuera del histórico en auditoría.');
