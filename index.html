@@ -3855,7 +3855,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             try{
                 const start=valid[0].date,end=valid[valid.length-1].date;
                 if(start===end){setBenchmarkStatus('Solo hay un día registrado. Guarda otro punto en una fecha posterior para poder comparar la evolución.');return;}
-                const [sp,nasdaq]=await Promise.all([fetchYahooHistoricalCloses('^GSPC',start,end),fetchYahooHistoricalCloses('^NDX',start,end)]);
+                // Consultar los índices en serie: Yahoo/Cloudflare puede devolver históricos incompletos si se solicitan a la vez.
+                const sp=await fetchYahooHistoricalCloses('^GSPC',start,end);
+                const nasdaq=await fetchYahooHistoricalCloses('^NDX',start,end);
                 const spMap=new Map(sp.map(x=>[x.date,x.close])), ndMap=new Map(nasdaq.map(x=>[x.date,x.close]));
                 const common=valid.map(p=>({date:p.date,portfolio:Number(p.returnPct),sp:spMap.get(p.date),nasdaq:ndMap.get(p.date)})).filter(p=>Number.isFinite(p.sp)&&Number.isFinite(p.nasdaq));
                 if(common.length<2){setBenchmarkStatus('No hay al menos dos fechas comunes entre tu histórico y los cierres de ambos índices. Guarda más puntos y vuelve a intentarlo.',true);return;}
