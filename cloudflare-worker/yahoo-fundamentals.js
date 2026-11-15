@@ -193,26 +193,40 @@ function getNewsRelevance(item, symbol) {
 }
 
 async function fetchYahooNews(symbol) {
-  const yahooUrl = new URL("https://query1.finance.yahoo.com/v1/finance/search");
-  yahooUrl.searchParams.set("q", symbol);
-  yahooUrl.searchParams.set("quotesCount", "0");
-  yahooUrl.searchParams.set("newsCount", "20");
-  yahooUrl.searchParams.set("listsCount", "0");
+  // Para Sivers e Indra, Yahoo devuelve mejores resultados usando el nombre
+  // de la empresa. Conservamos también la búsqueda por ticker.
+  const aliases = NEWS_ALIASES[symbol] || [];
+  const searchTerms = [...new Set([symbol, ...aliases])];
+  const collected = new Map();
 
-  const response = await fetch(yahooUrl.toString(), {
-    headers: {
-      "User-Agent": USER_AGENT,
-      "Accept": "application/json,text/plain,*/*"
-    },
-    cf: { cacheTtl: 0, cacheEverything: false }
-  });
+  for (const term of searchTerms) {
+    const yahooUrl = new URL("https://query1.finance.yahoo.com/v1/finance/search");
+    yahooUrl.searchParams.set("q", term);
+    yahooUrl.searchParams.set("quotesCount", "0");
+    yahooUrl.searchParams.set("newsCount", "20");
+    yahooUrl.searchParams.set("listsCount", "0");
 
-  if (!response.ok) {
-    throw new Error("Yahoo news respondió HTTP " + response.status);
+    const response = await fetch(yahooUrl.toString(), {
+      headers: {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json,text/plain,*/*"
+      },
+      cf: { cacheTtl: 0, cacheEverything: false }
+    });
+
+    if (!response.ok) {
+      throw new Error("Yahoo news respondió HTTP " + response.status + " al buscar " + term);
+    }
+
+    const payload = await response.json();
+    for (const item of (payload.news || [])) {
+      const link = item.link || item.canonicalUrl?.url || "";
+      const id = item.uuid || link || item.title || "";
+      if (id && !collected.has(id)) collected.set(id, item);
+    }
   }
 
-  const payload = await response.json();
-  return (payload.news || [])
+  return [...collected.values()]
     .map(item => {
       const relevance = getNewsRelevance(item, symbol);
       if (!relevance) return null;
@@ -237,7 +251,6 @@ async function fetchYahooNews(symbol) {
     })
     .filter(item => item && item.url);
 }
-
 function normalizeSymbols(value) {
   if (!Array.isArray(value)) return [];
   return [...new Set(
