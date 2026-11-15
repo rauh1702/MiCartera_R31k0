@@ -3432,11 +3432,16 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const period2=Math.floor(new Date(endDate+'T23:59:59Z').getTime()/1000)+86400;
             const target=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
             const errors=[];
-            for(const makeProxyUrl of YAHOO_PROXIES){
+            const workerBase='https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev';
+            const sources=[
+                url=>workerBase+'/chart?symbol='+encodeURIComponent(symbol)+'&period1='+period1+'&period2='+period2+'&_='+Date.now(),
+                ...YAHOO_PROXIES
+            ];
+            for(const makeUrl of sources){
                 try{
-                    const json=await fetchJsonWithTimeout(makeProxyUrl(target),14000);
+                    const json=await fetchJsonWithTimeout(makeUrl(target),20000);
                     const result=json.chart?.result?.[0];
-                    if(!result)throw new Error(json.chart?.error?.description||'Sin datos históricos');
+                    if(!result)throw new Error(json.chart?.error?.description||json.error||'Sin datos históricos');
                     const timestamps=result.timestamp||[];
                     const closes=result.indicators?.quote?.[0]?.close||[];
                     const timezone=result.meta?.exchangeTimezoneName||'UTC';
@@ -3448,8 +3453,6 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     const rows=[];
                     timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});});
                     if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
-                    // Conserva la divisa real del histórico: puede diferir de la cotización
-                    // que la aplicación utilizó para el precio actual del activo.
                     rows.currency=result.meta?.currency||null;
                     return rows;
                 }catch(error){errors.push(error?.message||'Error de conexión');}
