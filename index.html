@@ -2291,21 +2291,22 @@
             const past=events.filter(e=>e.date<today).slice(-2).reverse();
             const shown=upcoming.slice(0,6);
             if(!shown.length&&!past.length){box.innerHTML='<div class="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-400">No hay eventos registrados para este activo. Puedes añadir uno manualmente.</div>';return;}
-            const card=e=>'<article class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800/70 p-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="text-xs font-black text-violet-300">'+escapeHtml(new Date(e.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}))+'</span><span class="rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-200">'+escapeHtml(e.type||'Otro')+'</span>'+(e.source==='yahoo'?'<span class="text-[10px] text-amber-300">Estimación Yahoo</span>':'')+'</div><p class="mt-1 text-sm font-bold text-white">'+escapeHtml(e.title||'Evento')+'</p>'+(e.notes?'<p class="mt-1 text-xs text-slate-400">'+escapeHtml(e.notes)+'</p>':'')+'</div>'+(e.source==='yahoo'?'<span class="text-[10px] text-slate-500">Automático</span>':'<button type="button" onclick="editFinancialEvent(\''+String(e.id).replace(/'/g,'\\\\\\\'')+'\')" class="text-xs font-bold text-cyan-300">Editar</button>')+'</article>';
+            const card=e=>'<article class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800/70 p-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="text-xs font-black text-violet-300">'+escapeHtml(new Date(e.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}))+'</span><span class="rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-200">'+escapeHtml(e.type||'Otro')+'</span>'+(e.source==='yahoo'?'<span class="text-[10px] text-amber-300">Estimación Yahoo</span>':'')+'</div><p class="mt-1 text-sm font-bold text-white">'+escapeHtml(e.title||'Evento')+'</p>'+(e.notes?'<p class="mt-1 text-xs text-slate-400">'+escapeHtml(e.notes)+'</p>':'')+'</div>'+(e.source==='yahoo'?'<span class="text-[10px] text-slate-500">Automático</span>':'<button type="button" onclick="editWatchFinancialEvent(\''+String(e.id).replace(/'/g,'\\\\\\\'')+'\')" class="text-xs font-bold text-cyan-300">Editar</button>')+'</article>';
             box.innerHTML=(shown.length?shown.map(card).join(''):'<p class="text-sm text-slate-400">No hay próximos eventos.</p>')+(past.length?'<p class="pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Eventos pasados recientes</p>'+past.map(card).join(''):'');
         }
         function openWatchFinancialEvent(){
             const item=watchlistData[watchDetailIndex]; if(!item)return;
-            populateFinancialEventAssets(); resetFinancialEventForm();
+            showFinancialCalendarView();
+            openFinancialEventModal();
             const select=document.getElementById('financial-event-asset');
             if(![...select.options].some(o=>o.value===item.name))select.add(new Option(item.name+' ('+item.symbol+')',item.name));
             select.value=item.name||'';
             document.getElementById('financial-event-type').value='Resultados';
             document.getElementById('financial-event-title').value='Publicación de resultados · '+(item.name||item.symbol);
-            openFinancialEventModal();
-            select.value=item.name||'';
-            document.getElementById('financial-event-type').value='Resultados';
-            document.getElementById('financial-event-title').value='Publicación de resultados · '+(item.name||item.symbol);
+        }
+        function editWatchFinancialEvent(id){
+            showFinancialCalendarView();
+            editFinancialEvent(id);
         }
 
         function closeWatchDetail(){if(watchDetailChart){watchDetailChart.destroy();watchDetailChart=null;}watchDetailIndex=null;document.getElementById("watch-detail-view")?.classList.add("hidden");document.getElementById("watchlist-list")?.classList.remove("hidden");document.getElementById("watchlist-empty")?.classList.remove("hidden");}
