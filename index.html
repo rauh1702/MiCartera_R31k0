@@ -3352,7 +3352,11 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const transactions=[];
                 assets.forEach(asset=>{
                     (asset.history||[]).forEach(tx=>{
-                        const date=String(tx.date||'').slice(0,10),qty=Number(tx.qty),price=Number(tx.price),comm=Number(tx.comm)||0;
+                        let date=String(tx.date||'').slice(0,10);
+                        // Fechas contrastadas con el extracto oficial de Trade Republic.
+                        const dateFixes={'INDRA|2026-06-18':'2026-03-27','ONDAS|2026-05-10':'2026-05-18','ELICIO|2026-05-04':'2026-06-17','OUTLOOK|2026-07-20':'2026-07-17'};
+                        date=dateFixes[asset.name+'|'+date]||date;
+                        const qty=Number(tx.qty),price=Number(tx.price),comm=Number(tx.comm)||0;
                         if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!(qty>0)||!(price>0)||!['Compra','Venta'].includes(tx.type))throw new Error('Hay una operación incompleta o no válida en '+asset.name+'.');
                         transactions.push({date,assetName:asset.name,type:tx.type,qty,price,comm});
                     });
