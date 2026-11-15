@@ -133,14 +133,18 @@ const NEWS_ALIASES = {
   ELTX: ["elicio", "elicio therapeutics"]
 };
 
-function getNewsRelevance(item, symbol) {
+function getNewsRelevance(item, symbol, companyName = "") {
   const title = String(item.title || "").toLowerCase();
   const body = [item.summary, item.description]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
-  const aliases = NEWS_ALIASES[symbol] || [];
+  const dynamicName = String(companyName || "").trim().toLowerCase();
+  const aliases = [...new Set([
+    ...(NEWS_ALIASES[symbol] || []),
+    ...(dynamicName && dynamicName !== symbol.toLowerCase() ? [dynamicName] : [])
+  ])];
   const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const tickerPattern = new RegExp("(^|[^A-Z0-9])" + escaped + "([^A-Z0-9]|$)", "i");
 
@@ -192,11 +196,14 @@ function getNewsRelevance(item, symbol) {
   return direct ? "direct" : "related";
 }
 
-async function fetchYahooNews(symbol) {
-  // Para Sivers e Indra, Yahoo devuelve mejores resultados usando el nombre
-  // de la empresa. Conservamos también la búsqueda por ticker.
+async function fetchYahooNews(symbol, companyName = "") {
+  // Yahoo puede encontrar resultados por ticker o por nombre de empresa.
+  // El nombre se registra dinámicamente al añadir activos desde MiCartera.
+  const dynamicName = String(companyName || "").trim();
   const aliases = NEWS_ALIASES[symbol] || [];
-  const searchTerms = [...new Set([symbol, ...aliases])];
+  const searchTerms = [...new Set([symbol, dynamicName, ...aliases]
+    .map(term => String(term || "").trim())
+    .filter(Boolean))];
   const collected = new Map();
 
   for (const term of searchTerms) {
@@ -228,7 +235,7 @@ async function fetchYahooNews(symbol) {
 
   return [...collected.values()]
     .map(item => {
-      const relevance = getNewsRelevance(item, symbol);
+      const relevance = getNewsRelevance(item, symbol, dynamicName);
       if (!relevance) return null;
 
       const title = item.title || "Noticia sin titular";
@@ -260,24 +267,50 @@ function normalizeSymbols(value) {
   )].slice(0, 40);
 }
 
-async function getRegisteredSymbols(env) {
+function normalizeNewsAssets(value) {
+  if (!Array.isArray(value)) return [];
+  const bySymbol = new Map();
+  for (const raw of value) {
+    const item = typeof raw === "string" ? { symbol: raw } : (raw || {});
+    const symbol = String(item.symbol || item.ticker || "").trim().toUpperCase();
+    if (!/^[A-Z0-9.^=_-]{1,32}$/.test(symbol)) continue;
+    const name = String(item.name || item.companyName || "").trim().slice(0, 120);
+    const previous = bySymbol.get(symbol);
+    bySymbol.set(symbol, {
+      symbol,
+      name: name || previous?.name || symbol
+    });
+  }
+  return [...bySymbol.values()].slice(0, 40);
+}
+
+async function getRegisteredAssets(env) {
   if (!env.NEWS_KV) throw new Error("Falta configurar el binding NEWS_KV.");
-  const stored = await env.NEWS_KV.get("news:symbols");
-  if (!stored) return [];
+  const storedAssets = await env.NEWS_KV.get("news:assets");
+  if (storedAssets) {
+    try {
+      return normalizeNewsAssets(JSON.parse(storedAssets));
+    } catch {}
+  }
+  // Compatibilidad con el registro anterior, que solo guardaba tickers.
+  const storedSymbols = await env.NEWS_KV.get("news:symbols");
+  if (!storedSymbols) return [];
   try {
-    return normalizeSymbols(JSON.parse(stored));
+    return normalizeNewsAssets(JSON.parse(storedSymbols));
   } catch {
     return [];
   }
 }
 
-async function refreshNews(env, symbols) {
+async function refreshNews(env, assetsOrSymbols) {
   if (!env.NEWS_KV) throw new Error("Falta configurar el binding NEWS_KV.");
 
+  const assets = normalizeNewsAssets(assetsOrSymbols);
   const merged = new Map();
-  for (const symbol of normalizeSymbols(symbols)) {
+  for (const asset of assets) {
+    const { symbol, name } = asset;
     try {
-      const news = await fetchYahooNews(symbol);
+      const news = await fetchYahooNews(symbol, name);
       for (const item of news) {
         const existing = merged.get(item.url);
         if (existing) {
@@ -394,33 +427,39 @@ export default {
       }
     }
 
-    /* Registro de tickers que la aplicación tiene en cartera o seguimiento. */
+    /* Registro dinámico de activos: ticker y nombre de empresa. */
     if (url.pathname === "/symbols" && request.method === "POST") {
       if (!env?.NEWS_KV) {
         return json({ error: "Falta configurar el binding NEWS_KV." }, 503, origin);
       }
       const body = await request.json().catch(() => ({}));
-      const symbols = normalizeSymbols(body.symbols);
+      const assets = normalizeNewsAssets(
+        Array.isArray(body.assets) ? body.assets : body.symbols
+      );
+      const symbols = assets.map(asset => asset.symbol);
+      await env.NEWS_KV.put("news:assets", JSON.stringify(assets));
       await env.NEWS_KV.put("news:symbols", JSON.stringify(symbols));
-      return json({ ok: true, count: symbols.length }, 200, origin);
+      return json({ ok: true, count: assets.length, symbols: symbols.length }, 200, origin);
     }
 
-    /* Actualización inmediata solicitada desde el botón de la aplicación. */
+    /* Actualización inmediata solicitada desde la aplicación. */
     if (url.pathname === "/refresh" && request.method === "POST") {
       if (!env?.NEWS_KV) {
         return json({ error: "Falta configurar el binding NEWS_KV." }, 503, origin);
       }
       const body = await request.json().catch(() => ({}));
-      const symbols = normalizeSymbols(
-        Array.isArray(body.symbols) && body.symbols.length
-          ? body.symbols
-          : await getRegisteredSymbols(env)
+      const assets = normalizeNewsAssets(
+        Array.isArray(body.assets) && body.assets.length
+          ? body.assets
+          : (Array.isArray(body.symbols) && body.symbols.length
+            ? body.symbols
+            : await getRegisteredAssets(env))
       );
-      if (!symbols.length) {
-        return json({ error: "No hay símbolos registrados para actualizar." }, 400, origin);
+      if (!assets.length) {
+        return json({ error: "No hay activos registrados para actualizar." }, 400, origin);
       }
       try {
-        const result = await refreshNews(env, symbols);
+        const result = await refreshNews(env, assets);
         return json({
           ok: true,
           count: result.items.length,
@@ -465,9 +504,9 @@ export default {
   /* Cloudflare Cron Trigger: ejecuta la recogida aunque la app esté cerrada. */
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
-      const symbols = await getRegisteredSymbols(env);
-      if (symbols.length) {
-        await refreshNews(env, symbols);
+      const assets = await getRegisteredAssets(env);
+      if (assets.length) {
+        await refreshNews(env, assets);
       }
     })());
   }
