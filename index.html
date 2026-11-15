@@ -874,9 +874,19 @@
                 <div id="benchmark-chart-empty" class="rounded-xl border border-dashed border-slate-600 p-6 text-center text-sm text-slate-400">Todavía no hay datos suficientes para comparar.</div>
                 <div id="benchmark-chart-wrap" class="hidden h-80 relative"><canvas id="benchmarkChart"></canvas></div>
             </section>
+            <section class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-5 space-y-3">
+                <div><h3 class="font-bold text-white">Flujos externos de dinero</h3><p class="text-xs text-slate-400 mt-1">Registra aportaciones y retiradas de efectivo hacia/desde la cartera. No registres aquí compras o ventas de activos si el dinero permanece dentro de la cartera.</p></div>
+                <form id="benchmark-flow-form" onsubmit="saveBenchmarkFlow(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <label class="text-xs text-slate-300">Fecha<input id="benchmark-flow-date" type="date" required class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"></label>
+                    <label class="text-xs text-slate-300">Movimiento<select id="benchmark-flow-type" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"><option value="contribution">Aportación</option><option value="withdrawal">Retirada</option></select></label>
+                    <label class="text-xs text-slate-300">Importe (€)<input id="benchmark-flow-amount" type="number" min="0.01" step="0.01" required class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white" placeholder="100,00"></label>
+                    <button type="submit" class="self-end rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-2 text-sm font-bold text-white">Añadir flujo</button>
+                </form>
+                <div id="benchmark-flow-list" class="space-y-2 text-xs text-slate-300"><p>No hay flujos registrados.</p></div>
+            </section>
             <div class="rounded-xl border border-amber-500/20 bg-amber-950/30 p-4 text-xs leading-relaxed text-amber-100">
                 <strong class="block mb-1">Cómo interpretar esta comparativa</strong>
-                La cartera se calcula a partir de los puntos de rentabilidad que has ido guardando en MiCartera. El porcentaje de la cartera es una aproximación basada en la rentabilidad acumulada registrada, no una rentabilidad ponderada por tiempo (TWR) ni una TIR; las compras adicionales pueden influir en ella. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos. La comparación empieza en tu primer punto histórico disponible: no se inventan datos anteriores.
+                La rentabilidad de la cartera se calcula mediante TWR encadenado usando las valoraciones históricas guardadas y los flujos externos registrados. El cálculo comienza desde la línea base que se establece al activar por primera vez el seguimiento; no se reconstruye el histórico anterior. Registra las aportaciones y retiradas en esta pantalla. El valor de cartera usa las posiciones valoradas por MiCartera y no incluye efectivo no invertido. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos.
             </div>
         </section>
 
@@ -1395,6 +1405,8 @@
 
         const STORAGE_KEY = 'portfolio_control_acciones_v3';
         const PERFORMANCE_HISTORY_KEY = 'portfolio_performance_history_v1';
+        const BENCHMARK_FLOWS_KEY = 'micartera_r31k0_benchmark_flows_v1';
+        const BENCHMARK_TWR_START_KEY = 'micartera_r31k0_benchmark_twr_start_v1';
         const FINANCIAL_EVENTS_KEY = 'micartera_r31k0_financial_events_v1';
         const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
         const FINANCIAL_BROWSER_NOTIFIED_KEY = 'micartera_r31k0_financial_browser_notified_v1';
@@ -3207,12 +3219,69 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             }
             throw new Error('No se pudo consultar '+symbol+': '+errors.join(' · '));
         }
+        function readBenchmarkFlows() {
+            try { const rows=JSON.parse(localStorage.getItem(BENCHMARK_FLOWS_KEY)||'[]'); return Array.isArray(rows)?rows.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&Number(x.amount)>0&&['contribution','withdrawal'].includes(x.type)):[]; }
+            catch(_){ return []; }
+        }
+        function renderBenchmarkFlows() {
+            const list=document.getElementById('benchmark-flow-list'); if(!list)return;
+            const flows=readBenchmarkFlows().sort((a,b)=>b.date.localeCompare(a.date));
+            list.innerHTML=flows.length?flows.map(x=>'<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-800 px-3 py-2"><span>'+new Date(x.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+(x.type==='contribution'?'Aportación':'Retirada')+'</span><span class="font-bold '+(x.type==='contribution'?'text-emerald-300':'text-rose-300')+'">'+(x.type==='contribution'?'+':'−')+Number(x.amount).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €</span><button type="button" onclick="deleteBenchmarkFlow(\''+x.id+'\')" class="text-rose-300 hover:text-rose-200" aria-label="Eliminar flujo"><i class="fa-solid fa-trash"></i></button></div>').join(''):'<p>No hay flujos registrados.</p>';
+        }
+        function saveBenchmarkFlow(event) {
+            event.preventDefault();
+            const date=document.getElementById('benchmark-flow-date').value;
+            const amount=Number(document.getElementById('benchmark-flow-amount').value);
+            const type=document.getElementById('benchmark-flow-type').value;
+            if(!date||!Number.isFinite(amount)||amount<=0)return;
+            const flows=readBenchmarkFlows();
+            flows.push({id:'bf_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),date,amount:Number(amount.toFixed(2)),type});
+            localStorage.setItem(BENCHMARK_FLOWS_KEY,JSON.stringify(flows));
+            document.getElementById('benchmark-flow-amount').value='';
+            renderBenchmarkFlows(); showToast('Flujo externo registrado. Actualiza la comparativa.');
+        }
+        function deleteBenchmarkFlow(id) {
+            if(!confirm('¿Eliminar este flujo externo?'))return;
+            localStorage.setItem(BENCHMARK_FLOWS_KEY,JSON.stringify(readBenchmarkFlows().filter(x=>x.id!==id)));
+            renderBenchmarkFlows(); showToast('Flujo eliminado');
+        }
+        function calculatePortfolioTwr(history) {
+            const points=history.filter(x=>Number.isFinite(Number(x.marketValue))&&Number(x.marketValue)>=0).sort((a,b)=>a.date.localeCompare(b.date));
+            if(points.length<2)return null;
+            const flows=readBenchmarkFlows();
+            const byDate=new Map();
+            flows.forEach(f=>byDate.set(f.date,(byDate.get(f.date)||0)+(f.type==='contribution'?1:-1)*Number(f.amount)));
+            let index=100, valid=0;
+            const series=[{date:points[0].date,index}];
+            for(let i=1;i<points.length;i++){
+                const prev=Number(points[i-1].marketValue),current=Number(points[i].marketValue);
+                if(prev<=0)continue;
+                const flow=flows.filter(f=>f.date>points[i-1].date&&f.date<=points[i].date).reduce((sum,f)=>sum+(f.type==='contribution'?1:-1)*Number(f.amount),0);
+                const daily=(current-flow)/prev;
+                if(!Number.isFinite(daily)||daily<0)continue;
+                index*=daily; valid++;
+                series.push({date:points[i].date,index:Number(index.toFixed(4))});
+            }
+            return valid?series:null;
+        }
+
         async function refreshBenchmarkComparison(showToastAfter=true) {
             if(benchmarkComparisonRunning)return;
-            const history=readPerformanceHistory();
-            if(!history.length){setBenchmarkStatus('No hay histórico de rentabilidad. Guarda puntos desde la pantalla Rentabilidad.');return;}
-            const valid=history.filter(x=>Number.isFinite(Number(x.returnPct))).sort((a,b)=>a.date.localeCompare(b.date));
-            if(!valid.length)return;
+            renderBenchmarkFlows();
+            let history=readPerformanceHistory();
+            if(!localStorage.getItem(BENCHMARK_TWR_START_KEY)){
+                savePerformanceSnapshot(false);
+                history=readPerformanceHistory();
+                const baseline=history.filter(x=>Number.isFinite(Number(x.marketValue))).sort((a,b)=>a.date.localeCompare(b.date)).slice(-1)[0];
+                if(!baseline){setBenchmarkStatus('No se ha podido establecer una valoración inicial. Comprueba que tienes posiciones valoradas.');return;}
+                localStorage.setItem(BENCHMARK_TWR_START_KEY,baseline.date);
+                setBenchmarkStatus('Seguimiento TWR iniciado el '+new Date(baseline.date+'T12:00:00').toLocaleDateString('es-ES')+'. Guarda nuevas valoraciones en días posteriores para empezar la comparación.');
+                renderBenchmarkFlows();
+                return;
+            }
+            const twrStart=localStorage.getItem(BENCHMARK_TWR_START_KEY);
+            const valid=history.filter(x=>x.date>=twrStart&&Number.isFinite(Number(x.marketValue))).sort((a,b)=>a.date.localeCompare(b.date));
+            if(valid.length<2){setBenchmarkStatus('Seguimiento TWR iniciado el '+new Date(twrStart+'T12:00:00').toLocaleDateString('es-ES')+'. Necesitas una valoración posterior para calcular la rentabilidad.');return;}
             benchmarkComparisonRunning=true;
             const btn=document.getElementById('benchmark-refresh'); if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Consultando…';}
             setBenchmarkStatus('Consultando cierres históricos del S&P 500 y Nasdaq 100…');
@@ -3224,28 +3293,32 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const common=valid.map(p=>({date:p.date,portfolio:Number(p.returnPct),sp:spMap.get(p.date),nasdaq:ndMap.get(p.date)})).filter(p=>Number.isFinite(p.sp)&&Number.isFinite(p.nasdaq));
                 if(common.length<2){setBenchmarkStatus('No hay al menos dos fechas comunes entre tu histórico y los cierres de ambos índices. Guarda más puntos y vuelve a intentarlo.',true);return;}
                 const first=common[0];
-                const portfolioBase=1+first.portfolio/100;
-                if(!Number.isFinite(portfolioBase)||portfolioBase<=0){setBenchmarkStatus('El primer punto de rentabilidad de la cartera no permite normalizar la serie.',true);return;}
+                const twrSeries=calculatePortfolioTwr(valid);
+                if(!twrSeries||twrSeries.length<2){setBenchmarkStatus('No hay suficientes valoraciones consecutivas válidas para calcular el TWR.',true);return;}
+                const twrMap=new Map(twrSeries.map(p=>[p.date,p.index]));
+                const comparable=common.filter(p=>twrMap.has(p.date));
+                if(comparable.length<2){setBenchmarkStatus('No hay suficientes fechas comunes para comparar el TWR con los índices.',true);return;}
+                const portfolioBase=twrMap.get(comparable[0].date);
                 const series=[
-                    {label:'Mi cartera',data:common.map(p=>Number((100*(1+p.portfolio/100)/portfolioBase).toFixed(3))),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',borderWidth:3},
-                    {label:'S&P 500',data:common.map(p=>Number((100*p.sp/first.sp).toFixed(3))),borderColor:'#38bdf8',borderWidth:2},
-                    {label:'Nasdaq 100',data:common.map(p=>Number((100*p.nasdaq/first.nasdaq).toFixed(3))),borderColor:'#a78bfa',borderWidth:2}
+                    {label:'Mi cartera · TWR',data:comparable.map(p=>Number((100*twrMap.get(p.date)/portfolioBase).toFixed(3))),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',borderWidth:3},
+                    {label:'S&P 500',data:comparable.map(p=>Number((100*p.sp/comparable[0].sp).toFixed(3))),borderColor:'#38bdf8',borderWidth:2},
+                    {label:'Nasdaq 100',data:comparable.map(p=>Number((100*p.nasdaq/comparable[0].nasdaq).toFixed(3))),borderColor:'#a78bfa',borderWidth:2}
                 ];
-                const final=common[common.length-1];
+                const final=comparable[comparable.length-1];
                 const returns=series.map(x=>(x.data[x.data.length-1]/100-1)*100);
                 benchmarkSetMetric('benchmark-portfolio-return',returns[0]);benchmarkSetMetric('benchmark-sp-return',returns[1]);benchmarkSetMetric('benchmark-nasdaq-return',returns[2]);
-                document.getElementById('benchmark-portfolio-detail').textContent=common.length+' puntos comparables';
+                document.getElementById('benchmark-portfolio-detail').textContent='TWR · '+comparable.length+' puntos comparables';
                 document.getElementById('benchmark-sp-detail').textContent='Índice de precio · USD';
                 document.getElementById('benchmark-nasdaq-detail').textContent='Índice de precio · USD';
                 const best=Math.max(...returns),worst=Math.min(...returns),diff=returns[0]-Math.max(returns[1],returns[2]);
                 const diffEl=document.getElementById('benchmark-outperformance');
                 diffEl.textContent=(diff>=0?'Ventaja de la cartera: +':'Desventaja de la cartera: ')+Math.abs(diff).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' puntos';
                 diffEl.className='text-xs font-bold '+(diff>=0?'text-emerald-300':'text-rose-300');
-                document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+common.length+' fechas comunes';
+                document.getElementById('benchmark-period').textContent='Desde '+new Date(first.date+'T12:00:00').toLocaleDateString('es-ES')+' hasta '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+' · '+comparable.length+' fechas comunes';
                 document.getElementById('benchmark-chart-empty').classList.add('hidden');document.getElementById('benchmark-chart-wrap').classList.remove('hidden');
                 if(benchmarkChartInstance){benchmarkChartInstance.destroy();benchmarkChartInstance=null;}
-                benchmarkChartInstance=new Chart(document.getElementById('benchmarkChart').getContext('2d'),{type:'line',data:{labels:common.map(p=>new Date(p.date+'T12:00:00').toLocaleDateString('es-ES')),datasets:series.map(x=>({...x,fill:false,tension:.2,pointRadius:common.length>90?0:2,pointHoverRadius:5}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}}},scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{color:'rgba(148,163,184,.12)'}},y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString('es-ES')},grid:{color:'rgba(148,163,184,.12)'},title:{display:true,text:'Índice (base 100)',color:'#94a3b8'}}}}});
-                setBenchmarkStatus('Comparativa actualizada con cierres históricos de Yahoo Finance. Último dato disponible: '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+'.');
+                benchmarkChartInstance=new Chart(document.getElementById('benchmarkChart').getContext('2d'),{type:'line',data:{labels:comparable.map(p=>new Date(p.date+'T12:00:00').toLocaleDateString('es-ES')),datasets:series.map(x=>({...x,fill:false,tension:.2,pointRadius:comparable.length>90?0:2,pointHoverRadius:5}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}}},scales:{x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{color:'rgba(148,163,184,.12)'}},y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString('es-ES')},grid:{color:'rgba(148,163,184,.12)'},title:{display:true,text:'Índice (base 100)',color:'#94a3b8'}}}}});
+                setBenchmarkStatus('Comparativa TWR actualizada con cierres históricos de Yahoo Finance. Último dato disponible: '+new Date(final.date+'T12:00:00').toLocaleDateString('es-ES')+'.');
                 if(showToastAfter)showToast('Comparativa de mercado actualizada');
             }catch(error){console.error('Error en comparativa benchmark:',error);setBenchmarkStatus('No se pudo completar la comparativa: '+(error.message||'fallo de conexión')+'. Puedes volver a intentarlo más tarde.',true);}
             finally{benchmarkComparisonRunning=false;if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate mr-2"></i>Actualizar comparativa';}}
