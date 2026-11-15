@@ -1399,6 +1399,8 @@
         const FINANCIAL_EVENTS_SYNC_KEY = 'micartera_r31k0_financial_events_sync_v1';
         const FINANCIAL_BROWSER_NOTIFIED_KEY = 'micartera_r31k0_financial_browser_notified_v1';
         let financialBrowserNotified = new Set();
+        let financialNotificationRegistration = null;
+        let financialServiceWorkerReady = null;
         const INVESTMENT_JOURNAL_KEY = 'micartera_r31k0_investment_journal_v1';
         let investmentJournalData = [];
         const investmentJournalNotified = new Set();
@@ -1429,6 +1431,15 @@
             const dateInput = document.getElementById('tx-date');
             if (dateInput) dateInput.value = today;
 
+            initFinancialServiceWorker();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.addEventListener('message', event => {
+                    if(event.data && event.data.type==='OPEN_FINANCIAL_CALENDAR' && typeof showFinancialCalendarView==='function') showFinancialCalendarView();
+                });
+            }
+            if (new URLSearchParams(window.location.search).get('openFinancialCalendar')==='1') {
+                setTimeout(() => { if(typeof showFinancialCalendarView==='function') showFinancialCalendarView(); }, 1200);
+            }
             loadPortfolioData();
             loadStrategies();
             loadFinancialEvents();
@@ -3422,36 +3433,79 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             if(badge){badge.textContent=count>99?'99+':String(count);badge.hidden=count===0;badge.title=count?count+' evento(s) en ventana de aviso':'Sin avisos próximos';}
             const due=document.getElementById('financial-event-due-count'); if(due) due.textContent=count;
         }
+        function initFinancialServiceWorker(){
+            if(!('serviceWorker' in navigator) || !window.isSecureContext) {
+                financialServiceWorkerReady = Promise.resolve(null);
+                return financialServiceWorkerReady;
+            }
+            financialServiceWorkerReady = navigator.serviceWorker.register('./service-worker.js')
+                .then(() => navigator.serviceWorker.ready)
+                .then(registration => {
+                    financialNotificationRegistration = registration;
+                    updateFinancialNotificationUI();
+                    return registration;
+                })
+                .catch(error => {
+                    console.warn('No se pudo registrar el service worker de avisos:', error);
+                    updateFinancialNotificationUI();
+                    return null;
+                });
+            return financialServiceWorkerReady;
+        }
         function updateFinancialNotificationUI(){
             const button=document.getElementById('financial-notification-enable');
             const status=document.getElementById('financial-notification-status');
             if(!button||!status)return;
             if(!('Notification' in window)){button.disabled=true;button.textContent='Avisos no compatibles';status.textContent='Este navegador no admite notificaciones web.';return;}
+            if(!('serviceWorker' in navigator) || !window.isSecureContext){button.disabled=true;button.textContent='Avisos no compatibles';status.textContent='Este navegador o contexto no permite activar notificaciones móviles.';return;}
             const permission=Notification.permission;
-            if(permission==='granted'){button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Avisos activados';button.classList.add('opacity-70');status.textContent='Notificaciones del navegador activadas. La aplicación debe permanecer abierta.';}
-            else if(permission==='denied'){button.innerHTML='<i class="fa-solid fa-bell-slash mr-2"></i>Avisos bloqueados';button.disabled=true;status.textContent='El navegador ha bloqueado los avisos. Puedes permitirlos desde los ajustes del sitio.';}
-            else{button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Activar avisos';status.textContent='Los avisos del navegador están desactivados.';}
+            button.disabled=false;
+            if(permission==='granted'){button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Avisos activados';button.classList.add('opacity-70');status.textContent='Notificaciones activadas. En móviles, el navegador las muestra mediante el servicio de notificaciones.';}
+            else if(permission==='denied'){button.innerHTML='<i class="fa-solid fa-bell-slash mr-2"></i>Avisos bloqueados';status.textContent='El permiso está bloqueado. Actívalo desde los ajustes del navegador o del sitio.';}
+            else{button.innerHTML='<i class="fa-solid fa-bell mr-2"></i>Activar avisos';status.textContent='Pulsa para permitir las notificaciones de este sitio.';}
         }
         async function enableFinancialNotifications(){
-            if(!('Notification' in window)){showToast('Este navegador no admite notificaciones web');updateFinancialNotificationUI();return;}
+            if(!('Notification' in window) || !('serviceWorker' in navigator) || !window.isSecureContext){
+                showToast('Este navegador no permite notificaciones web en esta configuración');updateFinancialNotificationUI();return;
+            }
             try{
-                const permission=await Notification.requestPermission();
+                // Solicitar permiso inmediatamente desde el gesto del usuario.
+                const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+                if(permission!=='granted'){
+                    updateFinancialNotificationUI();
+                    if(permission==='denied')showToast('Permiso bloqueado. Revisa los ajustes del sitio en el navegador.','fa-bell-slash');
+                    return;
+                }
+                const registration = financialNotificationRegistration || await (financialServiceWorkerReady || initFinancialServiceWorker());
+                if(!registration || typeof registration.showNotification!=='function'){
+                    showToast('No se pudo preparar el servicio de notificaciones. Recarga la aplicación e inténtalo de nuevo.');
+                    return;
+                }
+                financialNotificationRegistration=registration;
                 updateFinancialNotificationUI();
-                if(permission==='granted'){showToast('Avisos del navegador activados','fa-bell');sendDueFinancialBrowserNotifications();}
-                else if(permission==='denied')showToast('El navegador ha bloqueado los avisos','fa-bell-slash');
-            }catch(error){showToast('No se pudo activar el permiso de notificaciones');}
+                showToast('Avisos del navegador activados','fa-bell');
+                sendDueFinancialBrowserNotifications();
+            }catch(error){
+                console.warn('Error activando avisos:',error);
+                showToast('No se pudieron activar los avisos. Comprueba los permisos del navegador.');
+            }
         }
-        function sendFinancialBrowserNotification(e,days){
+        async function sendFinancialBrowserNotification(e,days){
             if(!('Notification' in window)||Notification.permission!=='granted')return;
             const key=String(e.id)+'|'+financialTodayISO();
             if(financialBrowserNotified.has(key))return;
             const when=days===0?'Hoy':days===1?'Mañana':'En '+days+' días';
             try{
-                const n=new Notification('MiCartera R31k0 · '+when,{body:(e.asset?e.asset+' · ':'')+(e.title||'Evento financiero'),tag:key});
-                n.onclick=()=>{window.focus();showFinancialCalendarView();n.close();};
+                const registration=financialNotificationRegistration || await (financialServiceWorkerReady || initFinancialServiceWorker());
+                if(!registration || typeof registration.showNotification!=='function')return;
+                await registration.showNotification('MiCartera R31k0 · '+when,{
+                    body:(e.asset?e.asset+' · ':'')+(e.title||'Evento financiero'),
+                    tag:key,
+                    data:{url:'./?openFinancialCalendar=1'}
+                });
                 financialBrowserNotified.add(key);
                 localStorage.setItem(FINANCIAL_BROWSER_NOTIFIED_KEY,JSON.stringify([...financialBrowserNotified].slice(-300)));
-            }catch(error){}
+            }catch(error){console.warn('No se pudo mostrar el aviso:',error);}
         }
         function sendDueFinancialBrowserNotifications(){
             financialEventsData.forEach(e=>{const days=financialDaysUntil(e.date),lead=Number(e.reminderDays||0);if(days>=0&&days<=lead)sendFinancialBrowserNotification(e,days);});
