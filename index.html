@@ -3443,11 +3443,16 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const attempts=sourceIndex===0?2:1;
                 for(let attempt=0;attempt<attempts;attempt++){
                     try{
-                        const json=await fetchJsonWithTimeout(makeUrl(target),30000);
+                        const requestUrl=makeUrl(target);
+                        const json=await fetchJsonWithTimeout(requestUrl,30000);
+                        const chartError=json?.chart?.error;
                         const result=json.chart?.result?.[0];
-                        if(!result)throw new Error(json.chart?.error?.description||json.error||'Sin datos históricos');
-                        const timestamps=result.timestamp||[];
-                        const closes=result.indicators?.quote?.[0]?.close||[];
+                        if(!result){
+                            const detail=chartError?.description||json.error||'Yahoo no devolvió chart.result[0]';
+                            throw new Error(detail+' [símbolo solicitado: '+symbol+'; rango: '+startDate+' a '+endDate+'; period1: '+period1+'; period2: '+period2+'; respuesta: '+(json?.chart?'chart sin resultado':'sin objeto chart')+']');
+                        }
+                        const timestamps=Array.isArray(result.timestamp)?result.timestamp:[];
+                        const closes=Array.isArray(result.indicators?.quote?.[0]?.close)?result.indicators.quote[0].close:[];
                         const timezone=result.meta?.exchangeTimezoneName||'UTC';
                         const dateInExchange=(timestamp)=>{
                             const parts=new Intl.DateTimeFormat('en-GB',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(timestamp*1000));
@@ -3455,8 +3460,19 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                             return get('year')+'-'+get('month')+'-'+get('day');
                         };
                         const rows=[];
-                        timestamps.forEach((ts,i)=>{const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});});
-                        if(!rows.length)throw new Error('Yahoo no devolvió cierres válidos');
+                        let nullCloses=0, invalidCloses=0;
+                        timestamps.forEach((ts,i)=>{
+                            const raw=closes[i];
+                            if(raw===null||raw===undefined){nullCloses++;return;}
+                            const close=Number(raw);
+                            if(Number.isFinite(close)&&close>0)rows.push({date:dateInExchange(ts),close});
+                            else invalidCloses++;
+                        });
+                        if(!rows.length){
+                            const firstTs=timestamps.length?new Date(timestamps[0]*1000).toISOString():'ninguno';
+                            const lastTs=timestamps.length?new Date(timestamps[timestamps.length-1]*1000).toISOString():'ninguno';
+                            throw new Error('Yahoo no devolvió cierres válidos [solicitado: '+symbol+'; devuelto: '+(result.meta?.symbol||'sin símbolo')+'; rango: '+startDate+' a '+endDate+'; period1: '+period1+'; period2: '+period2+'; zona horaria: '+timezone+'; timestamps: '+timestamps.length+'; cierres: '+closes.length+'; cierres nulos: '+nullCloses+'; cierres no válidos: '+invalidCloses+'; primer timestamp: '+firstTs+'; último timestamp: '+lastTs+'; error Yahoo: '+(chartError?.description||'ninguno')+']');
+                        }
                         rows.currency=result.meta?.currency||null;
                         return rows;
                     }catch(error){
