@@ -572,7 +572,7 @@ export default {
         );
         yahooUrl.searchParams.set(
           "modules",
-          "price,summaryDetail,defaultKeyStatistics,financialData,assetProfile"
+          "price,summaryDetail,defaultKeyStatistics,financialData,assetProfile,incomeStatementHistory,balanceSheetHistory,cashflowStatementHistory,incomeStatementHistoryQuarterly,balanceSheetHistoryQuarterly,cashflowStatementHistoryQuarterly"
         );
         yahooUrl.searchParams.set("formatted", "true");
         yahooUrl.searchParams.set("crumb", crumb);
