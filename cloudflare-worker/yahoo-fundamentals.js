@@ -648,7 +648,7 @@ export default {
         const assetProfile = profile.assetProfile || {};
         const top = profile.topHoldings || {};
         const holdings = Array.isArray(top.holdings) ? top.holdings : [];
-        const mapped = await Promise.all(holdings.slice(0,10).map(async holding => {
+        const mapped = await Promise.all(holdings.slice(0,5).map(async holding => {
           const holdingSymbol = String(holding.symbol || "").trim();
           const weight = Number(holding.holdingPercent?.raw ?? holding.holdingPercent ?? 0) * (Number(holding.holdingPercent?.raw ?? holding.holdingPercent ?? 0) <= 1 ? 100 : 1);
           let country = "";
