@@ -623,6 +623,57 @@ export default {
       }
     }
 
+    /*
+     * Perfil de riesgo: datos públicos de Yahoo para activos y fondos.
+     * En ETF se devuelve la lista de principales posiciones y, cuando Yahoo
+     * publica el país de la empresa subyacente, su atribución geográfica.
+     */
+    if (url.pathname === "/risk-profile" && request.method === "GET") {
+      const symbol = (url.searchParams.get("symbol") || "").trim();
+      if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) return json({ error: "Símbolo no válido." }, 400, origin);
+      try {
+        const { cookies, crumb } = await fetchYahooSession();
+        async function quoteModules(ticker, modules) {
+          const target = new URL("https://query1.finance.yahoo.com/v10/finance/quoteSummary/" + encodeURIComponent(ticker));
+          target.searchParams.set("modules", modules);
+          target.searchParams.set("formatted", "true");
+          target.searchParams.set("crumb", crumb);
+          const response = await fetch(target.toString(), {headers:{"User-Agent":USER_AGENT,"Accept":"application/json,*/*","Cookie":cookies,"Referer":"https://finance.yahoo.com/"},cf:{cacheTtl:900,cacheEverything:true}});
+          if (!response.ok) throw new Error("Yahoo HTTP "+response.status+" para "+ticker);
+          const payload = await response.json();
+          if (payload?.quoteSummary?.error) throw new Error(payload.quoteSummary.error.description || "Yahoo rechazó "+ticker);
+          return payload?.quoteSummary?.result?.[0] || {};
+        }
+        const profile = await quoteModules(symbol, "assetProfile,fundProfile,topHoldings");
+        const assetProfile = profile.assetProfile || {};
+        const top = profile.topHoldings || {};
+        const holdings = Array.isArray(top.holdings) ? top.holdings : [];
+        const mapped = await Promise.all(holdings.slice(0,10).map(async holding => {
+          const holdingSymbol = String(holding.symbol || "").trim();
+          const weight = Number(holding.holdingPercent?.raw ?? holding.holdingPercent ?? 0) * (Number(holding.holdingPercent?.raw ?? holding.holdingPercent ?? 0) <= 1 ? 100 : 1);
+          let country = "";
+          if (/^[A-Za-z0-9.^=_-]{1,32}$/.test(holdingSymbol)) {
+            try { const underlying = await quoteModules(holdingSymbol, "assetProfile"); country = String(underlying.assetProfile?.country || ""); } catch (_) {}
+          }
+          return {symbol:holdingSymbol,name:String(holding.holdingName || holdingSymbol || "Posición"),weight,country};
+        }));
+        const sectors = Array.isArray(top.sectorWeightings) ? top.sectorWeightings : [];
+        return json({
+          symbol,
+          country:String(assetProfile.country || ""),
+          sector:String(assetProfile.sector || ""),
+          fundCategory:String(profile.fundProfile?.categoryName || ""),
+          holdings:mapped,
+          sectorWeightings:sectors,
+          updatedAt:new Date().toISOString(),
+          source:"Yahoo Finance",
+          coverageNote: holdings.length ? "Principales posiciones publicadas por Yahoo; no necesariamente representan el 100 % del fondo." : "Yahoo no publica principales posiciones para este símbolo."
+        },200,origin);
+      } catch(error) {
+        return json({error:String(error?.message || error),symbol},502,origin);
+      }
+    }
+
     /* Registro dinámico de activos: ticker y nombre de empresa. */
     if (url.pathname === "/symbols" && request.method === "POST") {
       if (!env?.NEWS_KV) {
