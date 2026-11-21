@@ -5432,20 +5432,51 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             }
         }
 
+        let cloudWriteQueue = Promise.resolve();
+        let cloudSyncTimer = null;
+
+        function readCloudArray(key) {
+            try {
+                const value = JSON.parse(localStorage.getItem(key) || '[]');
+                return Array.isArray(value) ? value : [];
+            } catch (_) { return []; }
+        }
+
+        function scheduleCloudSync() {
+            if (!fbUser || isApplyingRemoteSync) return;
+            clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(() => pushToCloud(), 450);
+        }
+
         async function pushToCloud() {
             if (!fbUser || isApplyingRemoteSync) return;
+            const syncUser = fbUser;
+            const payload = {
+                assets: assetsData,
+                strategies: Array.isArray(strategiesData) ? strategiesData : [],
+                watchlist: Array.isArray(watchlistData) ? watchlistData : [],
+                priceAlertHistory: Array.isArray(priceAlertHistory) ? priceAlertHistory : [],
+                assetNewsRead: [...getReadAssetNews()],
+                taxonomy: { sectors, assetTypes },
+                performanceHistory: readCloudArray(PERFORMANCE_HISTORY_KEY),
+                riskHistory: readCloudArray(RISK_HISTORY_KEY),
+                financialEvents: readCloudArray(FINANCIAL_EVENTS_KEY),
+                financialEventsSync: localStorage.getItem(FINANCIAL_EVENTS_SYNC_KEY) || '',
+                investmentJournal: readCloudArray(INVESTMENT_JOURNAL_KEY),
+                benchmarkFlows: readCloudArray(BENCHMARK_FLOWS_KEY),
+                benchmarkTwrStart: localStorage.getItem(BENCHMARK_TWR_START_KEY) || '',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
             setCloudStatus('<i class="fa-solid fa-arrows-rotate fa-spin mr-1"></i>Guardando...', 'bg-amber-500/20 text-amber-200 border-amber-400/30');
+            cloudWriteQueue = cloudWriteQueue.catch(() => {}).then(() => {
+                if (!fbUser || fbUser.uid !== syncUser.uid) return;
+                return fbDb.collection('carteras').doc(syncUser.uid).set(payload, { merge: true });
+            });
             try {
-                await fbDb.collection('carteras').doc(fbUser.uid).set({
-                    assets: assetsData,
-                    strategies: Array.isArray(strategiesData) ? strategiesData : [],
-                    watchlist: Array.isArray(watchlistData) ? watchlistData : [],
-                    priceAlertHistory: Array.isArray(priceAlertHistory) ? priceAlertHistory : [],
-                    assetNewsRead: [...getReadAssetNews()],
-                    taxonomy: { sectors, assetTypes },
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                setCloudStatus('<i class="fa-solid fa-cloud-check mr-1"></i>Sincronizado', 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30');
+                await cloudWriteQueue;
+                if (fbUser && fbUser.uid === syncUser.uid) {
+                    setCloudStatus('<i class="fa-solid fa-cloud-check mr-1"></i>Sincronizado', 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30');
+                }
             } catch (err) {
                 console.error('Error subiendo a Firestore:', err);
                 setCloudStatus('<i class="fa-solid fa-triangle-exclamation mr-1"></i>Error nube', 'bg-rose-500/20 text-rose-200 border-rose-400/30');
@@ -5477,6 +5508,32 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             pushToCloud();
         };
 
+        // Sincroniza también los históricos y módulos que guardan directamente en localStorage.
+        // Al aplicar datos remotos, isApplyingRemoteSync evita el eco de escritura a Firestore.
+        const CLOUD_SYNC_STORAGE_KEYS = new Set([
+            PERFORMANCE_HISTORY_KEY, RISK_HISTORY_KEY, FINANCIAL_EVENTS_KEY,
+            FINANCIAL_EVENTS_SYNC_KEY, INVESTMENT_JOURNAL_KEY,
+            BENCHMARK_FLOWS_KEY, BENCHMARK_TWR_START_KEY
+        ]);
+        const originalStorageSetItem = Storage.prototype.setItem;
+        const originalStorageRemoveItem = Storage.prototype.removeItem;
+        Storage.prototype.setItem = function(key, value) {
+            originalStorageSetItem.call(this, key, value);
+            if (this === window.localStorage && CLOUD_SYNC_STORAGE_KEYS.has(String(key))) scheduleCloudSync();
+        };
+        Storage.prototype.removeItem = function(key) {
+            originalStorageRemoveItem.call(this, key);
+            if (this === window.localStorage && CLOUD_SYNC_STORAGE_KEYS.has(String(key))) scheduleCloudSync();
+        };
+
+        function hasLocalCloudData() {
+            return assetsData.length > 0 || strategiesData.length > 0 || watchlistData.length > 0 ||
+                [...CLOUD_SYNC_STORAGE_KEYS].some(key => {
+                    const value = localStorage.getItem(key);
+                    return value !== null && value !== '' && value !== '[]';
+                });
+        }
+
         fbAuth.onAuthStateChanged(user => {
             fbUser = user;
             const modal = document.getElementById('firebaseLoginModal');
@@ -5495,8 +5552,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
 
             fbUnsubscribe = fbDb.collection('carteras').doc(user.uid).onSnapshot(doc => {
                 if (!doc.exists) {
-                    // Si la nube aún está vacía pero hay datos locales (ej. recién importados de JSON), los sube
-                    if (assetsData.length > 0 || strategiesData.length > 0 || watchlistData.length > 0) {
+                    // Si la nube aún está vacía pero hay datos locales, los sube como primera copia.
+                    if (hasLocalCloudData()) {
                         pushToCloud();
                     } else {
                         setCloudStatus('<i class="fa-solid fa-cloud mr-1"></i>Nube lista (vacía)', 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30');
@@ -5520,6 +5577,35 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     }
                     if (Array.isArray(data.priceAlertHistory)) { priceAlertHistory=data.priceAlertHistory; persistPriceAlertHistory(); renderPriceAlertHistory(); }
                     if (Array.isArray(data.assetNewsRead)) { try { localStorage.setItem(ASSET_NEWS_READ_KEY,JSON.stringify(data.assetNewsRead)); } catch(e) {} if (typeof renderAssetNews==="function" && !document.getElementById("asset-news-view")?.classList.contains("hidden")) renderAssetNews(); }
+
+                    // Históricos y módulos personales: se restauran incluso si están vacíos para
+                    // que las eliminaciones realizadas en otro dispositivo también se propaguen.
+                    if (Array.isArray(data.performanceHistory)) localStorage.setItem(PERFORMANCE_HISTORY_KEY, JSON.stringify(data.performanceHistory));
+                    if (Array.isArray(data.riskHistory)) localStorage.setItem(RISK_HISTORY_KEY, JSON.stringify(data.riskHistory));
+                    if (Array.isArray(data.financialEvents)) {
+                        financialEventsData = data.financialEvents;
+                        localStorage.setItem(FINANCIAL_EVENTS_KEY, JSON.stringify(data.financialEvents));
+                        if (typeof renderFinancialCalendar === 'function') renderFinancialCalendar();
+                    }
+                    if (typeof data.financialEventsSync === 'string') localStorage.setItem(FINANCIAL_EVENTS_SYNC_KEY, data.financialEventsSync);
+                    if (Array.isArray(data.investmentJournal)) {
+                        investmentJournalData = data.investmentJournal;
+                        localStorage.setItem(INVESTMENT_JOURNAL_KEY, JSON.stringify(data.investmentJournal));
+                        if (typeof updateInvestmentJournalBadge === 'function') updateInvestmentJournalBadge();
+                        if (!document.getElementById('investment-journal-view')?.classList.contains('hidden') && typeof renderInvestmentJournal === 'function') renderInvestmentJournal();
+                    }
+                    if (Array.isArray(data.benchmarkFlows)) {
+                        localStorage.setItem(BENCHMARK_FLOWS_KEY, JSON.stringify(data.benchmarkFlows));
+                        if (typeof renderBenchmarkFlows === 'function') renderBenchmarkFlows();
+                    }
+                    if (typeof data.benchmarkTwrStart === 'string') {
+                        if (data.benchmarkTwrStart) localStorage.setItem(BENCHMARK_TWR_START_KEY, data.benchmarkTwrStart);
+                        else localStorage.removeItem(BENCHMARK_TWR_START_KEY);
+                    }
+                    if (typeof renderPerformanceSummary === 'function') renderPerformanceSummary();
+                    if (typeof renderPerformanceHistoryChart === 'function') renderPerformanceHistoryChart();
+                    if (typeof renderRiskHistoryChart === 'function') renderRiskHistoryChart();
+
                     if (data.taxonomy && Array.isArray(data.taxonomy.sectors) && Array.isArray(data.taxonomy.assetTypes)) {
                         sectors = data.taxonomy.sectors;
                         assetTypes = data.taxonomy.assetTypes;
