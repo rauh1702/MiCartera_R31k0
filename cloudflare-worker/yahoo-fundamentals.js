@@ -668,6 +668,55 @@ export default {
     }
 
 
+    /* Listado y restauración de copias completas almacenadas en GitHub. */
+    if ((url.pathname === "/backups" || url.pathname === "/backup/restore") && request.method === "POST") {
+      if (!env?.GITHUB_TOKEN || !env?.BACKUP_ACCESS_KEY) return json({error:"El Worker no tiene configurados los secrets GITHUB_TOKEN y BACKUP_ACCESS_KEY."},503,origin);
+      const suppliedKey=request.headers.get("X-Backup-Key") || "";
+      if (!suppliedKey || suppliedKey!==env.BACKUP_ACCESS_KEY) return json({error:"Clave de copia incorrecta."},401,origin);
+      try {
+        const api="https://api.github.com/repos/rauh1702/MiCartera_R31k0";
+        const headers={"Authorization":"Bearer "+env.GITHUB_TOKEN,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"MiCartera-R31k0-Backup"};
+        async function github(path) {
+          const response=await fetch(api+path,{headers});
+          const data=await response.json().catch(()=>({}));
+          if(!response.ok) throw new Error("GitHub API "+response.status+": "+(data.message||path));
+          return data;
+        }
+        const ref=await github("/git/ref/heads/main");
+        const tree=await github("/git/trees/"+ref.object.sha+"?recursive=1");
+        const entries=Array.isArray(tree.tree)?tree.tree:[];
+        if(url.pathname==="/backups") {
+          const folders=[...new Set(entries.filter(item=>/^backups\/complete-[^/]+\/datos\/backup-datos\.json$/.test(item.path)).map(item=>item.path.split("/").slice(0,2).join("/")))];
+          const backups=[];
+          for(const folder of folders) {
+            const item=entries.find(entry=>entry.path===folder+"/datos/backup-datos.json");
+            if(!item) continue;
+            const blob=await github("/git/blobs/"+item.sha);
+            const binary=atob(String(blob.content||"").replace(/\s/g,""));
+            const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));
+            let exportedAt=null;
+            try { exportedAt=JSON.parse(new TextDecoder().decode(bytes)).exportedAt||null; } catch {}
+            backups.push({folder,exportedAt});
+          }
+          backups.sort((a,b)=>String(b.exportedAt||b.folder).localeCompare(String(a.exportedAt||a.folder)));
+          return json({ok:true,backups},200,origin);
+        }
+        const body=await request.json().catch(()=>({}));
+        const folder=String(body.folder||"");
+        if(!/^backups\/complete-[A-Za-z0-9T._-]+$/.test(folder)) return json({error:"La carpeta solicitada no es válida."},400,origin);
+        const item=entries.find(entry=>entry.path===folder+"/datos/backup-datos.json");
+        if(!item) return json({error:"No se ha encontrado el archivo de datos de esa copia."},404,origin);
+        const blob=await github("/git/blobs/"+item.sha);
+        const binary=atob(String(blob.content||"").replace(/\s/g,""));
+        const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));
+        const backup=JSON.parse(new TextDecoder().decode(bytes));
+        if(!backup || backup.backupType!=="complete" || !Array.isArray(backup.assets)) return json({error:"El archivo no es una copia completa válida."},422,origin);
+        return json({ok:true,backup,folder},200,origin);
+      } catch(error) {
+        return json({error:String(error?.message||error)},502,origin);
+      }
+    }
+
     /*
      * Histórico de mercado para la comparativa y la reconstrucción TWR.
      * Yahoo exige una sesión válida; se reutiliza el handshake cookie + crumb.
