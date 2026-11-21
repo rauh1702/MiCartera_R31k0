@@ -996,6 +996,7 @@
                         </div>
                         <p id="watch-financial-history-status" class="text-xs text-slate-400" aria-live="polite">Esperando estados financieros…</p>
                         <div id="watch-financial-history-content" class="space-y-4"></div>
+                        <details class="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2"><summary class="cursor-pointer text-xs font-semibold text-slate-400">Diagnóstico de datos recibidos de Yahoo</summary><div id="watch-financial-history-diagnostic" class="mt-2 text-[11px]"></div></details>
                     </div>
                     <p class="text-[11px] text-slate-500">Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>
                 </section>
@@ -2632,7 +2633,7 @@
         }
         function renderWatchFinancialHistory(data,sourceCurrency,rates){
             if(data){watchFinancialHistoryData=data;watchFinancialHistoryCurrency=sourceCurrency||"EUR";watchFinancialHistoryRates=rates||{};}
-            const host=document.getElementById("watch-financial-history-content"),status=document.getElementById("watch-financial-history-status");
+            const host=document.getElementById("watch-financial-history-content"),status=document.getElementById("watch-financial-history-status"),diagnostic=document.getElementById("watch-financial-history-diagnostic");
             if(!host||!watchFinancialHistoryData)return;
             const d=watchFinancialHistoryData,quarterly=watchFinancialHistoryMode==="quarterly";
             const modules=quarterly?[
@@ -2644,33 +2645,63 @@
                 ["Balance","balanceSheetHistory","balanceSheetStatements",[["Activos totales","totalAssets"],["Efectivo y equivalentes","cash"],["Deuda total","totalDebt"],["Patrimonio neto","totalStockholderEquity"],["Activos corrientes","totalCurrentAssets"],["Pasivos corrientes","totalCurrentLiabilities"]]],
                 ["Flujos de caja","cashflowStatementHistory","cashflowStatements",[["Flujo de caja operativo","totalCashFromOperatingActivities"],["Inversión / CAPEX","capitalExpenditures"],["Flujo de caja libre","freeCashFlow"],["Variación neta de efectivo","changeInCash"]]]
             ];
+            const aliases={
+                operatingIncome:["operatingIncome","incomeFromOperations","operatingIncomeLoss"],
+                dilutedEPS:["dilutedEPS","dilutedEps","dilutedEarningsPerShare","dilutedEPSCommonStockholders"],
+                cash:["cash","cashAndCashEquivalents","cashCashEquivalentsAndShortTermInvestments"],
+                totalDebt:["totalDebt","longTermDebtAndCapitalLeaseObligation","longTermDebt"],
+                totalStockholderEquity:["totalStockholderEquity","stockholdersEquity","totalEquityGrossMinorityInterest"],
+                totalCashFromOperatingActivities:["totalCashFromOperatingActivities","operatingCashFlow","cashFlowFromContinuingOperatingActivities"],
+                capitalExpenditures:["capitalExpenditures","capitalExpenditure"],
+                freeCashFlow:["freeCashFlow"],
+                changeInCash:["changeInCash","changesInCash"]
+            };
             const raw=v=>{if(v==null)return null;if(typeof v==="number")return Number.isFinite(v)?v:null;if(typeof v==="object"){if(v.raw!=null)return Number(v.raw);if(v.fmt!=null&&v.fmt!=="")return Number(String(v.fmt).replace(/,/g,""));}return null;};
             const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
             const money=v=>{const n=raw(v);if(n===null)return "—";try{return formatFundamentalNumber(convertToEUR(n,watchFinancialHistoryCurrency,watchFinancialHistoryRates),0)+" €";}catch(_){return formatFundamentalNumber(n,0)+" "+watchFinancialHistoryCurrency;}};
             const periodLabel=row=>{const n=raw(row.endDate);const date=n?new Date(n*1000):null;return date&&!Number.isNaN(date.getTime())?date.toLocaleDateString("es-ES",{month:"short",year:"numeric"}):"Periodo";};
+            const findStatementArray=(node,depth=0)=>{
+                if(!node||typeof node!=="object"||depth>5)return null;
+                if(Array.isArray(node))return node.length?node:null;
+                for(const value of Object.values(node)){const found=findStatementArray(value,depth+1);if(found)return found;}
+                return null;
+            };
+            const inspect=(node,depth=0)=>{
+                if(!node||typeof node!=="object"||depth>5)return [];
+                if(Array.isArray(node))return node.length?node:[];
+                for(const value of Object.values(node)){const found=inspect(value,depth+1);if(found.length)return found;}
+                return [];
+            };
             let totalRows=0;
+            const diagnostics=[];
             const sections=modules.map(([title,module,key,metrics])=>{
-                const moduleData=d[module];
-                // Yahoo puede variar la clave interna de la colección según el mercado.
-                const findStatementArray=(node,depth=0)=>{
-                    if(!node||typeof node!=="object"||depth>4)return null;
-                    if(Array.isArray(node))return node;
-                    for(const value of Object.values(node)){
-                        const found=findStatementArray(value,depth+1);
-                        if(found&&found.length)return found;
-                    }
-                    return null;
-                };
-                const records=Array.isArray(moduleData?.[key])?moduleData[key]:findStatementArray(moduleData)||[];
+                const moduleData=d[module],direct=Array.isArray(moduleData?.[key])?moduleData[key]:null;
+                const records=direct||findStatementArray(moduleData)||[];
                 const rows=Array.isArray(records)?records.slice().sort((a,b)=>(raw(b.endDate)||0)-(raw(a.endDate)||0)).slice(0,quarterly?8:5):[];
+                const sample=rows[0]||{};
+                const presentKeys=Object.keys(sample);
+                diagnostics.push({title,module,modulePresent:moduleData!=null,moduleType:Array.isArray(moduleData)?"array":typeof moduleData,topKeys:moduleData&&typeof moduleData==="object"?Object.keys(moduleData):[],arrayCount:rows.length,sampleKeys:presentKeys});
                 if(!rows.length)return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-slate-200 mb-2">'+title+'</h5><p class="text-xs text-slate-500">Yahoo Finance no ofrece datos '+(quarterly?"trimestrales":"anuales")+' para este apartado.</p></section>';
                 totalRows+=rows.length;
                 const head='<thead><tr><th class="sticky left-0 z-10 bg-slate-900 px-3 py-2 text-left text-slate-400">Indicador</th>'+rows.map(r=>'<th class="whitespace-nowrap px-3 py-2 text-right text-slate-400">'+esc(periodLabel(r))+'</th>').join("")+'</tr></thead>';
-                const body=metrics.map(([label,key])=>'<tr class="border-t border-slate-800"><th class="sticky left-0 bg-slate-950 px-3 py-2 text-left font-medium text-slate-300">'+esc(label)+'</th>'+rows.map(r=>'<td class="whitespace-nowrap px-3 py-2 text-right font-semibold text-slate-100">'+(key==="dilutedEPS"?(raw(r[key])===null?"—":formatFundamentalNumber(raw(r[key]),2)+" "+watchFinancialHistoryCurrency):money(r[key]))+'</td>').join("")+'</tr>').join("");
+                const body=metrics.map(([label,metricKey])=>{
+                    const candidates=aliases[metricKey]||[metricKey];
+                    return '<tr class="border-t border-slate-800"><th class="sticky left-0 bg-slate-950 px-3 py-2 text-left font-medium text-slate-300">'+esc(label)+'</th>'+rows.map(row=>{
+                        const actualKey=candidates.find(k=>row[k]!=null),value=actualKey?row[actualKey]:null,n=raw(value);
+                        const formatted=n===null?"—":metricKey==="dilutedEPS"?formatFundamentalNumber(n,2)+" "+watchFinancialHistoryCurrency:money(value);
+                        return '<td class="whitespace-nowrap px-3 py-2 text-right font-semibold text-slate-100">'+formatted+'</td>';
+                    }).join("")+'</tr>';
+                }).join("");
                 return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-cyan-300 mb-2">'+title+'</h5><div class="overflow-x-auto"><table class="min-w-full text-xs">'+head+'<tbody>'+body+'</tbody></table></div></section>';
             }).join("");
             host.innerHTML=sections;
             if(status)status.textContent=totalRows?"Periodos disponibles: "+(quarterly?"trimestrales":"anuales")+". Las fechas corresponden al cierre de cada periodo; importes convertidos a euros al tipo de cambio actual.":"No hay estados financieros históricos disponibles para este activo en Yahoo Finance.";
+            if(diagnostic){
+                diagnostic.innerHTML=diagnostics.map(x=>{
+                    const state=!x.modulePresent?"módulo ausente":x.arrayCount+" registros";
+                    return '<div class="border-t border-slate-700 py-2"><p class="font-semibold text-slate-200">'+esc(x.title)+' · '+esc(x.module)+' · '+state+'</p><p class="mt-1 break-words text-slate-400">Claves del módulo: '+esc(x.topKeys.join(", ")||"ninguna")+'</p><p class="mt-1 break-words text-slate-400">Claves del primer registro: '+esc(x.sampleKeys.join(", ")||"ninguna")+'</p></div>';
+                }).join("");
+            }
         }
 
         async function loadWatchFundamentals(){
