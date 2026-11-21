@@ -3229,7 +3229,14 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     const quote = await yahooChart(symbol);
                     const eurPrice = convertToEUR(quote.price, quote.currency, rates);
                     const previousCloseEUR = quote.previousClose ? convertToEUR(quote.previousClose, quote.currency, rates) : null;
-                    const candidate = { price: Number(eurPrice.toFixed(4)), previousCloseEUR: previousCloseEUR ? Number(previousCloseEUR.toFixed(4)) : null, symbol, currency: quote.currency };
+                    const candidate = {
+                        price: Number(eurPrice.toFixed(4)),
+                        previousCloseEUR: Number.isFinite(previousCloseEUR) && previousCloseEUR > 0 ? Number(previousCloseEUR.toFixed(4)) : null,
+                        symbol,
+                        currency: quote.currency,
+                        marketTime: quote.marketTime || null,
+                        marketState: quote.marketState || ''
+                    };
                     // Algunos símbolos alternativos del ETC devuelven precio, pero no
                     // suficiente histórico para calcular la sesión anterior. Probar el
                     // siguiente ticker antes de aceptar una cotización sin variación diaria.
@@ -3262,9 +3269,16 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                         applyPriceAndCheckAlerts(asset, quote.price);
                         // Guarda también el cierre anterior convertido a euros: lo usa
                         // el modo «Variación del día» del Resumen diario.
-                        asset.previousCloseEUR = quote.previousCloseEUR;
+                        // No borres un cierre anterior válido si Yahoo devuelve temporalmente
+                        // una vela incompleta. Solo sustituimos el dato cuando llega uno nuevo.
+                        if (Number.isFinite(Number(quote.previousCloseEUR)) && Number(quote.previousCloseEUR) > 0) {
+                            asset.previousCloseEUR = Number(quote.previousCloseEUR);
+                            asset.previousCloseMarketTime = quote.marketTime || null;
+                        }
                         asset.yahooTicker = quote.symbol;
                         asset.priceCurrency = quote.currency;
+                        asset.marketState = quote.marketState || asset.marketState || '';
+                        asset.lastMarketTime = quote.marketTime || asset.lastMarketTime || null;
                         asset.lastPriceUpdate = new Date().toISOString();
                         updatedCount++;
                     } catch (error) {
