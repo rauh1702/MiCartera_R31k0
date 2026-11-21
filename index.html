@@ -2165,7 +2165,9 @@
                 asset.realizedProfitByYear = realizedProfitByYear;
                 asset.taxIRPF = 0;
 
-                const price = parseFloat(asset.currentPrice) || currentPMP;
+                // No sustituir una cotización ausente por el PMP: eso inventa una valoración de mercado.
+                const parsedMarketPrice = Number(asset.currentPrice);
+                const price = Number.isFinite(parsedMarketPrice) && parsedMarketPrice > 0 ? parsedMarketPrice : 0;
                 asset.currentPrice = price;
                 asset.marketValue = accumulatedShares * price;
                 asset.latentProfit = accumulatedShares > 0 ? (asset.marketValue - currentCapitalVivo) : 0;
@@ -3192,7 +3194,7 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     if (Number(fx.rates.GBP) > 0) rates.GBP = 1 / Number(fx.rates.GBP);
                     if (Number(fx.rates.SEK) > 0) rates.SEK = 1 / Number(fx.rates.SEK);
                     for (const currency of ['CHF','CAD','JPY','AUD','NOK','DKK']) if (Number(fx.rates[currency]) > 0) rates[currency] = 1 / Number(fx.rates[currency]);
-                    if (rates.USD && rates.GBP && rates.SEK) return rates;
+                    if (rates.USD && rates.GBP && rates.SEK) { rates.rateDate = fx.date || null; rates.rateSource = "BCE · Frankfurter"; return rates; }
                 }
             } catch (error) {
                 console.warn("No se pudo consultar Frankfurter; se intenta obtener el cambio desde Yahoo Finance", error);
@@ -3208,6 +3210,8 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     console.warn(`No se pudo actualizar el cambio EUR/${currency}`, error);
                 }
             }));
+            rates.rateDate = new Date().toISOString().slice(0, 10);
+            rates.rateSource = "Yahoo Finance · pares EUR";
             return rates;
         }
 
@@ -3230,8 +3234,12 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                     const eurPrice = convertToEUR(quote.price, quote.currency, rates);
                     const previousCloseEUR = quote.previousClose ? convertToEUR(quote.previousClose, quote.currency, rates) : null;
                     const candidate = {
-                        price: Number(eurPrice.toFixed(4)),
-                        previousCloseEUR: Number.isFinite(previousCloseEUR) && previousCloseEUR > 0 ? Number(previousCloseEUR.toFixed(4)) : null,
+                        price: Number(eurPrice.toFixed(6)),
+                        rawPrice: Number(quote.price),
+                        fxToEUR: Number(quote.currency === "EUR" ? 1 : (eurPrice / quote.price)),
+                        fxRateDate: rates.rateDate || null,
+                        fxRateSource: rates.rateSource || "Fuente no identificada",
+                        previousCloseEUR: Number.isFinite(previousCloseEUR) && previousCloseEUR > 0 ? Number(previousCloseEUR.toFixed(6)) : null,
                         symbol,
                         currency: quote.currency,
                         marketTime: quote.marketTime || null,
@@ -3277,6 +3285,11 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                         }
                         asset.yahooTicker = quote.symbol;
                         asset.priceCurrency = quote.currency;
+                        asset.rawMarketPrice = quote.rawPrice;
+                        asset.fxToEUR = quote.fxToEUR;
+                        asset.fxRateDate = quote.fxRateDate;
+                        asset.fxRateSource = quote.fxRateSource;
+                        asset.priceSource = "Yahoo Finance";
                         asset.marketState = quote.marketState || asset.marketState || '';
                         asset.lastMarketTime = quote.marketTime || asset.lastMarketTime || null;
                         asset.lastPriceUpdate = new Date().toISOString();
@@ -3310,9 +3323,16 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                 const fxRates = await getExchangeRates();
                 const quote = await fetchAssetQuote(asset, fxRates);
                 applyPriceAndCheckAlerts(asset, quote.price);
-                asset.previousCloseEUR = quote.previousCloseEUR;
+                if (Number.isFinite(Number(quote.previousCloseEUR)) && Number(quote.previousCloseEUR) > 0) { asset.previousCloseEUR = quote.previousCloseEUR; asset.previousCloseMarketTime = quote.marketTime || null; }
                 asset.yahooTicker = quote.symbol;
                 asset.priceCurrency = quote.currency;
+                asset.rawMarketPrice = quote.rawPrice;
+                asset.fxToEUR = quote.fxToEUR;
+                asset.fxRateDate = quote.fxRateDate;
+                asset.fxRateSource = quote.fxRateSource;
+                asset.priceSource = "Yahoo Finance";
+                asset.marketState = quote.marketState || asset.marketState || "";
+                asset.lastMarketTime = quote.marketTime || asset.lastMarketTime || null;
                 asset.lastPriceUpdate = new Date().toISOString();
                 savePortfolioData();
                 renderDashboard();
