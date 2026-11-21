@@ -923,6 +923,7 @@
                       <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-extrabold text-slate-900">Exposición geográfica</h3><p class="text-xs text-slate-500 mt-1">País de empresas identificadas y distribución conocida de los fondos; cobertura parcial en ETF.</p></div><button type="button" onclick="refreshRiskLookthrough(true)" class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
                       <p id="risk-lookthrough-status" class="my-3 text-xs text-slate-500" aria-live="polite">Pulsa actualizar para consultar la composición disponible.</p>
                       <div id="risk-by-country" class="space-y-3"><p class="text-xs text-slate-400">Todavía no hay datos geográficos.</p></div>
+                      <div class="mt-4 border-t border-slate-100 pt-3"><p class="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Exposición sin país atribuible</p><div id="risk-nongeographic-exposure" class="space-y-2"><p class="text-xs text-slate-400">Pendiente de calcular.</p></div></div>
                     </div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                       <h3 class="font-extrabold text-slate-900">Principales posiciones de ETF</h3><p class="text-xs text-slate-500 mt-1 mb-4">Composición comunicada por Yahoo Finance; puede no incluir todas las posiciones del fondo.</p>
@@ -4070,25 +4071,52 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         function riskKnownCountry(asset){
             const id=riskAssetIdentity(asset);
-            if(/sive\.st|\bsive\b|sivers/.test(id))return "Suecia";
-            if(/\bonds\b|ondas/.test(id))return "Estados Unidos";
-            if(/\botlk\b|outlook therapeutics/.test(id))return "Estados Unidos";
-            if(/\bidr(?:\.mc)?\b|indra sistemas|indra/.test(id))return "España";
-            if(/\b9ha\b|elicio therapeutics|elicio/.test(id))return "Estados Unidos";
+            if(/sive\\.st|\\bsive\\b|sivers/.test(id))return "Suecia";
+            if(/\\bonds\\b|ondas/.test(id))return "Estados Unidos";
+            if(/\\botlk\\b|outlook therapeutics/.test(id))return "Estados Unidos";
+            if(/\\bidr(?:\\.mc)?\\b|indra sistemas|indra/.test(id))return "España";
+            if(/\\b9ha\\b|elicio therapeutics|elicio|\\beltx\\b/.test(id))return "Estados Unidos";
             return "";
         }
         function riskIsFund(asset){
             const type=String(asset.assetType||asset.type||"").toLowerCase();
-            const identity=riskAssetIdentity(asset);
-            return /etf|fondo|fund|ucits/.test(type)||/\bvuaa\b|\bxnas\b|\bl0ck\b|\block\b/.test(identity);
+            const id=riskAssetIdentity(asset);
+            return /etf|fondo|fund|ucits/.test(type)||/\\bvuaa\\b|\\bxnas\\b|\\bl0ck\\b|\\block\\b/.test(id);
+        }
+        function riskGeoProfile(asset){
+            const id=riskAssetIdentity(asset);
+            // Distribuciones por país publicadas para estos ISIN; fecha de referencia 31-08-2026.
+            const profiles={
+                "IE00BFMXXD54":[["Estados Unidos",97.50],["Irlanda",1.15],["Otros países",1.35]],
+                "IE00BMFKG444":[["Estados Unidos",94.51],["Reino Unido",1.66],["Países Bajos",1.32],["Otros países",2.51]],
+                "IE00BG0J4C88":[["Estados Unidos",71.72],["Japón",11.91],["Israel",3.20],["Taiwán",2.94],["Otros países",10.23]]
+            };
+            const isin=String(asset.isin||"").toUpperCase();
+            if(profiles[isin])return {kind:"countries",rows:profiles[isin],source:"distribución por países publicada a 31-08-2026"};
+            if(isin==="IE00B4ND3602"||isin==="IE00B4NCWG09")return {kind:"commodity",label:isin==="IE00B4ND3602"?"Oro físico":"Plata física",source:"ETC respaldado por metal físico; no representa exposición a un país"};
+            return null;
         }
         function riskFormatPct(value){return (Number(value)||0).toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1})+" %";}
         function renderRiskLookthrough(){
-            const countryMap=new Map(), fundRows=[];
-            let knownValue=0, totalValue=0, errors=0, fallbackCount=0, unknownCount=0;
+            const countryMap=new Map(), fundRows=[], nonGeoMap=new Map();
+            let knownValue=0,totalValue=0,errors=0,fallbackCount=0,unknownValue=0,profileValue=0;
             const positions=assetsData.filter(a=>(Number(a.shares)||0)>0&&(Number(a.marketValue)||0)>0);
             for(const a of positions){
-                const value=Number(a.marketValue)||0; totalValue+=value;
+                const value=Number(a.marketValue)||0;totalValue+=value;
+                const profile=riskGeoProfile(a);
+                if(profile?.kind==="countries"){
+                    profileValue+=value;
+                    for(const [country,weight] of profile.rows){
+                        const contribution=value*weight/100;
+                        countryMap.set(country,(countryMap.get(country)||0)+contribution);
+                    }
+                    knownValue+=value;
+                    continue;
+                }
+                if(profile?.kind==="commodity"){
+                    nonGeoMap.set(profile.label,(nonGeoMap.get(profile.label)||0)+value);
+                    continue;
+                }
                 const data=riskLookthroughCache[riskYahooSymbol(a)];
                 if(riskIsFund(a)){
                     if(data&&!data.error){
@@ -4096,34 +4124,35 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         if(holdings.length)fundRows.push({name:a.name||a.ticker||"ETF",value,holdings});
                         let attributed=0;
                         for(const h of holdings){
-                            const weight=Number(h.weight)||0, country=String(h.country||"").trim();
+                            const weight=Number(h.weight)||0,country=String(h.country||"").trim();
                             if(country&&weight>0){const contribution=value*weight/100;countryMap.set(country,(countryMap.get(country)||0)+contribution);attributed+=contribution;}
                         }
-                        knownValue+=attributed;
-                        if(!attributed)unknownCount++;
-                    }else{errors++;unknownCount++;}
+                        knownValue+=attributed;unknownValue+=Math.max(0,value-attributed);
+                        if(!attributed)errors++;
+                    }else{unknownValue+=value;errors++;}
                     continue;
                 }
                 const yahooCountry=String(data&&!data.error?data.country||"": "").trim();
                 const country=yahooCountry||riskKnownCountry(a);
                 if(country){
-                    countryMap.set(country,(countryMap.get(country)||0)+value);
-                    knownValue+=value;
+                    countryMap.set(country,(countryMap.get(country)||0)+value);knownValue+=value;
                     if(!yahooCountry)fallbackCount++;
-                }else{
-                    unknownCount++;
-                    if(!data||data.error)errors++;
-                }
+                }else{unknownValue+=value;if(!data||data.error)errors++;}
             }
-            const countryEl=document.getElementById("risk-by-country"), holdingsEl=document.getElementById("risk-fund-holdings"), status=document.getElementById("risk-lookthrough-status");
+            const countryEl=document.getElementById("risk-by-country"),holdingsEl=document.getElementById("risk-fund-holdings"),status=document.getElementById("risk-lookthrough-status"),nonGeoEl=document.getElementById("risk-nongeographic-exposure");
             if(countryEl){
                 const rows=[...countryMap.entries()].map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
                 countryEl.innerHTML=rows.length?rows.map(r=>'<div><div class="flex justify-between gap-2 text-xs"><span class="font-semibold text-slate-700">'+escapeHtml(r.name)+'</span><span class="font-bold text-slate-900">'+riskFormatPct(r.value/totalValue*100)+'</span></div><div class="mt-1 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full bg-violet-500" style="width:'+Math.min(100,r.value/totalValue*100).toFixed(2)+'%"></div></div></div>').join(""):'<p class="text-xs text-slate-500">No hay datos geográficos disponibles para las posiciones actuales.</p>';
             }
-            if(holdingsEl){
-                holdingsEl.innerHTML=fundRows.length?fundRows.map(f=>'<div class="border-b border-slate-100 pb-3 last:border-0"><div class="flex justify-between gap-2 mb-2"><span class="text-sm font-bold text-slate-800">'+escapeHtml(f.name)+'</span><span class="text-xs text-slate-500">'+riskFormatPct(f.value/totalValue*100)+' cartera</span></div><div class="space-y-1.5">'+f.holdings.slice(0,10).map(h=>'<div class="flex justify-between gap-2 text-xs"><span class="min-w-0 truncate text-slate-700">'+escapeHtml(h.name||h.symbol||"Posición")+'</span><span class="shrink-0 font-semibold text-slate-900">'+riskFormatPct(h.weight)+'</span></div>').join("")+'</div></div>').join(""):'<p class="text-xs text-slate-500">Yahoo Finance no ha devuelto principales posiciones para los ETF consultados. No se mostrarán datos estimados como si fueran reales.</p>';
+            if(nonGeoEl){
+                const rows=[...nonGeoMap.entries()].map(([name,value])=>({name,value}));
+                if(unknownValue>0)rows.push({name:"Sin datos suficientes",value:unknownValue});
+                nonGeoEl.innerHTML=rows.length?rows.map(r=>'<div class="flex justify-between gap-2 text-xs"><span class="text-slate-700">'+escapeHtml(r.name)+'</span><span class="font-bold text-slate-900">'+riskFormatPct(r.value/totalValue*100)+'</span></div>').join(""):'<p class="text-xs text-slate-500">Toda la cartera tiene atribución geográfica o clasificación específica.</p>';
             }
-            if(status)status.textContent="País conocido: "+riskFormatPct(totalValue?knownValue/totalValue*100:0)+" del valor de cartera. "+fallbackCount+" empresa(s) con país asignado por identificación del activo; "+unknownCount+" posición(es) sin atribución geográfica. La cobertura de ETF es parcial y depende de los datos publicados por Yahoo.";
+            if(holdingsEl){
+                holdingsEl.innerHTML=fundRows.length?fundRows.map(f=>'<div class="border-b border-slate-100 pb-3 last:border-0"><div class="flex justify-between gap-2 mb-2"><span class="text-sm font-bold text-slate-800">'+escapeHtml(f.name)+'</span><span class="text-xs text-slate-500">'+riskFormatPct(f.value/totalValue*100)+' cartera</span></div><div class="space-y-1.5">'+f.holdings.slice(0,10).map(h=>'<div class="flex justify-between gap-2 text-xs"><span class="min-w-0 truncate text-slate-700">'+escapeHtml(h.name||h.symbol||"Posición")+'</span><span class="shrink-0 font-semibold text-slate-900">'+riskFormatPct(h.weight)+'</span></div>').join("")+'</div></div>').join(""):'<p class="text-xs text-slate-500">No hay principales posiciones adicionales comunicadas por Yahoo para los fondos restantes.</p>';
+            }
+            if(status)status.textContent="Atribución geográfica: "+riskFormatPct(totalValue?knownValue/totalValue*100:0)+" de la cartera. "+riskFormatPct(totalValue?unknownValue/totalValue*100:0)+" sigue sin país por falta de datos; los ETC de oro y plata se muestran aparte, sin asignarles Irlanda como país de inversión. "+fallbackCount+" empresa(s) identificadas por país. Perfiles de ETF con fecha 31-08-2026.";
         }
         async function refreshRiskLookthrough(force){
             if(riskLookthroughBusy)return;
