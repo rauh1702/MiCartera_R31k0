@@ -561,6 +561,61 @@ async function fetchYahooFinancialTimeseries(symbol,cookies,crumb){
   return {statements,count,source:"Yahoo Finance fundamentals-timeseries",updatedAt:new Date().toISOString()};
 }
 
+
+/* Consulta de cotizaciones públicas de Trade Republic.
+   El topic ticker es público: no se solicitan teléfono, PIN ni sesión personal. */
+async function fetchTradeRepublicTickers(isins) {
+  const unique = [...new Set((isins || []).map(value => String(value || "").trim().toUpperCase()).filter(value => /^[A-Z0-9]{12}$/.test(value)))].slice(0, 30);
+  if (!unique.length) return [];
+  return await new Promise((resolve, reject) => {
+    let ws, settled = false, connected = false, nextId = 1;
+    const pending = new Map(), results = [];
+    const timer = setTimeout(() => finish(new Error("Trade Republic no respondió dentro del tiempo límite.")), 10000);
+    function finish(error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { ws?.close(1000, "quotes complete"); } catch (_) {}
+      if (error && !results.length) reject(error);
+      else resolve(results);
+    }
+    try {
+      ws = new WebSocket("wss://api.traderepublic.com");
+      ws.addEventListener("open", () => ws.send("connect 30"));
+      ws.addEventListener("message", event => {
+        const raw = String(event.data || "");
+        if (!connected) {
+          if (/connected/i.test(raw)) {
+            connected = true;
+            for (const isin of unique) {
+              const id = nextId++;
+              pending.set(String(id), isin);
+              ws.send("sub " + id + " " + JSON.stringify({ type: "ticker", id: isin + ".LSX" }));
+            }
+          } else if (/error|unauthorized|forbidden/i.test(raw)) {
+            finish(new Error("Trade Republic rechazó la conexión pública: " + raw.slice(0, 180)));
+          }
+          return;
+        }
+        for (const line of raw.split(/\r?\n/)) {
+          const match = line.match(/^\s*(\d+)\s+A\s+(\{.*\})\s*$/s);
+          if (!match) continue;
+          const isin = pending.get(match[1]);
+          if (!isin) continue;
+          try {
+            const payload = JSON.parse(match[2]);
+            results.push({ isin, bid: payload.bid || null, ask: payload.ask || null, last: payload.last || null, pre: payload.pre || null, open: payload.open || null, qualityId: payload.qualityId || "", exchange: "LSX" });
+            pending.delete(match[1]);
+          } catch (_) {}
+          if (!pending.size) finish();
+        }
+      });
+      ws.addEventListener("error", () => finish(new Error("No se pudo abrir el WebSocket público de Trade Republic.")));
+      ws.addEventListener("close", () => { if (!settled) finish(new Error("Trade Republic cerró la conexión antes de completar las cotizaciones.")); });
+    } catch (error) { finish(error); }
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -785,6 +840,19 @@ export default {
         return json({symbol,financialHistory:history},200,origin);
       }catch(error){
         return json({error:String(error?.message||error),stage:"fundamentals-timeseries",symbol},502,origin);
+      }
+    }
+
+
+    /* Cotizaciones públicas de Trade Republic por ISIN, sin credenciales personales. */
+    if (url.pathname === "/tr-quotes" && request.method === "GET") {
+      const isins = [...new Set((url.searchParams.get("isins") || "").split(",").map(value => value.trim().toUpperCase()).filter(value => /^[A-Z0-9]{12}$/.test(value)))].slice(0, 30);
+      if (!isins.length) return json({ error: "Indica al menos un ISIN válido." }, 400, origin);
+      try {
+        const quotes = await fetchTradeRepublicTickers(isins);
+        return json({ quotes, source: "Trade Republic · ticker público LSX", updatedAt: new Date().toISOString(), requested: isins.length }, 200, origin);
+      } catch (error) {
+        return json({ error: String(error?.message || error), stage: "trade-republic-quotes" }, 502, origin);
       }
     }
 
