@@ -1940,6 +1940,63 @@
             document.getElementById('importJsonInput').click();
         }
 
+        function validateImportedAssets(importedAssets) {
+            if (!Array.isArray(importedAssets) || importedAssets.length === 0) return 'La copia no contiene activos.';
+            const names = new Set();
+
+            for (let assetIndex = 0; assetIndex < importedAssets.length; assetIndex++) {
+                const asset = importedAssets[assetIndex];
+                if (!asset || typeof asset !== 'object' || Array.isArray(asset) ||
+                    typeof asset.name !== 'string' || !asset.name.trim()) {
+                    return 'El activo número ' + (assetIndex + 1) + ' no tiene un nombre válido.';
+                }
+
+                const normalizedName = asset.name.trim().toUpperCase();
+                if (names.has(normalizedName)) return 'Hay activos con el nombre duplicado: ' + asset.name + '.';
+                names.add(normalizedName);
+
+                if (asset.history === undefined || asset.history === null) asset.history = [];
+                if (!Array.isArray(asset.history)) return 'El historial de ' + asset.name + ' no tiene un formato válido.';
+
+                const orderedHistory = asset.history.map((tx, index) => ({ tx, index }))
+                    .sort((a, b) => String(a.tx && a.tx.date || '').localeCompare(String(b.tx && b.tx.date || '')) || a.index - b.index);
+                let availableShares = 0;
+
+                for (const entry of orderedHistory) {
+                    const tx = entry.tx;
+                    if (!tx || typeof tx !== 'object' || Array.isArray(tx)) {
+                        return 'Hay una operación inválida en el historial de ' + asset.name + '.';
+                    }
+                    const date = String(tx.date || '');
+                    const qty = Number(tx.qty);
+                    const price = Number(tx.price);
+                    const comm = tx.comm === undefined || tx.comm === null || tx.comm === '' ? 0 : Number(tx.comm);
+                    const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+                        !Number.isNaN(Date.parse(date + 'T00:00:00Z')) &&
+                        new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) === date;
+
+                    if (!validDate || !['Compra', 'Venta'].includes(tx.type) ||
+                        !Number.isFinite(qty) || qty <= 0 ||
+                        !Number.isFinite(price) || price <= 0 ||
+                        !Number.isFinite(comm) || comm < 0) {
+                        return 'Operación inválida en ' + asset.name + ' (' + (date || 'fecha desconocida') +
+                            '). Revisa fecha, tipo, cantidad, precio y comisión.';
+                    }
+
+                    if (tx.type === 'Compra') availableShares += qty;
+                    else {
+                        if (qty > availableShares + 1e-8) {
+                            return 'La venta de ' + asset.name + ' del ' + date +
+                                ' supera las acciones disponibles en esa fecha (' +
+                                availableShares.toLocaleString('es-ES') + '). La copia no se ha importado.';
+                        }
+                        availableShares -= qty;
+                    }
+                }
+            }
+            return null;
+        }
+
         function importDataFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1951,6 +2008,11 @@
                     // y el nuevo formato que incluye cartera + estrategias.
                     const importedAssets = Array.isArray(importedData) ? importedData : importedData && importedData.assets;
                     if (Array.isArray(importedAssets) && importedAssets.length > 0) {
+                        const validationError = validateImportedAssets(importedAssets);
+                        if (validationError) {
+                            alert('No se puede importar esta copia: ' + validationError);
+                            return;
+                        }
                         // No modificar localStorage ni el estado de la aplicación hasta confirmar.
                         if (!confirm('La importación sustituirá los datos actuales de la cartera. ¿Deseas continuar?')) return;
                         // Restaura las claves locales incluidas en las copias completas
