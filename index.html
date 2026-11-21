@@ -2134,7 +2134,7 @@
                         totalRealizedProfit += opProfitFIFO;
 
                         const saleYear = String(tx.date || '').slice(0, 4);
-                        if (/^\\d{4}$/.test(saleYear)) {
+                        if (/^\d{4}$/.test(saleYear)) {
                             realizedProfitByYear[saleYear] = (realizedProfitByYear[saleYear] || 0) + opProfitFIFO;
                         }
 
