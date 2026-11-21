@@ -480,6 +480,87 @@ async function refreshNews(env, assetsOrSymbols) {
   return result;
 }
 
+const FINANCIAL_SERIES_MAP = {
+  annualTotalRevenue:"incomeStatementHistory.totalRevenue",
+  annualGrossProfit:"incomeStatementHistory.grossProfit",
+  annualOperatingIncome:"incomeStatementHistory.operatingIncome",
+  annualNetIncome:"incomeStatementHistory.netIncome",
+  annualDilutedEPS:"incomeStatementHistory.dilutedEPS",
+  annualEBIT:"incomeStatementHistory.ebit",
+  annualTotalAssets:"balanceSheetHistory.totalAssets",
+  annualCashCashEquivalentsAndShortTermInvestments:"balanceSheetHistory.cash",
+  annualCashAndCashEquivalents:"balanceSheetHistory.cash",
+  annualTotalDebt:"balanceSheetHistory.totalDebt",
+  annualStockholdersEquity:"balanceSheetHistory.totalStockholderEquity",
+  annualTotalEquityGrossMinorityInterest:"balanceSheetHistory.totalStockholderEquity",
+  annualCurrentAssets:"balanceSheetHistory.totalCurrentAssets",
+  annualCurrentLiabilities:"balanceSheetHistory.totalCurrentLiabilities",
+  annualOperatingCashFlow:"cashflowStatementHistory.totalCashFromOperatingActivities",
+  annualCapitalExpenditure:"cashflowStatementHistory.capitalExpenditures",
+  annualCapitalExpenditureReported:"cashflowStatementHistory.capitalExpenditures",
+  annualFreeCashFlow:"cashflowStatementHistory.freeCashFlow",
+  annualChangesInCash:"cashflowStatementHistory.changeInCash",
+  annualEndCashPosition:"cashflowStatementHistory.endCashPosition"
+};
+const FINANCIAL_COLLECTIONS = {
+  incomeStatementHistory:"incomeStatementHistory",
+  balanceSheetHistory:"balanceSheetStatements",
+  cashflowStatementHistory:"cashflowStatements",
+  incomeStatementHistoryQuarterly:"incomeStatementHistory",
+  balanceSheetHistoryQuarterly:"balanceSheetStatements",
+  cashflowStatementHistoryQuarterly:"cashflowStatements"
+};
+function normalizeFinancialTimeseries(payload) {
+  const result=payload?.timeseries?.result;
+  const rowsByModule={};
+  for(const moduleKey of Object.keys(FINANCIAL_COLLECTIONS))rowsByModule[moduleKey]=new Map();
+  for(const item of Array.isArray(result)?result:[]){
+    if(!item||typeof item!=="object")continue;
+    for(const [seriesName,path] of Object.entries(FINANCIAL_SERIES_MAP)){
+      for(const frequency of ["annual","quarterly"]){
+        const seriesKey=frequency+seriesName.slice(6);
+        const points=item[seriesKey];
+        if(!Array.isArray(points))continue;
+        const moduleBase=path.split(".")[0];
+        const moduleKey=frequency==="annual"?moduleBase:moduleBase+"Quarterly";
+        const metric=path.split(".")[1];
+        for(const point of points){
+          const date=Date.parse(String(point?.asOfDate||"")+"T00:00:00Z");
+          if(!Number.isFinite(date))continue;
+          const timestamp=Math.floor(date/1000);
+          const row=rowsByModule[moduleKey].get(timestamp)||{endDate:{raw:timestamp}};
+          const value=point.reportedValue;
+          if(value&&value.raw!=null)row[metric]={raw:Number(value.raw),fmt:value.fmt??null};
+          rowsByModule[moduleKey].set(timestamp,row);
+        }
+      }
+    }
+  }
+  const output={};
+  for(const [moduleKey,collection] of Object.entries(FINANCIAL_COLLECTIONS)){
+    output[moduleKey]={[collection]:[...rowsByModule[moduleKey].values()].sort((a,b)=>(b.endDate.raw||0)-(a.endDate.raw||0))};
+  }
+  return output;
+}
+async function fetchYahooFinancialTimeseries(symbol,cookies,crumb){
+  const annual=["TotalRevenue","GrossProfit","OperatingIncome","NetIncome","DilutedEPS","EBIT","TotalAssets","CashCashEquivalentsAndShortTermInvestments","CashAndCashEquivalents","TotalDebt","StockholdersEquity","TotalEquityGrossMinorityInterest","CurrentAssets","CurrentLiabilities","OperatingCashFlow","CapitalExpenditure","CapitalExpenditureReported","FreeCashFlow","ChangesInCash","EndCashPosition"].map(x=>"annual"+x);
+  const types=annual.concat(annual.map(x=>x.replace(/^annual/,"quarterly")));
+  const target=new URL("https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/"+encodeURIComponent(symbol));
+  target.searchParams.set("symbol",symbol);
+  target.searchParams.set("type",types.join(","));
+  target.searchParams.set("period1",String(Math.floor(Date.UTC(2016,0,1)/1000)));
+  target.searchParams.set("period2",String(Math.floor(Date.now()/1000)+86400));
+  if(crumb)target.searchParams.set("crumb",crumb);
+  const response=await fetch(target.toString(),{headers:{"User-Agent":USER_AGENT,"Accept":"application/json,*/*","Cookie":cookies,"Referer":"https://finance.yahoo.com/"},redirect:"manual",cf:{cacheTtl:0,cacheEverything:false}});
+  const body=await response.text();
+  if(!response.ok)throw new Error("Yahoo fundamentals-timeseries respondió HTTP "+response.status);
+  let payload;try{payload=JSON.parse(body);}catch{throw new Error("Yahoo fundamentals-timeseries no devolvió JSON");}
+  if(payload?.timeseries?.error)throw new Error(payload.timeseries.error.description||"Yahoo rechazó la consulta de estados financieros");
+  const statements=normalizeFinancialTimeseries(payload);
+  const count=Object.values(statements).reduce((n,module)=>n+(Object.values(module).find(Array.isArray)?.length||0),0);
+  return {statements,count,source:"Yahoo Finance fundamentals-timeseries",updatedAt:new Date().toISOString()};
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -558,6 +639,19 @@ export default {
      * RUTA ORIGINAL DE FUNDAMENTALES.
      * Se conserva el flujo cookie + crumb y la validación de respuesta JSON.
      */
+
+    if (url.pathname === "/financial-history" && request.method === "GET") {
+      const symbol=(url.searchParams.get("symbol")||"").trim();
+      if(!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol))return json({error:"Símbolo vacío o no válido."},400,origin);
+      try{
+        const {cookies,crumb}=await fetchYahooSession();
+        const history=await fetchYahooFinancialTimeseries(symbol,cookies,crumb);
+        return json({symbol,financialHistory:history},200,origin);
+      }catch(error){
+        return json({error:String(error?.message||error),stage:"fundamentals-timeseries",symbol},502,origin);
+      }
+    }
+
     if (url.pathname === "/fundamentals" && request.method === "GET") {
       const symbol = (url.searchParams.get("symbol") || "").trim();
       if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) {
