@@ -2650,7 +2650,18 @@
             const periodLabel=row=>{const n=raw(row.endDate);const date=n?new Date(n*1000):null;return date&&!Number.isNaN(date.getTime())?date.toLocaleDateString("es-ES",{month:"short",year:"numeric"}):"Periodo";};
             let totalRows=0;
             const sections=modules.map(([title,module,key,metrics])=>{
-                const records=d[module]?.[key]||[];
+                const moduleData=d[module];
+                // Yahoo puede variar la clave interna de la colección según el mercado.
+                const findStatementArray=(node,depth=0)=>{
+                    if(!node||typeof node!=="object"||depth>4)return null;
+                    if(Array.isArray(node))return node;
+                    for(const value of Object.values(node)){
+                        const found=findStatementArray(value,depth+1);
+                        if(found&&found.length)return found;
+                    }
+                    return null;
+                };
+                const records=Array.isArray(moduleData?.[key])?moduleData[key]:findStatementArray(moduleData)||[];
                 const rows=Array.isArray(records)?records.slice().sort((a,b)=>(raw(b.endDate)||0)-(raw(a.endDate)||0)).slice(0,quarterly?8:5):[];
                 if(!rows.length)return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-slate-200 mb-2">'+title+'</h5><p class="text-xs text-slate-500">Yahoo Finance no ofrece datos '+(quarterly?"trimestrales":"anuales")+' para este apartado.</p></section>';
                 totalRows+=rows.length;
