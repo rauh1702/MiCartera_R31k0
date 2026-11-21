@@ -788,6 +788,55 @@ export default {
       }
     }
 
+    /* Cotización directa de Yahoo v7: incluye bid/ask además del último precio.
+       Se consulta en lote para evitar una petición por activo desde el navegador. */
+    if (url.pathname === "/quotes" && request.method === "GET") {
+      const symbols = [...new Set((url.searchParams.get("symbols") || "")
+        .split(",").map(value => value.trim())
+        .filter(value => /^[A-Za-z0-9.^=_-]{1,32}$/.test(value)))].slice(0, 40);
+      if (!symbols.length) return json({ error: "Indica al menos un símbolo válido." }, 400, origin);
+      try {
+        const { cookies, crumb } = await fetchYahooSession();
+        const yahooUrl = new URL("https://query1.finance.yahoo.com/v7/finance/quote");
+        yahooUrl.searchParams.set("symbols", symbols.join(","));
+        yahooUrl.searchParams.set("crumb", crumb);
+        const upstream = await fetch(yahooUrl.toString(), {
+          headers: {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json,text/plain,*/*",
+            "Cookie": cookies,
+            "Referer": "https://finance.yahoo.com/"
+          },
+          redirect: "manual",
+          cf: { cacheTtl: 0, cacheEverything: false }
+        });
+        const body = await upstream.text();
+        if (!upstream.ok) return json({ error: "Yahoo Finance respondió HTTP " + upstream.status + ".", stage: "quotes" }, 502, origin);
+        let parsed;
+        try { parsed = JSON.parse(body); }
+        catch { return json({ error: "Yahoo devolvió una respuesta que no es JSON.", stage: "quotes" }, 502, origin); }
+        const result = parsed?.quoteResponse?.result;
+        if (!Array.isArray(result)) return json({ error: parsed?.quoteResponse?.error?.description || "Yahoo no devolvió cotizaciones.", stage: "quotes" }, 502, origin);
+        return json({
+          quotes: result.map(item => ({
+            symbol: item.symbol,
+            currency: item.currency || null,
+            marketState: item.marketState || "",
+            regularMarketPrice: Number(item.regularMarketPrice) || null,
+            bid: Number(item.bid) || null,
+            ask: Number(item.ask) || null,
+            regularMarketTime: Number(item.regularMarketTime) || null,
+            exchange: item.fullExchangeName || item.exchange || "",
+            quoteType: item.quoteType || ""
+          })),
+          source: "Yahoo Finance v7 quote",
+          updatedAt: new Date().toISOString()
+        }, 200, origin);
+      } catch (error) {
+        return json({ error: String(error?.message || error), stage: "quotes" }, 502, origin);
+      }
+    }
+
     if (url.pathname === "/fundamentals" && request.method === "GET") {
       const symbol = (url.searchParams.get("symbol") || "").trim();
       if (!/^[A-Za-z0-9.^=_-]{1,32}$/.test(symbol)) {
