@@ -2433,7 +2433,8 @@
             const totalCapital = data.reduce((sum, item) => sum + item.capital, 0);
             const totalLatent = data.reduce((sum, item) => sum + item.latentProfit, 0);
             const totalProfit = data.reduce((sum, item) => sum + item.realizedProfit, 0);
-            const totalTax = data.reduce((sum, item) => sum + item.taxIRPF, 0);
+            // El IRPF es un dato global del ejercicio: no debe depender de los filtros visibles.
+            const totalTax = assetsData.reduce((sum, item) => sum + (Number(item.taxIRPF) || 0), 0);
             const totalCommissions = data.reduce((sum, item) => sum + (item.commmissions || 0), 0);
 
             document.getElementById('kpi-capital-total').innerText = totalCapital.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
