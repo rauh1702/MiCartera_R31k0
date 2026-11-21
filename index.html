@@ -1947,19 +1947,21 @@
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    // Restaura las claves locales incluidas en las copias completas.
-                    if (importedData && !Array.isArray(importedData) && importedData.localStorage && typeof importedData.localStorage === 'object') {
-                        for (const [key, value] of Object.entries(importedData.localStorage)) {
-                            if (!/auth|token|credential|password|secret|session/i.test(key)) {
-                                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-                            }
-                        }
-                    }
                     // Compatibilidad: admite las copias antiguas (un array de activos)
                     // y el nuevo formato que incluye cartera + estrategias.
                     const importedAssets = Array.isArray(importedData) ? importedData : importedData && importedData.assets;
                     if (Array.isArray(importedAssets) && importedAssets.length > 0) {
+                        // No modificar localStorage ni el estado de la aplicación hasta confirmar.
                         if (!confirm('La importación sustituirá los datos actuales de la cartera. ¿Deseas continuar?')) return;
+                        // Restaura las claves locales incluidas en las copias completas
+                        // únicamente después de la confirmación del usuario.
+                        if (!Array.isArray(importedData) && importedData.localStorage && typeof importedData.localStorage === 'object') {
+                            for (const [key, value] of Object.entries(importedData.localStorage)) {
+                                if (!/auth|token|credential|password|secret|session/i.test(key)) {
+                                    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                                }
+                            }
+                        }
                         assetsData = importedAssets;
                         savePortfolioData();
                         if (!Array.isArray(importedData) && Array.isArray(importedData.watchlist)) { watchlistData = importedData.watchlist; persistWatchlist(); }
