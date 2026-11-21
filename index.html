@@ -1861,6 +1861,14 @@
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
+                    // Restaura las claves locales incluidas en las copias completas.
+                    if (importedData && !Array.isArray(importedData) && importedData.localStorage && typeof importedData.localStorage === 'object') {
+                        for (const [key, value] of Object.entries(importedData.localStorage)) {
+                            if (!/auth|token|credential|password|secret|session/i.test(key)) {
+                                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                            }
+                        }
+                    }
                     // Compatibilidad: admite las copias antiguas (un array de activos)
                     // y el nuevo formato que incluye cartera + estrategias.
                     const importedAssets = Array.isArray(importedData) ? importedData : importedData && importedData.assets;
