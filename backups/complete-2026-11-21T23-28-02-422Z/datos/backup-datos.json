@@ -1,0 +1,3796 @@
+{
+  "app": "MiCartera R31k0",
+  "formatVersion": 5,
+  "backupType": "complete",
+  "exportedAt": "2026-11-21T23:27:58.286Z",
+  "assets": [
+    {
+      "fxRateDate": "2026-11-21",
+      "targetSellPrice": 9,
+      "ticker": "SIVE.ST",
+      "realizedProfitByYear": {
+        "2026": 117.16685823754787
+      },
+      "lastMarketTime": 1795192194,
+      "priceCurrency": "SEK",
+      "taxIRPF": 22.261703065134096,
+      "realizedProfit": 117.16685823754787,
+      "latentPct": -71.50900555880708,
+      "yahooTicker": "SIVE.ST",
+      "shares": 102.15899999999999,
+      "commmissions": 7,
+      "color": "#2563eb",
+      "fxToEUR": 0.08917424647761726,
+      "targetBuyAlerted": false,
+      "name": "SIVERS",
+      "wkn": "",
+      "lastPriceUpdate": "2026-11-21T23:18:40.556Z",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "targetSellAlerted": false,
+      "previousCloseEUR": 1.220795,
+      "isin": "SE0003917798",
+      "priceSource": "Yahoo Finance",
+      "category": "TECH",
+      "latentProfit": -260.88841323554783,
+      "previousCloseMarketTime": 1795192194,
+      "targetBuyPrice": null,
+      "rawMarketPrice": 11.41,
+      "capital": 364.83294823754784,
+      "currentPrice": 1.017478,
+      "marketValue": 103.94453500200001,
+      "assetType": "SMALLCAP",
+      "pmp": 3.5712266979663845,
+      "marketState": "",
+      "history": [
+        {
+          "price": 4.51,
+          "comm": 1,
+          "qty": 22,
+          "type": "Compra",
+          "date": "2026-05-06"
+        },
+        {
+          "price": 4.56,
+          "comm": 1,
+          "qty": 7.83,
+          "type": "Compra",
+          "date": "2026-05-18"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-05-29",
+          "qty": 10,
+          "price": 6.34,
+          "comm": 1
+        },
+        {
+          "comm": 1,
+          "qty": 10,
+          "price": 9.2,
+          "type": "Venta",
+          "date": "2026-06-02"
+        },
+        {
+          "type": "Venta",
+          "date": "2026-06-17",
+          "price": 9.43,
+          "comm": 1,
+          "qty": 15
+        },
+        {
+          "comm": 1,
+          "qty": 13.5,
+          "price": 5.26,
+          "type": "Compra",
+          "date": "2026-07-02"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-07-07",
+          "qty": 22,
+          "comm": 1,
+          "price": 4.086
+        },
+        {
+          "price": 2.05,
+          "comm": 0,
+          "qty": 14.61,
+          "type": "Compra",
+          "date": "2026-09-01"
+        },
+        {
+          "comm": 0,
+          "price": 3.04,
+          "qty": 9.88,
+          "type": "Compra",
+          "date": "2026-10-01"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-10-16",
+          "qty": 13.55,
+          "comm": 0,
+          "price": 2.21
+        },
+        {
+          "type": "Compra",
+          "date": "2026-11-02",
+          "qty": 13.789,
+          "comm": 0,
+          "price": 1.81
+        }
+      ]
+    },
+    {
+      "yahooTicker": "ONDS",
+      "name": "ONDAS",
+      "latentPct": -47.93757313274066,
+      "previousCloseMarketTime": 1795208400,
+      "history": [
+        {
+          "comm": 1,
+          "qty": 10,
+          "price": 8.24,
+          "type": "Compra",
+          "date": "2026-05-10"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-06-05",
+          "price": 9.06,
+          "qty": 10,
+          "comm": 1
+        },
+        {
+          "type": "Compra",
+          "date": "2026-06-22",
+          "qty": 10,
+          "comm": 1,
+          "price": 7.79
+        },
+        {
+          "comm": 1,
+          "qty": 20,
+          "price": 6.78,
+          "type": "Compra",
+          "date": "2026-06-24"
+        },
+        {
+          "price": 5.98,
+          "comm": 1,
+          "qty": 15,
+          "type": "Compra",
+          "date": "2026-10-09"
+        },
+        {
+          "price": 5.53,
+          "comm": 1,
+          "qty": 15,
+          "type": "Compra",
+          "date": "2026-10-14"
+        },
+        {
+          "comm": 1,
+          "price": 4.05,
+          "type": "Compra",
+          "date": "2026-11-05",
+          "qty": 10
+        },
+        {
+          "comm": 1,
+          "price": 5.04,
+          "type": "Compra",
+          "qty": 10,
+          "date": "2026-11-12"
+        }
+      ],
+      "capital": 658.05,
+      "lastMarketTime": 1795208400,
+      "ticker": "ONDS",
+      "currentPrice": 3.425968,
+      "category": "DEFENSA",
+      "wkn": "",
+      "latentProfit": -315.4531999999999,
+      "lastPriceUpdate": "2026-11-21T23:18:40.558Z",
+      "realizedProfit": 0,
+      "shares": 100,
+      "fxRateDate": "2026-11-21",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "marketValue": 342.59680000000003,
+      "fxToEUR": 0.9111617312072894,
+      "previousCloseEUR": 3.854214,
+      "realizedProfitByYear": {},
+      "commmissions": 8,
+      "assetType": "SMALLCAP",
+      "rawMarketPrice": 3.76,
+      "color": "#141515",
+      "marketState": "",
+      "priceCurrency": "USD",
+      "pmp": 6.5805,
+      "taxIRPF": 0,
+      "isin": "US68236H2040",
+      "priceSource": "Yahoo Finance"
+    },
+    {
+      "pmp": 0.8042045454545456,
+      "assetType": "SMALLCAP",
+      "isin": "US69012T3059",
+      "previousCloseMarketTime": 1795208400,
+      "taxIRPF": 0,
+      "priceCurrency": "USD",
+      "targetBuyPrice": null,
+      "rawMarketPrice": 0.39,
+      "targetBuyAlerted": false,
+      "realizedProfitByYear": {},
+      "targetSellAlerted": false,
+      "yahooTicker": "OTLK",
+      "fxToEUR": 0.9111617312072894,
+      "commmissions": 5,
+      "shares": 220,
+      "lastPriceUpdate": "2026-11-21T23:18:40.561Z",
+      "wkn": "",
+      "priceSource": "Yahoo Finance",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "latentPct": -55.81310724883426,
+      "category": "BIOTECH",
+      "latentProfit": -98.74734000000002,
+      "lastMarketTime": 1795208400,
+      "fxRateDate": "2026-11-21",
+      "realizedProfit": 0,
+      "color": "#10b981",
+      "capital": 176.925,
+      "marketState": "",
+      "previousCloseEUR": 0.365376,
+      "currentPrice": 0.355353,
+      "targetSellPrice": 5,
+      "name": "OUTLOOK",
+      "marketValue": 78.17765999999999,
+      "ticker": "OTLK",
+      "history": [
+        {
+          "comm": 1,
+          "qty": 25,
+          "price": 1.41,
+          "type": "Compra",
+          "date": "2026-06-17"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-07-20",
+          "price": 1.25,
+          "qty": 25,
+          "comm": 1
+        },
+        {
+          "comm": 1,
+          "price": 0.769,
+          "qty": 65,
+          "type": "Compra",
+          "date": "2026-07-29"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-08-31",
+          "price": 0.558,
+          "qty": 55,
+          "comm": 1
+        },
+        {
+          "comm": 1,
+          "qty": 50,
+          "type": "Compra",
+          "date": "2026-10-01",
+          "price": 0.495
+        }
+      ]
+    },
+    {
+      "fxToEUR": 1,
+      "previousCloseEUR": 51.400002,
+      "marketState": "",
+      "priceCurrency": "EUR",
+      "marketValue": 99.34,
+      "realizedProfitByYear": {},
+      "targetBuyPrice": 49,
+      "latentPct": 2.15960510078158,
+      "rawMarketPrice": 49.67,
+      "wkn": "",
+      "targetSellAlerted": false,
+      "commmissions": 1,
+      "name": "INDRA",
+      "taxIRPF": 0,
+      "priceSource": "Yahoo Finance",
+      "category": "DEFENSA",
+      "assetType": "MEDIA CAPITALIZACION",
+      "lastPriceUpdate": "2026-11-21T23:18:40.602Z",
+      "shares": 2,
+      "latentProfit": 2.1000000000000085,
+      "history": [
+        {
+          "price": 48.12,
+          "comm": 1,
+          "qty": 2,
+          "type": "Compra",
+          "date": "2026-06-18"
+        }
+      ],
+      "capital": 97.24,
+      "lastMarketTime": 1795192805,
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "yahooTicker": "IDR.MC",
+      "pmp": 48.62,
+      "previousCloseMarketTime": 1795192805,
+      "isin": "ES0118594417",
+      "realizedProfit": 0,
+      "targetSellPrice": null,
+      "targetBuyAlerted": false,
+      "ticker": "IDR.MC",
+      "fxRateDate": "2026-11-21",
+      "currentPrice": 49.67,
+      "color": "#f59e0b"
+    },
+    {
+      "capital": 40.4,
+      "yahooTicker": "ELTX",
+      "priceCurrency": "USD",
+      "commmissions": 1,
+      "category": "BIOTECH",
+      "wkn": "A3CY4J",
+      "history": [
+        {
+          "price": 3.94,
+          "comm": 1,
+          "qty": 10,
+          "type": "Compra",
+          "date": "2026-05-04"
+        }
+      ],
+      "isin": "US28657F1030",
+      "targetBuyAlerted": false,
+      "assetType": "SMALLCAP",
+      "targetBuyPrice": null,
+      "rawMarketPrice": 1.45,
+      "color": "#059669",
+      "targetSellAlerted": false,
+      "previousCloseMarketTime": 1795208401,
+      "fxRateDate": "2026-11-21",
+      "currentPrice": 1.321185,
+      "realizedProfitByYear": {},
+      "marketValue": 13.21185,
+      "pmp": 4.04,
+      "fxToEUR": 0.9111617312072894,
+      "marketState": "",
+      "realizedProfit": 0,
+      "previousCloseEUR": 1.366743,
+      "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+      "ticker": "ELTX",
+      "shares": 10,
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "name": "ELICIO",
+      "targetSellPrice": 5,
+      "lastMarketTime": 1795208401,
+      "priceSource": "Yahoo Finance",
+      "latentPct": -67.297400990099,
+      "taxIRPF": 0,
+      "latentProfit": -27.18815
+    },
+    {
+      "taxIRPF": 0,
+      "isin": "IE00BFMXXD54",
+      "marketValue": 289.75804,
+      "realizedProfit": 0,
+      "shares": 2.327,
+      "latentPct": -3.6195853671614313,
+      "marketState": "",
+      "color": "#8b5cf6",
+      "ticker": "VUAA.MI",
+      "fxToEUR": 1,
+      "commmissions": 1,
+      "wkn": "A2PFN2",
+      "priceSource": "Yahoo Finance",
+      "lastMarketTime": 1795192514,
+      "realizedProfitByYear": {},
+      "assetType": "ETFS",
+      "priceCurrency": "EUR",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "fxRateDate": "2026-11-21",
+      "yahooTicker": "VUAA.MI",
+      "previousCloseMarketTime": 1795192514,
+      "category": "INDICES",
+      "latentProfit": -10.88191999999998,
+      "lastPriceUpdate": "2026-11-21T23:18:40.592Z",
+      "history": [
+        {
+          "price": 126.31,
+          "comm": 1,
+          "qty": 0.395,
+          "type": "Compra",
+          "date": "2026-06-03"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-07-03",
+          "qty": 0.395,
+          "comm": 0,
+          "price": 126.46
+        },
+        {
+          "price": 127.03,
+          "comm": 0,
+          "qty": 0.393,
+          "type": "Compra",
+          "date": "2026-08-02"
+        },
+        {
+          "type": "Compra",
+          "qty": 0.39,
+          "date": "2026-09-02",
+          "comm": 0,
+          "price": 127.98
+        },
+        {
+          "comm": 0,
+          "price": 132.94,
+          "qty": 0.376,
+          "type": "Compra",
+          "date": "2026-10-02"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-11-02",
+          "qty": 0.378,
+          "comm": 0,
+          "price": 132.21
+        }
+      ],
+      "currentPrice": 124.52,
+      "previousCloseEUR": 128.899994,
+      "rawMarketPrice": 124.52,
+      "pmp": 129.1963730124624,
+      "capital": 300.63996,
+      "name": "S&P 500"
+    },
+    {
+      "assetType": "ETFS",
+      "rawMarketPrice": 11.058,
+      "priceCurrency": "EUR",
+      "ticker": "L0CK.DE",
+      "lastPriceUpdate": "2026-11-21T23:18:40.621Z",
+      "commmissions": 1,
+      "wkn": "A2JMGE",
+      "previousCloseEUR": 11.658,
+      "capital": 116.27023000000003,
+      "realizedProfitByYear": {},
+      "shares": 10.534,
+      "isin": "IE00BG0J4C88",
+      "yahooTicker": "L0CK.DE",
+      "category": "TECH",
+      "color": "#6366f1",
+      "history": [
+        {
+          "comm": 1,
+          "qty": 2,
+          "price": 10.64,
+          "type": "Compra",
+          "date": "2026-06-02"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-07-02",
+          "qty": 1.927,
+          "comm": 0,
+          "price": 10.38
+        },
+        {
+          "type": "Compra",
+          "date": "2026-08-02",
+          "qty": 1.8965,
+          "comm": 0,
+          "price": 10.55
+        },
+        {
+          "comm": 0,
+          "price": 10.67,
+          "type": "Compra",
+          "qty": 1.3115,
+          "date": "2026-09-02"
+        },
+        {
+          "comm": 0,
+          "qty": 1.685,
+          "type": "Compra",
+          "price": 11.87,
+          "date": "2026-10-02"
+        },
+        {
+          "type": "Compra",
+          "date": "2026-11-02",
+          "qty": 1.714,
+          "comm": 0,
+          "price": 11.66
+        }
+      ],
+      "fxRateDate": "2026-11-21",
+      "currentPrice": 11.058,
+      "priceSource": "Yahoo Finance",
+      "lastMarketTime": 1795192551,
+      "previousCloseMarketTime": 1795192551,
+      "pmp": 11.03761439149421,
+      "latentPct": 0.18469216066741473,
+      "name": "DIGITAL SECURITY",
+      "taxIRPF": 0,
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "marketState": "",
+      "realizedProfit": 0,
+      "fxToEUR": 1,
+      "marketValue": 116.484972,
+      "latentProfit": 0.21474199999997268
+    },
+    {
+      "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+      "marketValue": 127.22358,
+      "assetType": "ETFS",
+      "priceCurrency": "EUR",
+      "history": [
+        {
+          "type": "Compra",
+          "date": "2026-07-02",
+          "qty": 0.493,
+          "price": 60.82,
+          "comm": 0
+        },
+        {
+          "comm": 0,
+          "qty": 0.523,
+          "type": "Compra",
+          "date": "2026-08-02",
+          "price": 57.29
+        },
+        {
+          "qty": 0.516,
+          "comm": 0,
+          "price": 58.05,
+          "type": "Compra",
+          "date": "2026-09-02"
+        },
+        {
+          "price": 63.76,
+          "comm": 0,
+          "qty": 0.392,
+          "type": "Compra",
+          "date": "2026-10-02"
+        },
+        {
+          "comm": 0,
+          "price": 59.13,
+          "type": "Compra",
+          "date": "2026-11-02",
+          "qty": 0.422
+        }
+      ],
+      "lastMarketTime": 1795192580,
+      "capital": 139.84751,
+      "marketState": "",
+      "commmissions": 0,
+      "realizedProfitByYear": {},
+      "category": "TECH",
+      "realizedProfit": 0,
+      "priceSource": "Yahoo Finance",
+      "name": "NASDAQ 100",
+      "fxRateDate": "2026-11-21",
+      "wkn": "A2QJU3",
+      "yahooTicker": "XNAS.MI",
+      "previousCloseMarketTime": 1795192580,
+      "fxToEUR": 1,
+      "rawMarketPrice": 54.23,
+      "shares": 2.346,
+      "currentPrice": 54.23,
+      "isin": "IE00BMFKG444",
+      "previousCloseEUR": 57.509998,
+      "latentPct": -9.026925112931936,
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "taxIRPF": 0,
+      "ticker": "XNAS.MI",
+      "pmp": 59.61104433077578,
+      "color": "#a855f7",
+      "latentProfit": -12.623930000000001
+    },
+    {
+      "rawMarketPrice": 62.595,
+      "taxIRPF": 0,
+      "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+      "fxRateDate": "2026-11-21",
+      "priceSource": "Yahoo Finance",
+      "previousCloseEUR": 65.084999,
+      "currentPrice": 62.595,
+      "realizedProfitByYear": {},
+      "priceCurrency": "EUR",
+      "fxToEUR": 1,
+      "latentProfit": -7.460125000000005,
+      "name": "ORO (ETC)",
+      "pmp": 76.53915887850468,
+      "marketValue": 33.488325,
+      "category": "METALES",
+      "marketState": "",
+      "assetType": "METALES",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "lastMarketTime": 1795192562,
+      "commmissions": 1,
+      "color": "#eab308",
+      "isin": "IE00B4ND3602",
+      "previousCloseMarketTime": 1795192562,
+      "ticker": "SGLN.L",
+      "wkn": "A1KWPQ",
+      "shares": 0.535,
+      "yahooTicker": "PPFB.DE",
+      "history": [
+        {
+          "comm": 1,
+          "price": 74.67,
+          "type": "Compra",
+          "qty": 0.535,
+          "date": "2026-06-03"
+        }
+      ],
+      "latentPct": -18.218333050457353,
+      "capital": 40.94845000000001,
+      "realizedProfit": 0
+    },
+    {
+      "pmp": 63.095536394372964,
+      "category": "METALES",
+      "currentPrice": 35.878773,
+      "targetBuyPrice": 40,
+      "rawMarketPrice": 3007,
+      "marketState": "",
+      "targetSellPrice": null,
+      "targetBuyAlerted": true,
+      "marketValue": 17.626200690483003,
+      "fxRateDate": "2026-11-21",
+      "priceCurrency": "GBp",
+      "assetType": "METALES",
+      "fxRateSource": "Yahoo Finance · pares EUR",
+      "capital": 30.99700726,
+      "targetSellAlerted": false,
+      "priceSource": "Yahoo Finance",
+      "previousCloseMarketTime": 1795192524,
+      "isin": "IE00B4NCWG09",
+      "lastPriceUpdate": "2026-11-21T23:18:53.462Z",
+      "history": [
+        {
+          "price": 61.06,
+          "comm": 1,
+          "qty": 0.491271,
+          "type": "Compra",
+          "date": "2026-06-03"
+        }
+      ],
+      "latentProfit": -13.370806569516997,
+      "name": "PLATA (ETC)",
+      "lastMarketTime": 1795192524,
+      "wkn": "A1KWPR",
+      "shares": 0.491271,
+      "latentPct": -43.135798425196086,
+      "yahooTicker": "SSLN.L",
+      "commmissions": 1,
+      "taxIRPF": 0,
+      "realizedProfitByYear": {},
+      "previousCloseEUR": 38.71853,
+      "ticker": "SSLN.MI",
+      "fxToEUR": 0.011931750387781888,
+      "realizedProfit": 0,
+      "color": "#94a3b8"
+    }
+  ],
+  "strategies": [
+    {
+      "updatedAt": "2026-11-19T23:33:27.100Z",
+      "exit": 0,
+      "thesis": "ACUMULAR PARA PODER PROMEDIAR Y CERRAR LA POSICION PARA CENTRARME EN ORO",
+      "entry": 40,
+      "reviewDate": "2026-11-30",
+      "horizon": "Corto plazo (< 1 año)",
+      "notes": "",
+      "name": "ACUMULAR PLATA PARA PROMEDIAR",
+      "risk": "QUE LA PLATA SUBA POR ENCIMA DE 55",
+      "capital": 40,
+      "id": "st-1794590804532-ym6uw",
+      "asset": "PLATA (ETC)",
+      "status": "En seguimiento",
+      "createdAt": "2026-11-13T17:26:44.532Z"
+    },
+    {
+      "updatedAt": "2026-11-10T17:30:01.110Z",
+      "id": "st-1794170616054-0rh1j",
+      "notes": "ESPERAR SUBIDA",
+      "exit": 9,
+      "horizon": "Corto plazo (< 1 año)",
+      "status": "Activa",
+      "asset": "SIVERS",
+      "capital": 375,
+      "thesis": "DOBLE COTIZCION, ENTRA EN 2027 EN EL NASDAQ AMERICA",
+      "name": "VENTA SIVERS",
+      "entry": 3.75,
+      "reviewDate": "2027-01-09",
+      "createdAt": "2026-11-08T20:43:36.054Z",
+      "risk": "PODEMOS ABORTAR A 7 SI SE ALARGA DEMASIADO"
+    },
+    {
+      "entry": 0.8,
+      "status": "Activa",
+      "reviewDate": "2027-01-09",
+      "id": "st-1794170464215-nvee4",
+      "horizon": "Medio plazo (1-3 años)",
+      "exit": 5,
+      "updatedAt": "2026-11-10T17:31:07.377Z",
+      "createdAt": "2026-11-08T20:41:04.215Z",
+      "notes": "ESPERAR SUBIDA",
+      "risk": "PODEMOS ABORTAR A 3€ SI SE ALARGA MUCHO",
+      "asset": "OUTLOOK",
+      "name": "VENTA DE OUTLOOK",
+      "thesis": "APROBADO NUEVA SALIDA DE MEDICAMENTO",
+      "capital": 160
+    },
+    {
+      "thesis": "EMPRESA CON POTENCIAL EN DEFENSA, ESTA BARATA",
+      "name": "VENTAS ONDAS",
+      "risk": "QUE LLEGEMOS A AGOSTO DE 2027,  ENTOCES SALDRIA A 9 O 10",
+      "horizon": "Corto plazo (< 1 año)",
+      "createdAt": "2026-11-08T20:38:43.903Z",
+      "entry": 6.5,
+      "updatedAt": "2026-11-19T23:34:50.119Z",
+      "exit": 12,
+      "asset": "ONDAS",
+      "reviewDate": "2026-11-30",
+      "capital": 650,
+      "status": "Activa",
+      "notes": "O ANTES O DESPUES DE RESULTADOS, COMPRAR LAS ULTIMAS 10.\n11/12/26. NO VEO CLARO COMPRAR, ESPERAMOS A DESPUES DE RESULTADO.\n12/11/26 COMPRO LAS 10 QUE FALTAN PARA 100, ESPERAMLS A DESPUES DE RESULTADOS. PASA A VENDER.\nDESPLOME, TOCA ESPERAR",
+      "id": "st-1794170323903-n6hd5"
+    }
+  ],
+  "watchlist": [
+    {
+      "addedAt": "2026-11-10T18:20:55.078Z",
+      "exchange": "NMS",
+      "priceEUR": 114.3781,
+      "analystTargetHistory": [
+        {
+          "current": 162.85,
+          "date": "2026-11-15T00:05:06.086Z",
+          "target": 278.30756,
+          "currency": "USD",
+          "count": 53,
+          "low": 170,
+          "high": 515
+        },
+        {
+          "target": 276.56415,
+          "current": 162.85,
+          "high": 515,
+          "count": 53,
+          "low": 170,
+          "date": "2026-11-15T17:46:45.941Z",
+          "currency": "USD"
+        },
+        {
+          "low": 130,
+          "current": 156.14,
+          "currency": "USD",
+          "date": "2026-11-17T13:58:01.652Z",
+          "high": 515,
+          "target": 267.6463,
+          "count": 54
+        },
+        {
+          "target": 265.23456,
+          "low": 130,
+          "currency": "USD",
+          "count": 55,
+          "date": "2026-11-17T21:36:21.767Z",
+          "high": 515,
+          "current": 155.46
+        },
+        {
+          "high": 425,
+          "current": 125.53,
+          "count": 56,
+          "currency": "USD",
+          "date": "2026-11-21T17:38:37.938Z",
+          "target": 244.18286,
+          "low": 130
+        }
+      ],
+      "currency": "USD",
+      "symbol": "NVDA",
+      "lastUpdate": "2026-11-21T19:58:14.604Z",
+      "name": "NVIDIA Corporation",
+      "changePct": -14.00876580768469
+    },
+    {
+      "currency": "USD",
+      "targetBuyPrice": 55,
+      "name": "Solana USD",
+      "changePct": 2.4182506602578124,
+      "lastUpdate": "2026-11-21T19:58:14.612Z",
+      "targetSellPrice": null,
+      "addedAt": "2026-11-14T18:45:11.701Z",
+      "exchange": "CCC",
+      "targetSellAlerted": false,
+      "symbol": "SOL-USD",
+      "targetBuyAlerted": false,
+      "priceEUR": 64.1549
+    },
+    {
+      "currency": "EUR",
+      "analystTargetHistory": [
+        {
+          "current": 58.8,
+          "date": "2026-11-15T00:33:11.009Z",
+          "target": 69.09875,
+          "low": 50,
+          "currency": "EUR",
+          "high": 85,
+          "count": 16
+        }
+      ],
+      "addedAt": "2026-11-14T21:14:35.365Z",
+      "lastUpdate": "2026-11-21T19:58:14.728Z",
+      "name": "INDRA SISTEMAS S.A., SERIE A",
+      "changePct": -3.3657616235826024,
+      "exchange": "MCE",
+      "symbol": "IDR.MC",
+      "priceEUR": 49.67
+    },
+    {
+      "analystTargetHistory": [
+        {
+          "low": 13,
+          "high": 25,
+          "count": 10,
+          "target": 16.975,
+          "currency": "USD",
+          "current": 5.16,
+          "date": "2026-11-15T00:02:56.845Z"
+        },
+        {
+          "low": 13,
+          "count": 10,
+          "date": "2026-11-16T19:46:00.737Z",
+          "high": 25,
+          "current": 4.8,
+          "target": 16.675,
+          "currency": "USD"
+        }
+      ],
+      "addedAt": "2026-11-14T23:13:03.264Z",
+      "currency": "USD",
+      "changePct": -11.111111511919864,
+      "name": "Ondas Inc",
+      "lastUpdate": "2026-11-21T19:58:14.621Z",
+      "priceEUR": 3.426,
+      "symbol": "ONDS",
+      "exchange": "NCM"
+    },
+    {
+      "changePct": -16.65448977551732,
+      "priceEUR": 1.0175,
+      "analystTargetHistory": [
+        {
+          "date": "2026-11-15T00:12:43.019Z",
+          "low": 7.4,
+          "current": 14.3,
+          "high": 8,
+          "currency": "SEK",
+          "target": 7.7,
+          "count": 2
+        }
+      ],
+      "lastUpdate": "2026-11-21T19:58:14.656Z",
+      "name": "Sivers Semiconductors AB",
+      "exchange": "STO",
+      "symbol": "SIVE.ST",
+      "addedAt": "2026-11-14T23:13:50.531Z",
+      "currency": "SEK"
+    },
+    {
+      "name": "iShares MSCI Emerging Index Fun",
+      "symbol": "EEM",
+      "exchange": "PCX",
+      "changePct": -5.127753303964751,
+      "quoteType": "ETF",
+      "priceEUR": 49.0569,
+      "currency": "USD",
+      "addedAt": "2026-11-16T00:57:43.394Z",
+      "lastUpdate": "2026-11-21T19:58:14.651Z"
+    },
+    {
+      "analystTargetHistory": [
+        {
+          "target": 236.184,
+          "date": "2026-11-21T19:58:17.774Z",
+          "currency": "USD",
+          "count": 40,
+          "low": 110,
+          "high": 400,
+          "current": 101.19
+        }
+      ],
+      "lastUpdate": "2026-11-21T19:58:14.573Z",
+      "currency": "USD",
+      "name": "Oracle Corporation",
+      "quoteType": "EQUITY",
+      "priceEUR": 92.2005,
+      "addedAt": "2026-11-21T19:58:05.516Z",
+      "symbol": "ORCL",
+      "exchange": "NYQ",
+      "changePct": -8.483313485315401
+    }
+  ],
+  "priceAlertHistory": [
+    {
+      "symbol": "SSLN.MI",
+      "id": "cbf80ba9-eb77-49a8-a178-f19fdefcdd54",
+      "target": 40,
+      "source": "cartera",
+      "kind": "buy",
+      "price": 39.7626,
+      "at": "2026-11-18T08:42:41.126Z",
+      "name": "PLATA (ETC)"
+    },
+    {
+      "at": "2026-11-18T08:34:55.262Z",
+      "source": "cartera",
+      "symbol": "SSLN.MI",
+      "target": 40,
+      "price": 39.5729,
+      "name": "PLATA (ETC)",
+      "id": "c696217f-aa4b-4c74-9f88-c89293843463",
+      "kind": "buy"
+    },
+    {
+      "id": "9f720d05-7735-4aca-b283-6397cf88e9fa",
+      "kind": "buy",
+      "name": "INDRA",
+      "target": 52,
+      "price": 51.98,
+      "symbol": "IDR.MC",
+      "source": "cartera",
+      "at": "2026-11-18T08:34:36.934Z"
+    }
+  ],
+  "performanceHistory": [
+    {
+      "totalPurchases": 2080.43,
+      "date": "2026-11-14",
+      "totalProfit": -414.87,
+      "returnPct": -19.9414,
+      "marketValue": 1434.12
+    },
+    {
+      "returnPct": -19.9433,
+      "date": "2026-11-15",
+      "totalPurchases": 2080.43,
+      "totalProfit": -414.91,
+      "marketValue": 1434.08
+    },
+    {
+      "date": "2026-11-16",
+      "totalProfit": -414.85,
+      "returnPct": -19.9404,
+      "marketValue": 1434.14,
+      "totalPurchases": 2080.43
+    },
+    {
+      "marketValue": 1221.87,
+      "returnPct": -30.1435,
+      "totalPurchases": 2080.43,
+      "date": "2026-11-21",
+      "totalProfit": -627.12
+    }
+  ],
+  "riskHistory": [
+    {
+      "top10Pct": 100,
+      "date": "2026-11-21",
+      "top5Pct": 80.2062,
+      "top5Value": 980.01,
+      "top10Value": 1221.87,
+      "effectivePositions": 5.7536,
+      "totalValue": 1221.87,
+      "hhi": 1738.04,
+      "largestPositionPct": 28.039,
+      "largestSectorPct": 36.1692
+    }
+  ],
+  "financialEvents": [
+    {
+      "asset": "ONDAS",
+      "date": "2027-03-22",
+      "id": "fe_yahoo_ONDS_2027-03-22",
+      "reminderDays": 3,
+      "title": "Publicación de resultados · ONDAS",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=ONDS",
+      "updatedAt": "2026-11-21T17:26:06.371Z",
+      "source": "yahoo",
+      "type": "Resultados",
+      "time": "",
+      "sourceSymbol": "ONDS"
+    },
+    {
+      "reminderDays": 3,
+      "type": "Resultados",
+      "time": "",
+      "id": "fe_yahoo_OTLK_2026-12-18",
+      "asset": "OUTLOOK",
+      "updatedAt": "2026-11-21T17:26:07.711Z",
+      "sourceSymbol": "OTLK",
+      "date": "2026-12-18",
+      "title": "Publicación de resultados · OUTLOOK",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=OTLK",
+      "source": "yahoo"
+    },
+    {
+      "updatedAt": "2026-11-21T17:26:09.752Z",
+      "reminderDays": 3,
+      "asset": "INDRA",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=IDR.MC",
+      "source": "yahoo",
+      "type": "Resultados",
+      "time": "",
+      "sourceSymbol": "IDR.MC",
+      "id": "fe_yahoo_IDR_MC_2027-02-24",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "title": "Publicación de resultados · INDRA",
+      "date": "2027-02-24"
+    },
+    {
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NVDA",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "sourceSymbol": "NVDA",
+      "updatedAt": "2026-11-15T20:32:14.183Z",
+      "type": "Resultados",
+      "title": "Publicación de resultados · NVIDIA Corporation",
+      "time": "",
+      "source": "yahoo",
+      "asset": "NVIDIA Corporation",
+      "id": "fe_yahoo_NVDA_2026-11-17",
+      "date": "2026-11-17",
+      "reminderDays": 3
+    },
+    {
+      "asset": "Nu Holdings Ltd.",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NU",
+      "sourceSymbol": "NU",
+      "date": "2027-02-24",
+      "id": "fe_yahoo_NU_2027-02-24",
+      "updatedAt": "2026-11-15T20:32:38.340Z",
+      "title": "Publicación de resultados · Nu Holdings Ltd.",
+      "reminderDays": 3,
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "source": "yahoo",
+      "type": "Resultados",
+      "time": ""
+    },
+    {
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=SIVE.ST",
+      "updatedAt": "2026-11-21T17:26:05.340Z",
+      "type": "Resultados",
+      "time": "",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "title": "Publicación de resultados · SIVERS",
+      "reminderDays": 3,
+      "id": "fe_yahoo_SIVE_ST_2026-11-30",
+      "source": "yahoo",
+      "asset": "SIVERS",
+      "sourceSymbol": "SIVE.ST",
+      "date": "2026-11-30"
+    },
+    {
+      "reminderDays": 3,
+      "updatedAt": "2026-11-21T17:26:12.665Z",
+      "type": "Resultados",
+      "time": "",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NVDA",
+      "asset": "NVIDIA Corporation",
+      "source": "yahoo",
+      "sourceSymbol": "NVDA",
+      "date": "2027-02-24",
+      "id": "fe_yahoo_NVDA_2027-02-24",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+      "title": "Publicación de resultados · NVIDIA Corporation"
+    },
+    {
+      "type": "Resultados",
+      "time": "",
+      "asset": "Revolution Medicines, Inc.",
+      "reminderDays": 3,
+      "source": "yahoo",
+      "id": "fe_yahoo_RVMD_2027-02-24",
+      "updatedAt": "2026-11-21T17:26:45.161Z",
+      "sourceSymbol": "RVMD",
+      "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=RVMD",
+      "date": "2027-02-24",
+      "title": "Publicación de resultados · Revolution Medicines, Inc.",
+      "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa."
+    }
+  ],
+  "financialEventsSync": "2026-11-21T17:26:45.473Z",
+  "investmentJournal": [
+    {
+      "id": "ij_1794784676176_n1u3p",
+      "reviewDate": "2026-11-30",
+      "outcome": "21/11/2026 LA PLATA A BAJADO A 35€, TODAVIA NO SE VE UN SUELO CLARO, ESPEREMOS A VER QUE PASA, NUEVO LIMITE 30€ (NO CREO QUE LLEGE).",
+      "action": "sell",
+      "status": "reviewed",
+      "updatedAt": "2026-11-21T17:58:55.965Z",
+      "expectation": "que la plata baje y coinzada para meterle un plan mensual, bajar el precio promedio y cuando consiga ganar algo si perder dinero, vendo y lo meto en oro",
+      "date": "2026-11-16",
+      "risks": "que la plata no acabe de bajar a 40, que es el precio que me interesa para promediar",
+      "asset": "PLATA (ETC)",
+      "thesis": "No creo que la plata aporte nada a la cartera, prefiero promediar para poder salir y meter lo que saque en oro."
+    }
+  ],
+  "localStorage": {
+    "micartera_r31k0_risk_history_v1": [
+      {
+        "top10Pct": 100,
+        "date": "2026-11-21",
+        "top5Pct": 80.2062,
+        "top5Value": 980.01,
+        "top10Value": 1221.87,
+        "effectivePositions": 5.7536,
+        "totalValue": 1221.87,
+        "hhi": 1738.04,
+        "largestPositionPct": 28.039,
+        "largestSectorPct": 36.1692
+      }
+    ],
+    "micartera_r31k0_financial_events_sync_v1": "2026-11-21T17:26:45.473Z",
+    "micartera_r31k0_investment_journal_v1": [
+      {
+        "id": "ij_1794784676176_n1u3p",
+        "reviewDate": "2026-11-30",
+        "outcome": "21/11/2026 LA PLATA A BAJADO A 35€, TODAVIA NO SE VE UN SUELO CLARO, ESPEREMOS A VER QUE PASA, NUEVO LIMITE 30€ (NO CREO QUE LLEGE).",
+        "action": "sell",
+        "status": "reviewed",
+        "updatedAt": "2026-11-21T17:58:55.965Z",
+        "expectation": "que la plata baje y coinzada para meterle un plan mensual, bajar el precio promedio y cuando consiga ganar algo si perder dinero, vendo y lo meto en oro",
+        "date": "2026-11-16",
+        "risks": "que la plata no acabe de bajar a 40, que es el precio que me interesa para promediar",
+        "asset": "PLATA (ETC)",
+        "thesis": "No creo que la plata aporte nada a la cartera, prefiero promediar para poder salir y meter lo que saque en oro."
+      }
+    ],
+    "micartera_r31k0_price_alert_history_v1": [
+      {
+        "symbol": "SSLN.MI",
+        "id": "cbf80ba9-eb77-49a8-a178-f19fdefcdd54",
+        "target": 40,
+        "source": "cartera",
+        "kind": "buy",
+        "price": 39.7626,
+        "at": "2026-11-18T08:42:41.126Z",
+        "name": "PLATA (ETC)"
+      },
+      {
+        "at": "2026-11-18T08:34:55.262Z",
+        "source": "cartera",
+        "symbol": "SSLN.MI",
+        "target": 40,
+        "price": 39.5729,
+        "name": "PLATA (ETC)",
+        "id": "c696217f-aa4b-4c74-9f88-c89293843463",
+        "kind": "buy"
+      },
+      {
+        "id": "9f720d05-7735-4aca-b283-6397cf88e9fa",
+        "kind": "buy",
+        "name": "INDRA",
+        "target": 52,
+        "price": 51.98,
+        "symbol": "IDR.MC",
+        "source": "cartera",
+        "at": "2026-11-18T08:34:36.934Z"
+      }
+    ],
+    "micartera_r31k0_watchlist_v1": [
+      {
+        "addedAt": "2026-11-10T18:20:55.078Z",
+        "exchange": "NMS",
+        "priceEUR": 114.3781,
+        "analystTargetHistory": [
+          {
+            "current": 162.85,
+            "date": "2026-11-15T00:05:06.086Z",
+            "target": 278.30756,
+            "currency": "USD",
+            "count": 53,
+            "low": 170,
+            "high": 515
+          },
+          {
+            "target": 276.56415,
+            "current": 162.85,
+            "high": 515,
+            "count": 53,
+            "low": 170,
+            "date": "2026-11-15T17:46:45.941Z",
+            "currency": "USD"
+          },
+          {
+            "low": 130,
+            "current": 156.14,
+            "currency": "USD",
+            "date": "2026-11-17T13:58:01.652Z",
+            "high": 515,
+            "target": 267.6463,
+            "count": 54
+          },
+          {
+            "target": 265.23456,
+            "low": 130,
+            "currency": "USD",
+            "count": 55,
+            "date": "2026-11-17T21:36:21.767Z",
+            "high": 515,
+            "current": 155.46
+          },
+          {
+            "high": 425,
+            "current": 125.53,
+            "count": 56,
+            "currency": "USD",
+            "date": "2026-11-21T17:38:37.938Z",
+            "target": 244.18286,
+            "low": 130
+          }
+        ],
+        "currency": "USD",
+        "symbol": "NVDA",
+        "lastUpdate": "2026-11-21T19:58:14.604Z",
+        "name": "NVIDIA Corporation",
+        "changePct": -14.00876580768469
+      },
+      {
+        "currency": "USD",
+        "targetBuyPrice": 55,
+        "name": "Solana USD",
+        "changePct": 2.4182506602578124,
+        "lastUpdate": "2026-11-21T19:58:14.612Z",
+        "targetSellPrice": null,
+        "addedAt": "2026-11-14T18:45:11.701Z",
+        "exchange": "CCC",
+        "targetSellAlerted": false,
+        "symbol": "SOL-USD",
+        "targetBuyAlerted": false,
+        "priceEUR": 64.1549
+      },
+      {
+        "currency": "EUR",
+        "analystTargetHistory": [
+          {
+            "current": 58.8,
+            "date": "2026-11-15T00:33:11.009Z",
+            "target": 69.09875,
+            "low": 50,
+            "currency": "EUR",
+            "high": 85,
+            "count": 16
+          }
+        ],
+        "addedAt": "2026-11-14T21:14:35.365Z",
+        "lastUpdate": "2026-11-21T19:58:14.728Z",
+        "name": "INDRA SISTEMAS S.A., SERIE A",
+        "changePct": -3.3657616235826024,
+        "exchange": "MCE",
+        "symbol": "IDR.MC",
+        "priceEUR": 49.67
+      },
+      {
+        "analystTargetHistory": [
+          {
+            "low": 13,
+            "high": 25,
+            "count": 10,
+            "target": 16.975,
+            "currency": "USD",
+            "current": 5.16,
+            "date": "2026-11-15T00:02:56.845Z"
+          },
+          {
+            "low": 13,
+            "count": 10,
+            "date": "2026-11-16T19:46:00.737Z",
+            "high": 25,
+            "current": 4.8,
+            "target": 16.675,
+            "currency": "USD"
+          }
+        ],
+        "addedAt": "2026-11-14T23:13:03.264Z",
+        "currency": "USD",
+        "changePct": -11.111111511919864,
+        "name": "Ondas Inc",
+        "lastUpdate": "2026-11-21T19:58:14.621Z",
+        "priceEUR": 3.426,
+        "symbol": "ONDS",
+        "exchange": "NCM"
+      },
+      {
+        "changePct": -16.65448977551732,
+        "priceEUR": 1.0175,
+        "analystTargetHistory": [
+          {
+            "date": "2026-11-15T00:12:43.019Z",
+            "low": 7.4,
+            "current": 14.3,
+            "high": 8,
+            "currency": "SEK",
+            "target": 7.7,
+            "count": 2
+          }
+        ],
+        "lastUpdate": "2026-11-21T19:58:14.656Z",
+        "name": "Sivers Semiconductors AB",
+        "exchange": "STO",
+        "symbol": "SIVE.ST",
+        "addedAt": "2026-11-14T23:13:50.531Z",
+        "currency": "SEK"
+      },
+      {
+        "name": "iShares MSCI Emerging Index Fun",
+        "symbol": "EEM",
+        "exchange": "PCX",
+        "changePct": -5.127753303964751,
+        "quoteType": "ETF",
+        "priceEUR": 49.0569,
+        "currency": "USD",
+        "addedAt": "2026-11-16T00:57:43.394Z",
+        "lastUpdate": "2026-11-21T19:58:14.651Z"
+      },
+      {
+        "analystTargetHistory": [
+          {
+            "target": 236.184,
+            "date": "2026-11-21T19:58:17.774Z",
+            "currency": "USD",
+            "count": 40,
+            "low": 110,
+            "high": 400,
+            "current": 101.19
+          }
+        ],
+        "lastUpdate": "2026-11-21T19:58:14.573Z",
+        "currency": "USD",
+        "name": "Oracle Corporation",
+        "quoteType": "EQUITY",
+        "priceEUR": 92.2005,
+        "addedAt": "2026-11-21T19:58:05.516Z",
+        "symbol": "ORCL",
+        "exchange": "NYQ",
+        "changePct": -8.483313485315401
+      }
+    ],
+    "r31k0_asset_news_read_v1": [
+      "e5ae1193-2170-3ba1-a3ec-8927ffb6290c",
+      "b52e5114-c97c-33af-bee5-41247aae3cbe",
+      "dce0d7ca-b486-3641-ab69-e286d1b60d48",
+      "b2691e37-4ca1-391b-8887-52da65fab1e0",
+      "b31ed96f-dd8b-35b2-81de-3445529b0bfa",
+      "372256dd-5dab-3066-ab60-c2835a61c050",
+      "c1bc6cd4-90cd-395b-b6e3-50055564d23e",
+      "29b0d77e-343c-321f-8485-9631a4b10eb6",
+      "c578cd96-807d-3e90-932e-4ae09e9da914",
+      "daa0f518-e0a4-360c-9d36-3c4725ea5373",
+      "f0dac1ae-3571-32db-9092-bceb09c27d43",
+      "0ddee167-3128-3c3f-a39d-ad05baaeb500",
+      "528ff8d2-81e9-37be-8a3d-f72d34936984",
+      "be656158-602a-388f-b432-21c9fe015599",
+      "10bd4c93-e566-36f5-a3e0-fc83bf896980",
+      "3980cbc1-887b-3643-8fbf-eda8b4e74972",
+      "23276d93-5667-3de4-9663-2eccfb11026a",
+      "7ee4a9eb-5d4a-3d2f-8dce-cc1c3835f8ea",
+      "ed7bdfb4-244f-3a6f-a933-00b6ee7c928e",
+      "3f3d7932-d0eb-3ecb-bc93-b8319a84eabf",
+      "6c63b561-6e14-3f9f-9ca0-56121ed4eed5",
+      "8f5a9ba7-1d4d-3d98-ab73-52d2f73a6c56",
+      "4f6df130-db42-3bcc-9dab-2f9ee5f50556",
+      "52f76290-3e01-3e44-a27e-1f7948e7f1c7",
+      "f1440a6c-9d27-3421-ac15-87e111454f17",
+      "9073693a-a9fc-36f8-b70f-918f32f093f6",
+      "27fe8397-5037-389a-93eb-9eef52aae19f",
+      "e8d5b365-b209-356f-8848-e9b5e702ed99",
+      "a1c23807-dc72-3e53-a093-3e54cf2f0493",
+      "46783a0d-5f8f-3344-bc85-c591eb447f43",
+      "e126bed7-c57a-3034-8555-bdae8ef6170b",
+      "20912207-2d6b-39ad-a097-a2f03e360d25",
+      "2777ea08-ae6c-3e28-b136-ee1aa59e8b33",
+      "cb32bd6a-384b-3aff-baeb-4df60d731fae",
+      "a4111827-b566-359e-a792-e4fa43263540",
+      "69114582-be11-301f-bfcc-871eaa0fe16e",
+      "cf1cf916-c2a7-3869-a574-be11e67d0ae7",
+      "905ee0b6-2f0d-3ff2-a00f-e6456ebda1e5",
+      "ad60f440-71e8-3d19-be1a-feb55a19fc0d",
+      "07504bb3-9bb9-38ba-9b71-c2c8696adf83",
+      "f5aa6916-05de-3c80-a672-3507b4aa925a",
+      "1866dfda-3007-319b-bbbd-9b3b03cbf894",
+      "6eaebdab-f339-3cc0-8710-fd6bbe3fb753",
+      "35143373-c852-35ca-9187-61b11974a17b",
+      "31c4812d-3b09-375f-a2ff-0dda4edb5c48",
+      "4a7a4f90-99b5-368e-b977-26a2c565f8d2",
+      "6d064dda-4b8f-3d6c-b8d7-7d8909be26f5",
+      "a0399d27-8bbc-3e78-a3fa-262a0a4d7c24",
+      "dc884f07-cbf8-3b75-ad0e-8286e8996b59",
+      "b35b39f4-505e-3148-9069-40caf86327a1",
+      "c084cfae-53f4-3489-bef3-182f252529b7",
+      "6d4bce01-8126-37e6-9073-8df6d3800310",
+      "eeb28c97-3df5-3e88-823c-db8c6bdf7613",
+      "adcff8a1-70be-3a08-8134-9f3f3496ce58",
+      "e9b1af40-a312-3d57-b2f0-70f0b6ed5344",
+      "04ee6b9f-9f79-349e-aa2e-dc7584c458c3",
+      "5d18af1b-8f79-3dc2-a21d-78f0ea916e48",
+      "a8b5eb69-4867-328d-bab8-6cee9767be3a",
+      "2956afa2-b835-3368-b573-d821ce318e9c",
+      "90060481-cadc-36f0-9890-94c5100363c3",
+      "8c9634ac-4f1d-300e-8020-1a475a8a3bc7",
+      "dca81a6d-ffa7-33d9-99d9-cd6387a935eb",
+      "1f0cc6d9-bfb3-3e47-948b-a15e6d6e2d8d",
+      "c25e95b0-efe5-3c59-8465-bc405cb32aad",
+      "a6563930-bbbe-39d2-acef-862e4f82ce39",
+      "5d63f6be-1228-3059-8e8f-eef2b6bff1cb",
+      "efe182d1-0d8f-4d25-b056-832e73ae8794",
+      "dd217850-afe7-3e47-bc5e-c3e817d24287",
+      "548b84dc-5f78-35fb-a11a-7c8436b08d78",
+      "18b444c8-2ac4-38d5-b623-628ba223738a",
+      "d49325c1-15c4-3279-9c37-a2140d9e8421",
+      "076871ff-c9cf-35f1-bdb7-53256622fb44",
+      "bc7351ab-ff2a-3932-bc88-dfc05f798374",
+      "81b2372a-7e01-35a5-89f2-d649a7a5eb87",
+      "76dd9d9e-d900-3d63-8844-16483036789a",
+      "a46b6b63-5b53-3a0d-9f2c-e329ab76ecf3",
+      "0b249d25-8bbd-4181-9374-d3a6474ce7f2",
+      "225cc8a3-a09f-3e6b-a98d-84d9d5847dea",
+      "39ef7153-50f4-318d-98b9-fae6150d7fe4",
+      "83af01e1-7be6-33ad-bc0c-acdc0af4119a",
+      "77db959a-1e43-3a10-9a8b-9c839ad25c69",
+      "ee41d0aa-c813-311c-9dbf-979fc68c2d2a",
+      "1b7edb3d-f189-3b45-b60d-5a359089f1cb",
+      "0916234c-bcaf-36d7-8178-30b637dacb4c",
+      "a1addb62-c55c-3796-bd2b-7f25664f8297",
+      "cf4e2c6b-6afe-3390-9293-657437eb1280",
+      "c9425411-054e-3261-a646-7e9cba869b9d",
+      "b6a7135f-9711-43fb-94db-0ea496450568",
+      "6a23f8b2-3116-383f-a832-3b397584c25d",
+      "568db8b3-ff01-31e1-9d59-f4d75b4c94fb",
+      "cd8e9c03-02c3-34ac-8ae9-15b66ff55b86",
+      "088fedf0-39e7-339d-acee-6e38603ee3df",
+      "79a49ced-3edb-3c0a-9c53-15fa10c05291",
+      "01baf3cf-5191-3ba3-9283-13fc98d3f645",
+      "2cdd890c-adce-3b83-818e-7bc1bd4ddbb7",
+      "488bbaf1-898a-3e4c-94ec-7e6280296dd2",
+      "68f90e02-a080-38e7-8e28-237aa8db4378",
+      "48c408b3-ff36-3873-a0c4-c28ed89f97a2",
+      "ed9ab180-e80d-3e9c-a836-fa3617f3f544",
+      "adc7812f-2d0f-3fba-bf58-195a1a3cbf41",
+      "78a76a50-4aaa-39ca-a749-be17742f4aca",
+      "3bff6588-07d0-3b6c-bb22-c66be3c835ec",
+      "386cb3e7-c9fb-376f-aa31-0202c5ffa000",
+      "e91bdf8a-2b4f-3a3e-98cb-11ec21500506",
+      "ba18a039-7731-352d-8987-c4975d17d012",
+      "a3c19a99-c093-3b5f-a564-48ecfdfe10b8",
+      "3b943120-3b4e-3deb-9ca6-85be6f3e64b8",
+      "02a48130-66a5-3c26-984e-d7ca119d5a03",
+      "4a2c7d6a-9dc2-373e-b898-e5e7c558acbd",
+      "8ffcca62-8d05-3b75-b0fc-5f45292e9df2",
+      "546ff72c-8666-3711-a502-2b25997b0a6f",
+      "842336b3-9ee9-4af6-9244-1b0738fd7261",
+      "da385cc1-854e-3cee-a654-de32e8fca59a",
+      "c24dfefc-2c53-34c1-b123-513abf242eb4",
+      "8377d5f6-505e-3a8b-88d8-ed00b83e1c4e",
+      "d282f716-ae54-377c-ad00-b442e0e1a4ec",
+      "9accf50f-c7c7-3362-87f8-eff0ff73af54",
+      "ebb6969d-54f7-3180-8325-bbd7f1ee6d3b",
+      "34ce5dd6-d839-3eed-befd-de7790cdbfae",
+      "6d344905-b815-3679-b293-b3acd4f3b521",
+      "b51bb8f2-b293-3bb6-96f2-f17b49d0fe1e",
+      "406469d5-fae8-3699-970d-50834faaffe6",
+      "743a54b7-c932-3ecb-bf1f-76fb73c4c216",
+      "eed13864-9d74-3f63-b371-b3b628756c7d",
+      "e518c0e7-ac80-35ad-8121-a6e67a19ec95",
+      "2a874b3f-665f-3bd7-a6b1-4124608554ec",
+      "aee81b55-e0dd-31b2-ad45-56119c990d25",
+      "45d19a9b-7384-4652-982e-2509afdb7ba4",
+      "81afcd6c-2f2f-3526-afa2-bb86bdbb4739",
+      "12cf77ad-073a-3105-82fa-a6d9bdbb4a65",
+      "f14d8274-7eca-3fbe-94dc-a904383a9acb",
+      "00d9b9ee-7a56-3607-b19c-c2ebe41e3be0",
+      "96d04f5f-246e-393e-b2c2-9c5b769b288b",
+      "2116929a-ae3d-373e-8319-398a136db108",
+      "e3dd0663-ad58-3fd2-8c59-90f6cb9657af",
+      "8852a6df-750b-329d-b069-78174ef3ad2e",
+      "99ed43e7-3154-34c3-a4b6-589169e9e1c6",
+      "7027d9af-209b-3e5d-b316-232469bd3cd9",
+      "0260f063-d9bf-3475-857a-1c64b9123b08",
+      "085d3c14-7ae6-3dc0-9813-2120148a2ccd",
+      "ce41b1f6-00aa-3faa-a379-9fc27d0df01f",
+      "5e2f386d-1165-3b51-ba06-2edf3999018f",
+      "523b095b-ca24-3a35-8617-49dff64f0437",
+      "5d5a08d7-53f3-3713-8073-4b6ddfad3720",
+      "6af5a2c4-e775-3a76-a781-1dda2979f9ae",
+      "71c0a579-bcb4-363b-a39a-7c12947c7d05",
+      "8a70ab3c-6b4d-3f35-98e3-4a615088c1e7",
+      "fe6776e5-dff5-3677-8fe9-103c195421b7",
+      "8e160807-9542-3ff7-9845-167b7742570c",
+      "0c780d0f-dc89-3f38-8315-2c33a4a80b63",
+      "1bd84a21-088f-3b3f-ba74-6d857ee821be",
+      "008b2b8c-4813-3267-ae2b-7631b826e8e6",
+      "4bf084b5-e76f-378b-bb2b-1913403abf6a",
+      "88599711-f77b-3118-8de7-e07570f9f113",
+      "42b29120-ceca-31a4-b6fb-aa34445dae04",
+      "d6b079b6-1db7-3392-b9d2-7cfb81740e6f",
+      "43b8a53f-134f-3ad3-a4f6-706578c8ccb8"
+    ],
+    "micartera_r31k0_financial_browser_notified_v1": [
+      "fe_yahoo_NVDA_2026-11-17|2026-11-15",
+      "fe_yahoo_NVDA_2026-11-17|2026-11-16"
+    ],
+    "micartera_r31k0_benchmark_twr_start_v1": "2026-11-15",
+    "micartera_r31k0_financial_events_v1": [
+      {
+        "asset": "ONDAS",
+        "date": "2027-03-22",
+        "id": "fe_yahoo_ONDS_2027-03-22",
+        "reminderDays": 3,
+        "title": "Publicación de resultados · ONDAS",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=ONDS",
+        "updatedAt": "2026-11-21T17:26:06.371Z",
+        "source": "yahoo",
+        "type": "Resultados",
+        "time": "",
+        "sourceSymbol": "ONDS"
+      },
+      {
+        "reminderDays": 3,
+        "type": "Resultados",
+        "time": "",
+        "id": "fe_yahoo_OTLK_2026-12-18",
+        "asset": "OUTLOOK",
+        "updatedAt": "2026-11-21T17:26:07.711Z",
+        "sourceSymbol": "OTLK",
+        "date": "2026-12-18",
+        "title": "Publicación de resultados · OUTLOOK",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=OTLK",
+        "source": "yahoo"
+      },
+      {
+        "updatedAt": "2026-11-21T17:26:09.752Z",
+        "reminderDays": 3,
+        "asset": "INDRA",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=IDR.MC",
+        "source": "yahoo",
+        "type": "Resultados",
+        "time": "",
+        "sourceSymbol": "IDR.MC",
+        "id": "fe_yahoo_IDR_MC_2027-02-24",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "title": "Publicación de resultados · INDRA",
+        "date": "2027-02-24"
+      },
+      {
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NVDA",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "sourceSymbol": "NVDA",
+        "updatedAt": "2026-11-15T20:32:14.183Z",
+        "type": "Resultados",
+        "title": "Publicación de resultados · NVIDIA Corporation",
+        "time": "",
+        "source": "yahoo",
+        "asset": "NVIDIA Corporation",
+        "id": "fe_yahoo_NVDA_2026-11-17",
+        "date": "2026-11-17",
+        "reminderDays": 3
+      },
+      {
+        "asset": "Nu Holdings Ltd.",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NU",
+        "sourceSymbol": "NU",
+        "date": "2027-02-24",
+        "id": "fe_yahoo_NU_2027-02-24",
+        "updatedAt": "2026-11-15T20:32:38.340Z",
+        "title": "Publicación de resultados · Nu Holdings Ltd.",
+        "reminderDays": 3,
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "source": "yahoo",
+        "type": "Resultados",
+        "time": ""
+      },
+      {
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=SIVE.ST",
+        "updatedAt": "2026-11-21T17:26:05.340Z",
+        "type": "Resultados",
+        "time": "",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "title": "Publicación de resultados · SIVERS",
+        "reminderDays": 3,
+        "id": "fe_yahoo_SIVE_ST_2026-11-30",
+        "source": "yahoo",
+        "asset": "SIVERS",
+        "sourceSymbol": "SIVE.ST",
+        "date": "2026-11-30"
+      },
+      {
+        "reminderDays": 3,
+        "updatedAt": "2026-11-21T17:26:12.665Z",
+        "type": "Resultados",
+        "time": "",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=NVDA",
+        "asset": "NVIDIA Corporation",
+        "source": "yahoo",
+        "sourceSymbol": "NVDA",
+        "date": "2027-02-24",
+        "id": "fe_yahoo_NVDA_2027-02-24",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa.",
+        "title": "Publicación de resultados · NVIDIA Corporation"
+      },
+      {
+        "type": "Resultados",
+        "time": "",
+        "asset": "Revolution Medicines, Inc.",
+        "reminderDays": 3,
+        "source": "yahoo",
+        "id": "fe_yahoo_RVMD_2027-02-24",
+        "updatedAt": "2026-11-21T17:26:45.161Z",
+        "sourceSymbol": "RVMD",
+        "sourceUrl": "https://finance.yahoo.com/calendar/earnings?symbol=RVMD",
+        "date": "2027-02-24",
+        "title": "Publicación de resultados · Revolution Medicines, Inc.",
+        "notes": "Fecha estimada/indicada por Yahoo Finance. Comprueba la fecha en la web de relaciones con inversores de la empresa."
+      }
+    ],
+    "micartera_r31k0_asset_news_cache_v1": [
+      {
+        "id": "42b29120-ceca-31a4-b6fb-aa34445dae04",
+        "title": "T-Bills Are Beating the Nasdaq, S&P 500 and Dow This Year",
+        "summary": "T-Bills superan a Nasdaq, S&P 500 y Dow en 2026\n\nLos T-Bills, representados por SGOV y BIL, han obtenido un retorno del 3% este año, superando a la Nasdaq, S&P 500 y Dow incluso después de contar con dividendos de acciones. La expectativa de una subida de tasas en diciembre debería impulsar los rendimientos de los T-Bills.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/options/articles/t-bills-beating-nasdaq-p-192253796.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-21T19:22:53.000Z",
+        "symbols": [
+          "VUAA.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T19:58:17.462Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "d6b079b6-1db7-3392-b9d2-7cfb81740e6f",
+        "title": "The S&P 500 Heads Into Thanksgiving Below Its Peak. Here's How the Holiday Week Has Usually Gone Since 1950.",
+        "summary": "El S&P 500 entra en el fin de semana de Acción de Gracias por debajo de su máximo. Historicamente, este período ha sido beneficioso para las acciones, con un 70% de probabilidades de subir en la semana y un promedio de ganancia del 0,7%. Sin embargo, en los años en que el índice entra en la semana 3% a 10% por debajo de su máximo, la tasa de éxito es más baja, alrededor del 54%.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/p-500-heads-thanksgiving-below-190702687.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-11-21T19:07:02.000Z",
+        "symbols": [
+          "VUAA.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T19:30:43.772Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "43b8a53f-134f-3ad3-a4f6-706578c8ccb8",
+        "title": "Oracle (ORCL) Hospital Java Patching Rush Meets New AI Product Push",
+        "summary": "Oracle ha anunciado nuevas vulnerabilidades de seguridad en Java que afectan a sistemas de hospitales de los EE. UU. y ha lanzado nuevos agentes de inteligencia artificial (IA) para la investigación farmacéutica y la planificación de proyectos de construcción. Las empresas de salud están acelerando la aplicación de parches de seguridad en sus sistemas Java. \n\nResumen: Oracle ha anunciado nuevas vulnerabilidades de seguridad en Java que afectan a sistemas de hospitales de los EE. UU. y ha lanzado nuevos agentes de IA para la investigación farmacéutica y la planificación de proyectos de construcción.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/oracle-orcl-hospital-java-patching-180644592.html",
+        "publisher": "Simply Wall St.",
+        "publishedAt": "2026-11-21T18:06:44.000Z",
+        "symbols": [
+          "ORCL"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T19:58:18.995Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "5e2f386d-1165-3b51-ba06-2edf3999018f",
+        "title": "If the S&P 500 Drops by 20%, I'm Buying These 3 ETFs Without Hesitation",
+        "summary": "El artículo menciona tres fondos de inversión (ETFs) que podrían ser comprados en caso de que el índice S&P 500 disminuya en un 20%. Los fondos mencionados son el Vanguard S&P 500 ETF, el Invesco QQQ ETF y el Avantis U.S. Small Cap Value ETF. Según el autor, estos fondos podrían ser una buena oportunidad para invertir en un mercado bajista debido a sus precios descuentados.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/p-500-drops-20-im-160502319.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-11-21T16:05:02.000Z",
+        "symbols": [
+          "VUAA.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T17:00:34.648Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "523b095b-ca24-3a35-8617-49dff64f0437",
+        "title": "Jim Cramer Says the Market “Sliced Right Through” His S&P 500 Target",
+        "summary": "Jim Cramer ha dicho que el mercado \"solo ha pasado por encima\" de su objetivo para el índice S&P 500, que estaba en 6.900. El índice cerró ligeramente por encima de este nivel, pero Cramer está reevaluando su estrategia después de una caída de 8,6% en la semana.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/jim-cramer-says-market-sliced-154742007.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-21T15:47:42.000Z",
+        "symbols": [
+          "VUAA.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T16:00:39.517Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "5d5a08d7-53f3-3713-8073-4b6ddfad3720",
+        "title": "Wall Street’s Fear Index Just Hit 9.7. History Says the S&P 500 Could Rally 10.5% in 3 Weeks",
+        "summary": "La lectura del índice de miedo de Wall Street ha caído a 9,7, lo que según la historia podría significar un aumento del 10,5% en el S&P 500 en tres semanas. Esto se debe a que en los últimos tres casos en que el índice cayó por debajo de 10, el S&P 500 ganó un 10,5% en las tres semanas siguientes.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/wall-street-fear-index-just-152829696.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-21T15:28:29.000Z",
+        "symbols": [
+          "VUAA.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T16:00:40.855Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "71c0a579-bcb4-363b-a39a-7c12947c7d05",
+        "title": "Change of Date for Sivers Semiconductors' Q3 2026 Report and Invitation to Presentation",
+        "summary": "Sivers Semiconductors ha anunciado un cambio de fecha para la publicación de su informe interino del tercer trimestre de 2026, que ahora se publicará el 30 de noviembre de 2026 a las 18:00 CET, seguido de una presentación en webcast a las 18:30 CET. El cambio se debe a que la fecha original coincidía con el Día de Acción de Gracias en EE. UU. y el nuevo día se ha elegido para facilitar la participación de los inversores y analistas estadounidenses.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/articles/change-date-sivers-semiconductors-q3-172500533.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-11-20T17:25:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-20T18:00:48.462Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "1bd84a21-088f-3b3f-ba74-6d857ee821be",
+        "title": "Oracle (ORCL) Has a $664B Backlog. Can It Fund It?",
+        "summary": "Oracle tiene un backlog de $664 mil millones, pero hay preocupación por si puede financiarlo. Esto puede importar porque el crecimiento de la empresa está ligado a la inversión en centros de datos, y una posible regulación más estricta podría afectar a la industria de la inteligencia artificial.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/oracle-orcl-664b-backlog-fund-152315398.html",
+        "publisher": "Insider Monkey",
+        "publishedAt": "2026-11-20T15:23:15.000Z",
+        "symbols": [
+          "ORCL"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-21T19:58:20.142Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "8a70ab3c-6b4d-3f35-98e3-4a615088c1e7",
+        "title": "Ondas, Palantir and Regna AI Host Key Defense Technology Leaders to Accelerate the Path from AI Innovation to Fielded Capability",
+        "summary": "Resumen de la noticia: Ondas Inc., en colaboración con Palantir y Regna AI, ha organizado un encuentro de alto nivel para líderes de la industria de la defensa, con el objetivo de acelerar la implementación de tecnologías de inteligencia artificial en la capacidad de combate. El evento, que se celebró en Las Vegas, ha permitido a los asistentes discutir sobre la aplicación de la inteligencia artificial en missions de defensa y la necesidad de confiabilidad y control en la implementación de estas tecnologías.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/ai/articles/ondas-palantir-regna-ai-host-133000311.html",
+        "publisher": "ACCESS Newswire",
+        "publishedAt": "2026-11-20T13:30:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-20T14:00:43.862Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "fe6776e5-dff5-3677-8fe9-103c195421b7",
+        "title": "Invesco NASDAQ 100 ETF (QQQM) Adds Apple and Microsoft on Nov. 18",
+        "summary": "El Invesco NASDAQ 100 ETF (QQQM) ha realizado compras en Apple y Microsoft el 18 de noviembre. El fondo ha agregado 44.830 acciones de Apple, valoradas en $15,8 millones, y 22.818 acciones de Microsoft, valoradas en $11,6 millones. Estas adquisiciones representan un aumento en la participación de Apple al 8,76% y de Microsoft al 6,43% en el portafolio del fondo.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110401447.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-11-20T11:04:01.000Z",
+        "symbols": [
+          "XNAS.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-20T12:00:36.840Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "e3dd0663-ad58-3fd2-8c59-90f6cb9657af",
+        "title": "Unusual Machines Rallies 7% on Oppenheimer’s $30 Target; Red Cat Falls 7% in Extended Post-Earnings Rout, Ondas Holds Steady",
+        "summary": "Unusual Machines ha subido un 7% después de que Oppenheimer estableció un objetivo de precio de $30, mientras que Red Cat ha caído un 7% en una racha de ventas extendida después de su informe de resultados. Ondas ha mantenido una posición estable.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/unusual-machines-rallies-7-oppenheimer-155507391.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-19T15:55:07.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-19T16:00:48.520Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "e518c0e7-ac80-35ad-8121-a6e67a19ec95",
+        "title": "Ondas (ONDS) Raises Outlook Following Record Quarter As Valuation Debate Returns",
+        "summary": "Ondas (ONDS) ha reportado su cuarto trimestre más grande en la historia, con un aumento significativo en las ventas y una mayor expectativa de ventas para todo el año. A pesar de este cuarto trimestre récord, las acciones de Ondas han estado bajo presión debido a la actividad de adquisiciones acelerada, el uso más pesado de efectivo y el riesgo de ejecución. Sin embargo, los inversores a largo plazo han visto grandes ganancias, mientras que la reciente tendencia ha disminuido. La fuente no aporta más información.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-onds-raises-outlook-following-032751117.html",
+        "publisher": "Simply Wall St.",
+        "publishedAt": "2026-11-19T03:27:51.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-19T04:00:37.354Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "8377d5f6-505e-3a8b-88d8-ed00b83e1c4e",
+        "title": "Ondas and Aston Martin Aramco Formula One Team Launch Multi-Year Partnership Built for \"Speed to Decision\"",
+        "summary": "Ondas ha anunciado un acuerdo de colaboración a largo plazo con el equipo de Fórmula 1 Aston Martin Aramco. La alianza, que se extiende hasta 2029, busca aprovechar la velocidad y la precisión en la toma de decisiones, y se reflejará en la visibilidad de la marca de Ondas en eventos y actividades del equipo. La colaboración incluirá talleres de liderazgo y colaboración tecnológica anuales para explorar la innovación y el desarrollo de tecnologías avanzadas.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/articles/ondas-aston-martin-aramco-formula-163000086.html",
+        "publisher": "ACCESS Newswire",
+        "publishedAt": "2026-11-18T16:30:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "positive",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-18T17:00:47.789Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "c24dfefc-2c53-34c1-b123-513abf242eb4",
+        "title": "What Invesco NASDAQ 100 ETF (QQQM) Bought: Apple Leads on Nov. 16",
+        "summary": "El Invesco NASDAQ 100 ETF (QQQM) fue el único ETF que compró el 16 de noviembre, sin que ningún fondo vendiera. El QQQM agregó 165,4 millones de dólares en operaciones brutas, elevando todas sus 101 posiciones y dejando ninguna disminuida, contra activos totales de 105,25 mil millones de dólares.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110536188.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-11-18T11:05:36.000Z",
+        "symbols": [
+          "XNAS.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-18T12:00:40.561Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "adc7812f-2d0f-3fba-bf58-195a1a3cbf41",
+        "title": "ONDS Raises 2026 Outlook as Backlog and Defense Demand Accelerate",
+        "summary": "La empresa ONDS ha actualizado su objetivo de ingresos para 2026 a al menos $550 millones, debido a un tercer trimestre marcado por ingresos, órdenes y reserva de pedidos significativamente más altos. Esta actualización sugiere que su cartera de defensa más amplia está pasando de la adquisición y la construcción de programas hacia entregas a gran escala.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/onds-raises-2026-outlook-backlog-143300473.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-17T14:33:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T16:00:44.908Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "78a76a50-4aaa-39ca-a749-be17742f4aca",
+        "title": "ONDS Drops 22.3% in the Past Month as Execution Risks Cloud Growth",
+        "summary": "La empresa Ondas Inc. (ONDS) ha visto caer sus acciones un 22,3% en el pasado mes, a pesar de haber reportado un crecimiento rápido de la facturación y una base de pedidos más grande. El retroceso pone el foco en si la expansión operativa puede superar los riesgos de ejecución a corto plazo. La empresa espera que las facturas de la cuarta cuarta cuensten superen los $250 millones. El crecimiento de la empresa es lo suficientemente amplio como para mantener la historia de crecimiento atractiva, pero la acción ha caído un 48% en los últimos tres meses, lo que muestra que los inversores están demandando más que la aceleración de la facturación.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/onds-drops-22-3-past-143000738.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-17T14:30:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T16:00:49.010Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "3bff6588-07d0-3b6c-bb22-c66be3c835ec",
+        "title": "Is ONDS Worth Buying as Hypergrowth Battles Margins and M&A Risks",
+        "summary": "Ondas Inc. (ONDS) ha anunciado un aumento de su objetivo de ingresos para 2026 a al menos $550 millones y espera que los ingresos del cuarto trimestre superen $250 millones. También ha establecido un objetivo de ingresos de al menos $1.1 mil millones para 2027, excluyendo adquisiciones adicionales. La empresa enfrenta desafíos para convertir su crecimiento en ganancias sostenibles, ya que su margen de beneficio se ve presionado y enfrenta riesgos de adquisiciones.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/onds-worth-buying-hypergrowth-battles-142700060.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-17T14:27:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T16:00:52.104Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "2cdd890c-adce-3b83-818e-7bc1bd4ddbb7",
+        "title": "Red Cat Plunges 34% After Revenue Miss, Pulled Guidance and Needham Target Cut; Ondas and AeroVironment Dip",
+        "summary": "Red Cat ha caído un 34% después de que su objetivo de ingresos para el año se retirara y la empresa Needham redujera su objetivo de precio. La caída se debe a un ingreso de $12 millones que falló en alcanzar la estimación de $41 millones, lo que ha dejado al panorama de Red Cat en manos de decisiones de un solo programa.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/red-cat-plunges-34-revenue-141753303.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-17T14:17:53.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T14:48:47.980Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "68f90e02-a080-38e7-8e28-237aa8db4378",
+        "title": "Should You Buy, Hold or Sell Ondas Stock Post-Q3 Earnings?",
+        "summary": "Ondas Inc. (ONDS) ha reportado resultados financieros para el tercer trimestre de 2026, destacando una creciente demanda por sus soluciones de defensa y seguridad autónomas. La empresa ha obtenido nuevos pedidos significativos y ha aumentado su perspectiva de ingresos para todo el año. Sin embargo, las acciones de ONDS han caído un 17,8% desde la anuncio de resultados, cerrando a $4,71 el 16 de noviembre, en comparación con $5,73 antes del anuncio el 11 de noviembre de 2026.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/buy-hold-sell-ondas-stock-125500832.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-17T12:55:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T14:48:49.502Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "088fedf0-39e7-339d-acee-6e38603ee3df",
+        "title": "Ondas' Aggressive Acquisition Spree: Can It Fuel Sustained Growth?",
+        "summary": "Ondas Inc. (ONDS) está expandiendo su cartera de defensa y sistemas autónomos a través de adquisiciones que buscan fortalecer sus capacidades tecnológicas, capacidad de manufactura y alcance en el mercado global. Las adquisiciones están contribuyendo a un crecimiento operativo, con empresas como Sentrycs, 4M y Rotron registrando un crecimiento significativo en sus ingresos. Sin embargo, la expansión agresiva implica importantes inversiones, con Ondas desplegando aproximadamente $431 millones en adquisiciones durante el cuarto trimestre.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-aggressive-acquisition-spree-fuel-110800183.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-17T11:08:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T13:00:37.107Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "79a49ced-3edb-3c0a-9c53-15fa10c05291",
+        "title": "Invesco NASDAQ 100 ETF (QQQM) Buys $15.4 Million More Apple on Nov. 13",
+        "summary": "El Invesco NASDAQ 100 ETF (QQQM) ha adquirido $15,4 millones más de acciones de Apple el 13 de noviembre. Esta compra supone el 8,59% de los activos del fondo.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110429769.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-11-17T11:04:29.000Z",
+        "symbols": [
+          "XNAS.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T12:00:39.883Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "48c408b3-ff36-3873-a0c4-c28ed89f97a2",
+        "title": "How Risky Is Ondas Stock After Earnings?",
+        "summary": "La empresa Ondas (ONDS) ha visto su precio disminuir un 7,2% después de reportar el mejor cuatrimestre de su historia, con una facturación que ha doblado y un aumento en la meta anual. La caída en el precio ha llevado a algunos inversores a preguntarse si se trata de una oportunidad para comprar, pero la pregunta más importante es cuánto puede uno permitirse perder en una inversión como esta.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/risky-ondas-stock-earnings-103858770.html",
+        "publisher": "Trefis",
+        "publishedAt": "2026-11-17T10:38:58.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T14:48:51.803Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "ba18a039-7731-352d-8987-c4975d17d012",
+        "title": "Ondas Is Building a Defense Growth Engine, But Can It Deliver on Its Backlog?",
+        "summary": "Ondas Holdings Inc. ha informado un crecimiento del 100% en su ingresos trimestrales, que alcanzaron los $167,5 millones, con un aumento del 1.500% anual. La empresa también ha visto un aumento del 35% en su backlog, que asciende a $214 millones, gracias a nuevas contrataciones. Sin embargo, la compañía enfrenta presión de margen, con una disminución del margen bruto a un 21,8% y un aumento de la pérdida de EBITDA ajustado a $59,7 millones.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-building-defense-growth-engine-181000314.html",
+        "publisher": "MarketBeat",
+        "publishedAt": "2026-11-16T18:10:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-17T19:00:42.792Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "a46b6b63-5b53-3a0d-9f2c-e329ab76ecf3",
+        "title": "Ondas Falls 8% Despite $1.1 Billion 2027 Revenue Target as Drone Stocks Extend Losses; Red Cat Drops 5%, Unusual Machines Slides 4%",
+        "summary": "Ondas Holdings ha caído un 8% después de anunciar una meta de ingresos de $1.1 mil millones en 2027, a pesar de haber alcanzado ingresos récord y una meta de ingresos para 2027 de más de $1 mil millones. La caída se debe a las margen delgadas y la dilución de la adquisición que asustan a los inversores.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-falls-8-despite-1-150226611.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-16T15:02:26.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T16:00:50.677Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "c25e95b0-efe5-3c59-8465-bc405cb32aad",
+        "title": "Invesco NASDAQ 100 ETF (QQQM) Adds Apple and NVIDIA on Thursday",
+        "summary": "La Invesco NASDAQ 100 ETF (QQQM) ha agregado Apple y NVIDIA el jueves, adquiriendo $367,7 millones de acciones en todas las 101 posiciones, mientras que no vendió ninguna.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110452941.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-11-16T11:04:52.000Z",
+        "symbols": [
+          "XNAS.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T12:00:39.623Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "5d63f6be-1228-3059-8e8f-eef2b6bff1cb",
+        "title": "Formation of the Nomination Committee in Sivers Semiconductors AB ahead of the 2027 Annual General Meeting",
+        "summary": "El comité de nominaciones de Sivers Semiconductors AB se formará antes de la Junta General Anual de 2027, integrado por un miembro designado por cada uno de los tres accionistas más grandes en términos de derechos de voto y el presidente del consejo de administración.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/formation-nomination-committee-sivers-semiconductors-063200755.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-11-16T06:32:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T07:00:33.603Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "b31ed96f-dd8b-35b2-81de-3445529b0bfa",
+        "title": "Ondas (ONDS) Stock Faces Q3 Results With Losses Clouding Revenue Surge",
+        "summary": "Ondas (ONDS) ha presentado resultados financieros para el tercer trimestre de 2026, con una renta de US$167,5 millones y una pérdida neta de US$62,6 millones. A pesar de la fuerte subida de la renta, la pérdida neta ha aumentado, lo que ha llevado a una reacción negativa en el precio de la acción. La empresa sigue enfrentando desafíos en su integración y escalado, lo que ha generado preocupación entre los analistas.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-onds-stock-faces-q3-231218138.html",
+        "publisher": "Simply Wall St.",
+        "publishedAt": "2026-11-13T23:12:18.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:00:39.602Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "372256dd-5dab-3066-ab60-c2835a61c050",
+        "title": "ONDS Q3 Earnings Call Highlights Growth Targets and Margin Pressures",
+        "summary": "La empresa ONDS ha aumentado su objetivo de ingresos para el año 2026 a al menos 550 millones de dólares, impulsado por una demanda creciente en el sector de defensa y la expansión de sus capacidades de producción. El objetivo de ingresos para el cuarto trimestre es superar los 250 millones de dólares, apoyado por entregas aumentadas en sistemas de precisión, contra-drones y sistemas de tierra autónomos.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/onds-q3-earnings-call-highlights-180800136.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-13T18:08:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:00:41.047Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "c1bc6cd4-90cd-395b-b6e3-50055564d23e",
+        "title": "Ondas Drops 5% as Drone Stocks Slide; Unusual Machines Falls 6%, Red Cat Declines 4%",
+        "summary": "La empresa ONDS ha caído un 5% debido a una caída en las acciones de drones, mientras que Unusual Machines ha caído un 6% y Red Cat ha declinado un 4%. Esto se debe a un tech-led selloff que ha afectado a las acciones de drones. A pesar de esto, ONDS ha aumentado su guía de ingresos para 2026 a $550 millones, apoyado por un backlog de $835 millones.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-drops-5-drone-stocks-165140654.html",
+        "publisher": "24/7 Wall St.",
+        "publishedAt": "2026-11-13T16:51:40.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:00:43.308Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "29b0d77e-343c-321f-8485-9631a4b10eb6",
+        "title": "Can Ondas Convert Its $835M Backlog Into Sustainable Growth?",
+        "summary": "La empresa ONDS ha finalizado el tercer trimestre de 2026 con un retiro de aproximadamente 835 millones de dólares, lo que supone un aumento del 36% en comparación con el trimestre anterior y más de 12 veces el retiro del cuarto trimestre de 2025. Este aumento se debe a la contratación de nuevos pedidos por valor de 214 millones de dólares durante el trimestre, lo que eleva los pedidos para los primeros nueve meses de 2026 a 507 millones de dólares. \n\nEste aumento en el retiro se debe a la contratación de pedidos en diversas áreas, como la seguridad aérea, la inteligencia persistente y el ataque preciso. La empresa espera que estos pedidos se",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-convert-835m-backlog-sustainable-142200422.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-13T14:22:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:00:45.614Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "c578cd96-807d-3e90-932e-4ae09e9da914",
+        "title": "Ondas Q3 Earnings Show Wider Loss, Revenues Beat Estimates",
+        "summary": "La empresa Ondas Inc. (ONDS) ha informado un aumento en sus pérdidas netas en el tercer trimestre de 2026, que ascendieron a $64,7 millones, en comparación con $7,5 millones en el mismo período del año anterior. Sin embargo, sus ingresos aumentaron un 16 veces en comparación con el mismo período del año anterior, alcanzando $167,5 millones, lo que superó las previsiones de Zacks.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/ondas-q3-earnings-show-wider-141600756.html",
+        "publisher": "Zacks",
+        "publishedAt": "2026-11-13T14:16:00.000Z",
+        "symbols": [
+          "ONDS"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:00:47.499Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "8f5a9ba7-1d4d-3d98-ab73-52d2f73a6c56",
+        "title": "Invesco NASDAQ 100 ETF (QQQM) Adds Apple and NVIDIA on Nov. 10",
+        "summary": "Invesco NASDAQ 100 ETF (QQQM) ha aumentado su posición en Apple y NVIDIA el 10 de noviembre, con compras por valor de $20,6 millones y $16,5 millones, respectivamente.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110512326.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-11-12T11:05:12.000Z",
+        "symbols": [
+          "XNAS.MI"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:08:00.526Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "52f76290-3e01-3e44-a27e-1f7948e7f1c7",
+        "title": "Sivers Semiconductors Expands Global Market Reach Through Strategic Agreement with WT Microelectronics",
+        "summary": "Sivers Semiconductors ha anunciado un acuerdo de distribución global con WT Microelectronics, lo que amplía su alcance en el mercado gracias a la red de clientes de WT Microelectronics de 25.000 en 43 países. Este acuerdo apoya los esfuerzos de Sivers para expandir su alcance comercial en mercados donde la demanda de tecnologías ópticas y conectividad inalámbrica de alta capacidad sigue creciendo.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/articles/sivers-semiconductors-expands-global-market-061900007.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-11-11T06:19:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:08:02.471Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "9073693a-a9fc-36f8-b70f-918f32f093f6",
+        "title": "Is Indra Sistemas (BME:IDR) A Bargain Following Strong Q3 Sales And Net Income?",
+        "summary": "Indra Sistemas ha reportado ventas del tercer trimestre de €1,466.1 millones y beneficio neto de €136.2 millones, superando las cifras del año anterior. Sin embargo, el precio de la acción ha bajado un 11.15% en la última semana y un 10.13% en los últimos tres meses, lo que sugiere que los inversores pueden estar ponderando fuertes ganancias recientes frente a un clima más frío a corto plazo.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/indra-sistemas-bme-idr-bargain-231537614.html",
+        "publisher": "Simply Wall St.",
+        "publishedAt": "2026-11-07T23:15:37.000Z",
+        "symbols": [
+          "IDR.MC"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:20:56.893Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "27fe8397-5037-389a-93eb-9eef52aae19f",
+        "title": "Elicio Therapeutics: Q3 Earnings Snapshot",
+        "summary": "Elicio Therapeutics ha informado una pérdida de 8 millones de dólares en su tercer trimestre, con una pérdida de 30 centavos por acción. El resumen se basa únicamente en el titular y la fuente no aporta más información.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-q3-earnings-snapshot-211509375.html",
+        "publisher": "Associated Press",
+        "publishedAt": "2026-11-05T21:15:09.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:20:57.601Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "e8d5b365-b209-356f-8848-e9b5e702ed99",
+        "title": "Elicio Therapeutics Reports Third Quarter 2026 Financial Results and Provides Business Update",
+        "summary": "Elicio Therapeutics ha presentado resultados financieros para el tercer trimestre de 2026 y actualizaciones sobre su negocio. Los análisis pre-especificados de la fase 2 de la prueba AMPLIFY-7P demuestran reducciones sustanciales en el riesgo de recurrencia o muerte en pacientes con ADN circulante negativo y pacientes sin radioterapia previa, lo que permite un enfoque objetivo en la fase 3 para el tratamiento adyuvante del cáncer de páncreas.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-reports-third-quarter-210100401.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-11-05T21:01:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:20:59.109Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "2956afa2-b835-3368-b573-d821ce318e9c",
+        "title": "SPDW vs EEM: Which International ETF Offers Better Value for Investors Seeking Global Stock Profits?",
+        "summary": "La comparativa entre dos fondos de inversión (SPDW y EEM) ofrece diferentes opciones para inversores que buscan ganancias en el mercado de valores global. El SPDW es más asequible con un ratio de gastos del 0,03% frente al 0,72% del EEM, y ofrece un mayor pago con un rendimiento del 3,1% frente al 1,8% del EEM. Ambos fondos ofrecen exposición a una amplia selección de acciones no estadounidenses, pero tienen diferencias clave en su enfoque regional y perfil de riesgo.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/spdw-vs-eem-international-etf-200302804.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-11-05T20:03:02.000Z",
+        "symbols": [
+          "EEM"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:57:53.502Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "a1c23807-dc72-3e53-a093-3e54cf2f0493",
+        "title": "Elicio Therapeutics to Host Virtual KOL Event on November 11, 2026: ELI-002 7P for Metastatic and Neoadjuvant PDAC",
+        "summary": "Elicio Therapeutics organizará un evento virtual el 11 de noviembre de 2026, donde expertos en oncología discutirán la terapia inmunológica investigacional ELI-002 7P para el cáncer de páncreas metastásico y neoadyuvante.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-host-virtual-kol-130000515.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-11-04T13:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:21:00.329Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "90060481-cadc-36f0-9890-94c5100363c3",
+        "title": "Better iShares Emerging Markets ETF: IEMG vs. EEM",
+        "summary": "La iShares Core MSCI Emerging Markets ETF (IEMG) ofrece una entrada más asequible y diversificada a economías en desarrollo en comparación con la iShares MSCI Emerging Markets ETF (EEM). La primera ofrece una tasa de gastos de 0,09% frente a 0,72% de la segunda y tiene una mayor participación de dividendos del 2,4%. La primera también tiene una mayor exposición al mercado al incluir acciones de pequeña capitalización.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/better-ishares-emerging-markets-etf-200930883.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-10-31T20:09:30.000Z",
+        "symbols": [
+          "EEM"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:57:55.113Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "46783a0d-5f8f-3344-bc85-c591eb447f43",
+        "title": "Indra Sistemas SA (ISMAF) (Q3 2026) Earnings Call Highlights: Record EUR22. ...",
+        "summary": "Indra Sistemas SA ha presentado un record de EUR22.2 billones en su backlog al final de septiembre, lo que supone un aumento del 133% anual. Este aumento se debe principalmente a la defensa y el IRIS award.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/indra-sistemas-sa-ismaf-q3-150719803.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-10-29T15:07:19.000Z",
+        "symbols": [
+          "IDR.MC"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:21:01.334Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "e126bed7-c57a-3034-8555-bdae8ef6170b",
+        "title": "Elicio Therapeutics to Present Phase 2 AMPLIFY-7P Results at the SITC 2026 Annual Meeting",
+        "summary": "Elicio Therapeutics presentará resultados adicionales de la fase 2 de su estudio AMPLIFY-7P en la reunión anual de la Sociedad para la Inmunoterapia del Cáncer (SITC) 2026. El estudio investiga un tratamiento contra el cáncer de páncreas con mutaciones KRAS. La presentación puede proporcionar información adicional sobre la eficacia del tratamiento.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-present-phase-2-130000315.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-10-29T13:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:21:02.519Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "20912207-2d6b-39ad-a097-a2f03e360d25",
+        "title": "Indra shares rise as it keeps 2026 targets after nine-month sales up 29%",
+        "summary": "Las acciones de Indra han subido un 2% después de mantener sus objetivos para 2026, pese a un crecimiento de las ventas del 29% en los primeros nueve meses. Esto se debe en parte a la adquisición de empresas y pagos anticipados, que no se esperan que se repitan en el cuarto trimestre. El objetivo para 2026 sigue siendo superar los 7.000 millones de euros en ingresos, más de 700 millones en beneficios antes de intereses y impuestos, y más de 375 millones en flujo de efectivo libre.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/indra-shares-rise-keeps-2026-101057109.html",
+        "publisher": "Investing.com",
+        "publishedAt": "2026-10-29T10:10:57.000Z",
+        "symbols": [
+          "IDR.MC"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:21:04.172Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "8c9634ac-4f1d-300e-8020-1a475a8a3bc7",
+        "title": "Which International ETF Is the Better Buy: iShares’ Developed Market IEFA or Emerging Markets EEM?",
+        "summary": "Resumen: \n\nEl iShares Core MSCI EAFE ETF (IEFA) ofrece una exposición diversificada a mercados desarrollados con costos bajos, mientras que el iShares MSCI Emerging Markets ETF (EEM) busca economías en crecimiento con altos costos y mayor riesgo. El IEFA es más asequible y ofrece un pago más robusto para los inversores que buscan ingresos, con una tasa de gestión de 0,07% frente a 0,72% del EEM.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/international-etf-better-buy-ishares-195314927.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-10-26T19:53:14.000Z",
+        "symbols": [
+          "EEM"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:57:57.166Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "2777ea08-ae6c-3e28-b136-ee1aa59e8b33",
+        "title": "Elicio Therapeutics Presents Late-Breaking Phase 2 AMPLIFY-7P Results at ESMO Congress 2026 and Announces Simultaneous Publication in Nature Medicine",
+        "summary": "Elicio Therapeutics ha presentado los resultados del estudio de fase 2 AMPLIFY-7P en el congreso ESMO 2026 y anunciado su publicación simultánea en Nature Medicine. Los análisis pre-especificados del estudio han mostrado tendencias favorables de tratamiento en pacientes con y sin detectable ctDNA basal, así como en pacientes sin radioterapia previa. Aunque el estudio no cumplió con su objetivo principal de supervivencia libre de enfermedad en la población de intención de tratar, los resultados deben considerarse en el contexto de una desventaja basal en la positividad de ctDNA, un fuerte predictor de recurrencia, que fue más prevalente en el ",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-presents-breaking-phase-130000307.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-10-23T13:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:23.138Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "cb32bd6a-384b-3aff-baeb-4df60d731fae",
+        "title": "Bulletin from Sivers Semiconductors AB's Extraordinary General Meeting on 22 October 2026",
+        "summary": "La Asamblea General Extraordinaria de Sivers Semiconductors AB se reunió el 22 de octubre de 2026 y aprobó varias resoluciones importantes. Entre ellas, la elección de Ernst & Young AB como nuevo auditor del período hasta la próxima Asamblea General Anual, y la introducción de un programa de incentivos a largo plazo para empleados en diferentes países, que incluye la emisión de opciones de acciones para un total de 7,280,000 acciones, correspondientes a un 2.0% de las acciones y votos del compañía después de la dilución.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bulletin-sivers-semiconductors-abs-extraordinary-231000534.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-10-22T23:10:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:24.382Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "a4111827-b566-359e-a792-e4fa43263540",
+        "title": "Strategic LiDAR Customer Initiates Production Orders with Sivers Semiconductors",
+        "summary": "La empresa Sivers Semiconductors ha anunciado que un cliente estratégico de LiDAR ha iniciado órdenes de producción para sus clientes en el sector automoción e industrial. Esto permitirá a Sivers suministrar láseres y amplificadores ópticos a los clientes de LiDAR del cliente, lo que refleja la confianza en la tecnología y la capacidad de producción de la empresa.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/technology/articles/strategic-lidar-customer-initiates-production-053400376.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-10-20T05:34:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:25.692Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "69114582-be11-301f-bfcc-871eaa0fe16e",
+        "title": "Indra Sistemas (BME:IDR) Stock Looks Overvalued On Cash Flow Grounds",
+        "summary": "Indra Sistemas (BME:IDR) puede estar sobrevaluado desde la perspectiva de los flujos de efectivo. El análisis sugiere que el precio actual de la empresa no se alinea con los flujos de efectivo que puede generar y mantener a largo plazo.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/indra-sistemas-bme-idr-stock-181325742.html",
+        "publisher": "Simply Wall St.",
+        "publishedAt": "2026-10-17T18:13:25.000Z",
+        "symbols": [
+          "IDR.MC"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:26.752Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "dca81a6d-ffa7-33d9-99d9-cd6387a935eb",
+        "title": "Two International ETFs With Contrasting Styles: iShares MSCI World ETF (URTH) and Emerging Markets ETF (EEM)",
+        "summary": "La iShares MSCI World ETF (URTH) y la Emerging Markets ETF (EEM) son dos fondos de inversión internacionales con estilos contrastantes. La URTH ofrece exposición global con un enfoque en economías desarrolladas, mientras que la EEM se centra en economías emergentes con un alto componente tecnológico. La URTH tiene un costo de gestión más bajo y una mayor estabilidad en comparación con la EEM, que tiene un perfil de riesgo más alto y una rentabilidad mayor. La elección entre estos fondos dependerá del apetito de riesgo y la eficiencia de costos del inversor.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/two-international-etfs-contrasting-styles-164002219.html",
+        "publisher": "Motley Fool",
+        "publishedAt": "2026-10-09T16:40:02.000Z",
+        "symbols": [
+          "EEM"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:57:58.822Z",
+        "groups": [
+          "watchlist"
+        ]
+      },
+      {
+        "id": "cf1cf916-c2a7-3869-a574-be11e67d0ae7",
+        "title": "Outlook Therapeutics Names Greg DiPasquale Chief Commercial Officer",
+        "summary": "Outlook Therapeutics ha nombrado a Greg DiPasquale como director comercial. Esto puede importar porque un cambio en la estructura de liderazgo de una empresa puede tener un impacto en su estrategia comercial y resultados financieros.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-names-greg-dipasquale-131246687.html",
+        "publisher": "MT Newswires",
+        "publishedAt": "2026-10-09T13:12:46.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:27.794Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "905ee0b6-2f0d-3ff2-a00f-e6456ebda1e5",
+        "title": "Outlook Therapeutics Names Greg DiPasquale Chief Commercial Officer",
+        "summary": "Outlook Therapeutics ha nombrado a Greg DiPasquale como Director Comercial Jefe. DiPasquale, un líder comercial experimentado en retina, llevará a cabo la comercialización de LYTENAVA en los Estados Unidos. LYTENAVA es un tratamiento para la degeneración macular relacionada con la edad húmeda (AMD) y es la primera y única formulación oftálmica aprobada por la FDA de bevacizumab. El nombramiento de DiPasquale se produce en el marco de la preparación de la empresa para hacer disponible LYTENAVA a pacientes elegibles en los Estados Unidos antes de finales de 2026.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-names-greg-dipasquale-123000557.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-10-09T12:30:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:29.159Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "ad60f440-71e8-3d19-be1a-feb55a19fc0d",
+        "title": "Outlook Therapeutics Highlights What the Appointment of New CFO Kevin Lundquist Means for the Company’s Next Chapter in Virtual Investor Discussion",
+        "summary": "Outlook Therapeutics ha anunciado la incorporación de Kevin Lundquist como nuevo CFO. Este nuevo capítulo en la empresa se debe a la aprobación de LYTENAVA por la FDA, y Lundquist espera contribuir a la ejecución de la estrategia de la compañía y al éxito del lanzamiento comercial de LYTENAVA.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-highlights-appointment-cfo-132000229.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-10-06T13:20:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:30.528Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "07504bb3-9bb9-38ba-9b71-c2c8696adf83",
+        "title": "Outlook Therapeutics Submits HCPCS Level II Application to CMS for Permanent J-Code for LYTENAVA™ (bevacizumab-vikg)",
+        "summary": "La empresa Outlook Therapeutics ha presentado una solicitud a CMS para obtener un código permanente J para su producto LYTENAVA, un tratamiento para la degeneración macular relacionada con la edad húmeda. Esta solicitud es un paso importante para apoyar la reembolsación y la comercialización del producto en los Estados Unidos. La empresa sigue en camino para lanzar comercialmente LYTENAVA antes de finales de 2026.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-submits-hcpcs-level-130100515.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-10-01T13:01:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:54:31.840Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "1866dfda-3007-319b-bbbd-9b3b03cbf894",
+        "title": "Notice to attend an Extraordinary General Meeting of Sivers Semiconductors AB",
+        "summary": "Los accionistas de Sivers Semiconductors AB están invitados a asistir a una Asamblea General Extraordinaria el 22 de octubre de 2026 en Estocolmo. Los accionistas pueden ejercer sus derechos de voto por correo antes de la reunión. La propuesta de la Comisión de Nombramiento es elegir a Jorgen S. Axelsson como presidente de la reunión y cambiar a Ernst & Young AB como auditor del 2026 al 2027.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/notice-attend-extraordinary-general-meeting-182700788.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-09-29T18:27:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:58:00.050Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "6eaebdab-f339-3cc0-8710-fd6bbe3fb753",
+        "title": "Elicio Therapeutics Announces Late-Breaking Phase 2 AMPLIFY-7P Data Selected for Proffered Paper Oral Presentation at ESMO Congress 2026",
+        "summary": "La empresa Elicio Therapeutics ha anunciado que sus datos de la fase 2 de la investigación AMPLIFY-7P han sido seleccionados para una presentación orala en el Congreso ESMO 2026. Estos nuevos análisis se enfocan en la potencial actividad clínica del ELI-002 7P en el cáncer de páncreas resectado y pueden influir en la estrategia de desarrollo de la fase 3 de la empresa.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-announces-breaking-phase-120000811.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-09-24T12:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:58:01.351Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "35143373-c852-35ca-9187-61b11974a17b",
+        "title": "B. Riley Adjusts Price Target on Elicio Therapeutics to $8 From $27, Keeps Buy Rating",
+        "summary": "B. Riley ajusta el objetivo de precio de Elicio Therapeutics a $8 desde $27, mantiene la calificación de Compra. \n\nSe basa únicamente en el titular y la fuente no aporta más información.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/b-riley-adjusts-price-target-113605715.html",
+        "publisher": "MT Newswires",
+        "publishedAt": "2026-09-24T11:36:05.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T00:58:02.167Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "31c4812d-3b09-375f-a2ff-0dda4edb5c48",
+        "title": "Sivers Semiconductors Makes Changes to Senior Leadership Team for Next Phase of Commercial Growth",
+        "summary": "Sivers Semiconductors ha anunciado cambios en su equipo de liderazgo senior para impulsar su crecimiento comercial. La empresa ha contratado a Marc Pegulu como director general de Wireless y a David Clark como VP de Ingeniería de Fotonica, mientras que Harish Krishnaswamy pasa a ser el Chief Strategy Officer. Estos cambios se producen con el objetivo de avanzar en la comercialización y escalabilidad de sus productos de Wireless y Fotonica.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/articles/sivers-semiconductors-makes-changes-senior-051100296.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-09-24T05:11:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:38.826Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "4a7a4f90-99b5-368e-b977-26a2c565f8d2",
+        "title": "Outlook Therapeutics Fireside Chat from H.C. Wainwright Conference Now Available On-Demand",
+        "summary": "Outlook Therapeutics ha hecho disponible una presentación en vivo previamente grabada en la conferencia de inversión H.C. Wainwright. En ella, el CEO Bob Jahr y un analista de H.C. Wainwright discuten los últimos desarrollos de la empresa. Esta presentación puede ser vista en el sitio web de la empresa a partir del 11 de septiembre de 2026. La empresa participará en reuniones individuales con inversores en la conferencia del 14 al 16 de septiembre de 2026 en Nueva York.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-fireside-chat-h-110000514.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-09-11T11:00:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:40.650Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "3f3d7932-d0eb-3ecb-bc93-b8319a84eabf",
+        "title": "Outlook Therapeutics CEO, Bob Jahr, Discusses FDA Approval and Commercial Opportunity for LYTENAVA™ in Virtual Investor CEO Connect Segment",
+        "summary": "El CEO de Outlook Therapeutics, Bob Jahr, ha participado en un segmento de inversores virtuales para discutir la aprobación de la FDA para LYTENAVA y los planes de la empresa para su lanzamiento comercial en los EE. UU. Se espera que LYTENAVA pueda abordar el mercado de retinas en los EE. UU. y alcanzar más de 500 millones de dólares en ventas anuales en 2030.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-ceo-bob-jahr-131000887.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-09-10T13:10:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "positive",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:41.926Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "6d064dda-4b8f-3d6c-b8d7-7d8909be26f5",
+        "title": "Sivers Semiconductors Invests USD 30 Million to Expand European Photonics Manufacturing for AI Datacenters",
+        "summary": "Sivers Semiconductors ha invertido USD 30 millones en la expansión de su fabricación de fotónica en Europa, específicamente en Glasgow, para satisfacer la creciente demanda de centros de datos de inteligencia artificial. Esta inversión permitirá aumentar la capacidad de producción de láseres CW DFB en más de 100 millones anuales, apoyando las rampas de producción de clientes de infraestructura de AI.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/ai/articles/sivers-semiconductors-invests-usd-30-061600765.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-09-03T06:16:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:43.082Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "a0399d27-8bbc-3e78-a3fa-262a0a4d7c24",
+        "title": "Change in the Total Number of Shares and Votes in Sivers Semiconductors AB",
+        "summary": "La empresa Sivers Semiconductors AB ha aumentado su número total de acciones y votos debido a la ejercicio de opciones por parte de Bootstrap Europe IV SCSp, lo que ha llevado a la emisión de 1.659.015 nuevas acciones ordinarias.",
+        "summaryAvailable": true,
+        "relevance": "related",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/change-total-number-shares-votes-161500892.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-08-31T16:15:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:43.845Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "dc884f07-cbf8-3b75-ad0e-8286e8996b59",
+        "title": "Elicio Therapeutics to Participate at the H.C. Wainwright 28th Annual Global Investment Conference",
+        "summary": "Elicio Therapeutics participará en el H.C. Wainwright 28th Annual Global Investment Conference. La empresa, que desarrolla terapias inmunológicas para cánceres impulsados por KRAS, realizará un encuentro de preguntas y respuestas con su CEO y su director científico. El evento tendrá lugar del 14 al 16 de septiembre de 2026 en Nueva York.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-participate-h-c-120000801.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-08-31T12:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:45.407Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "b35b39f4-505e-3148-9069-40caf86327a1",
+        "title": "Sivers Semiconductors AB (SIVEF) (Q2 2026) Earnings Call Highlights: Pipeline Surges 268% to $1. ...",
+        "summary": "Sivers Semiconductors AB (SIVEF) ha presentado sus resultados financieros para el segundo trimestre de 2026, mostrando un aumento del 268% en su pipeline de oportunidades, que se ha expandido a $1,2 mil millones. La empresa ha incrementado su ingreso en productos un 18% en términos constantes de cambio, y ha recibido órdenes de producción de Allspace y Seminex, con órdenes de producción inminentes para un cliente de LiDAR.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/sivers-semiconductors-ab-sivef-q2-010113113.html",
+        "publisher": "GuruFocus.com",
+        "publishedAt": "2026-08-28T01:01:13.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T01:00:47.408Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "c084cfae-53f4-3489-bef3-182f252529b7",
+        "title": "Outlook Therapeutics Appoints Kevin Lundquist as CFO",
+        "summary": "Outlook Therapeutics ha nombrado a Kevin Lundquist como director financiero. \n\nEl resumen se basa únicamente en el titular y la fuente no aporta más información.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-appoints-kevin-lundquist-203905503.html",
+        "publisher": "MT Newswires",
+        "publishedAt": "2026-08-27T20:39:05.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T02:00:43.475Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "6d4bce01-8126-37e6-9073-8df6d3800310",
+        "title": "Outlook Therapeutics Appoints Kevin Lundquist as Chief Financial Officer as It Prepares for U.S. Commercial Launch of LYTENAVA™",
+        "summary": "Outlook Therapeutics ha nombrado a Kevin Lundquist como nuevo director financiero. Lundquist, con más de 20 años de experiencia en liderazgo financiero, se une a la empresa en un momento clave, después de que LYTENAVA obtuvo la aprobación de la FDA, y se prepara para el lanzamiento comercial en EE. UU. de la empresa.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-appoints-kevin-lundquist-200500912.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-08-27T20:05:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T02:00:45.178Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "eeb28c97-3df5-3e88-823c-db8c6bdf7613",
+        "title": "Sivers Semiconductors Reports Q2 2026 Results as Product Growth, Record Pipeline and Customer Ramps Position Company for Growth Acceleration",
+        "summary": "Sivers Semiconductors ha anunciado sus resultados financieros para el segundo trimestre de 2026. La empresa ha experimentado un crecimiento en sus ingresos de productos del 18% anual, mientras que su pipeline de oportunidades ha alcanzado los USD 1.2 mil millones, un aumento del 268% desde diciembre de 2025. La empresa está priorizando recursos para apoyar la producción de varios programas que avanzan hacia la producción en masa.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/technology/articles/sivers-semiconductors-reports-q2-2026-165900907.html",
+        "publisher": "PR Newswire",
+        "publishedAt": "2026-08-27T16:59:00.000Z",
+        "symbols": [
+          "SIVE.ST"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T02:00:47.580Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "adcff8a1-70be-3a08-8134-9f3f3496ce58",
+        "title": "Outlook Therapeutics CEO, Bob Jahr, Participates in the Virtual Investor “Why Now” On-Demand Conference",
+        "summary": "El CEO de Outlook Therapeutics, Bob Jahr, participó en un encuentro virtual de inversores donde habló sobre la aprobación de LYTENAVA por parte de la FDA y cómo representa un momento transformador para la empresa, ya que pasa de ser una empresa de desarrollo a una comercial.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/outlook-therapeutics-ceo-bob-jahr-130100936.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-08-27T13:01:00.000Z",
+        "symbols": [
+          "OTLK"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T02:00:48.756Z",
+        "groups": [
+          "portfolio"
+        ]
+      },
+      {
+        "id": "e9b1af40-a312-3d57-b2f0-70f0b6ed5344",
+        "title": "Elicio Therapeutics to Participate at the Wells Fargo 21st Annual Healthcare Conference",
+        "summary": "Elicio Therapeutics, una empresa de biotecnología en fase de ensayos clínicos, participará en reuniones individuales en el Wells Fargo 21st Annual Healthcare Conference. Esto puede importar porque la empresa está desarrollando terapias inmunológicas de próxima generación para el tratamiento de cánceres impulsados por KRAS.",
+        "summaryAvailable": true,
+        "relevance": "direct",
+        "url": "https://finance.yahoo.com/healthcare/articles/elicio-therapeutics-participate-wells-fargo-120000508.html",
+        "publisher": "GlobeNewswire",
+        "publishedAt": "2026-08-24T12:00:00.000Z",
+        "symbols": [
+          "ELTX"
+        ],
+        "impact": "neutral",
+        "summaryLanguage": "es",
+        "summaryBasis": "article",
+        "summaryGeneratedAt": "2026-11-16T02:00:50.937Z",
+        "groups": [
+          "portfolio"
+        ]
+      }
+    ],
+    "micartera_r31k0_strategies_v1": [
+      {
+        "updatedAt": "2026-11-19T23:33:27.100Z",
+        "exit": 0,
+        "thesis": "ACUMULAR PARA PODER PROMEDIAR Y CERRAR LA POSICION PARA CENTRARME EN ORO",
+        "entry": 40,
+        "reviewDate": "2026-11-30",
+        "horizon": "Corto plazo (< 1 año)",
+        "notes": "",
+        "name": "ACUMULAR PLATA PARA PROMEDIAR",
+        "risk": "QUE LA PLATA SUBA POR ENCIMA DE 55",
+        "capital": 40,
+        "id": "st-1794590804532-ym6uw",
+        "asset": "PLATA (ETC)",
+        "status": "En seguimiento",
+        "createdAt": "2026-11-13T17:26:44.532Z"
+      },
+      {
+        "updatedAt": "2026-11-10T17:30:01.110Z",
+        "id": "st-1794170616054-0rh1j",
+        "notes": "ESPERAR SUBIDA",
+        "exit": 9,
+        "horizon": "Corto plazo (< 1 año)",
+        "status": "Activa",
+        "asset": "SIVERS",
+        "capital": 375,
+        "thesis": "DOBLE COTIZCION, ENTRA EN 2027 EN EL NASDAQ AMERICA",
+        "name": "VENTA SIVERS",
+        "entry": 3.75,
+        "reviewDate": "2027-01-09",
+        "createdAt": "2026-11-08T20:43:36.054Z",
+        "risk": "PODEMOS ABORTAR A 7 SI SE ALARGA DEMASIADO"
+      },
+      {
+        "entry": 0.8,
+        "status": "Activa",
+        "reviewDate": "2027-01-09",
+        "id": "st-1794170464215-nvee4",
+        "horizon": "Medio plazo (1-3 años)",
+        "exit": 5,
+        "updatedAt": "2026-11-10T17:31:07.377Z",
+        "createdAt": "2026-11-08T20:41:04.215Z",
+        "notes": "ESPERAR SUBIDA",
+        "risk": "PODEMOS ABORTAR A 3€ SI SE ALARGA MUCHO",
+        "asset": "OUTLOOK",
+        "name": "VENTA DE OUTLOOK",
+        "thesis": "APROBADO NUEVA SALIDA DE MEDICAMENTO",
+        "capital": 160
+      },
+      {
+        "thesis": "EMPRESA CON POTENCIAL EN DEFENSA, ESTA BARATA",
+        "name": "VENTAS ONDAS",
+        "risk": "QUE LLEGEMOS A AGOSTO DE 2027,  ENTOCES SALDRIA A 9 O 10",
+        "horizon": "Corto plazo (< 1 año)",
+        "createdAt": "2026-11-08T20:38:43.903Z",
+        "entry": 6.5,
+        "updatedAt": "2026-11-19T23:34:50.119Z",
+        "exit": 12,
+        "asset": "ONDAS",
+        "reviewDate": "2026-11-30",
+        "capital": 650,
+        "status": "Activa",
+        "notes": "O ANTES O DESPUES DE RESULTADOS, COMPRAR LAS ULTIMAS 10.\n11/12/26. NO VEO CLARO COMPRAR, ESPERAMOS A DESPUES DE RESULTADO.\n12/11/26 COMPRO LAS 10 QUE FALTAN PARA 100, ESPERAMLS A DESPUES DE RESULTADOS. PASA A VENDER.\nDESPLOME, TOCA ESPERAR",
+        "id": "st-1794170323903-n6hd5"
+      }
+    ],
+    "portfolio_control_taxonomy_v1": {
+      "sectors": [
+        "Acciones Tech",
+        "Acciones Biotech",
+        "Acciones Defensa",
+        "ETF Índice",
+        "Materias Primas / Cobertura",
+        "Otras Actuaciones",
+        "TECH",
+        "BIOTECH",
+        "DEFENSA",
+        "INDICES",
+        "METALES"
+      ],
+      "assetTypes": [
+        "ETFS",
+        "SMALLCAP",
+        "METALES",
+        "EMERGENTES",
+        "OTROS",
+        "MEDIA CAPITALIZACION"
+      ]
+    },
+    "portfolio_control_acciones_v3": [
+      {
+        "fxRateDate": "2026-11-21",
+        "targetSellPrice": 9,
+        "ticker": "SIVE.ST",
+        "realizedProfitByYear": {
+          "2026": 117.16685823754787
+        },
+        "lastMarketTime": 1795192194,
+        "priceCurrency": "SEK",
+        "taxIRPF": 22.261703065134096,
+        "realizedProfit": 117.16685823754787,
+        "latentPct": -71.50900555880708,
+        "yahooTicker": "SIVE.ST",
+        "shares": 102.15899999999999,
+        "commmissions": 7,
+        "color": "#2563eb",
+        "fxToEUR": 0.08917424647761726,
+        "targetBuyAlerted": false,
+        "name": "SIVERS",
+        "wkn": "",
+        "lastPriceUpdate": "2026-11-21T23:18:40.556Z",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "targetSellAlerted": false,
+        "previousCloseEUR": 1.220795,
+        "isin": "SE0003917798",
+        "priceSource": "Yahoo Finance",
+        "category": "TECH",
+        "latentProfit": -260.88841323554783,
+        "previousCloseMarketTime": 1795192194,
+        "targetBuyPrice": null,
+        "rawMarketPrice": 11.41,
+        "capital": 364.83294823754784,
+        "currentPrice": 1.017478,
+        "marketValue": 103.94453500200001,
+        "assetType": "SMALLCAP",
+        "pmp": 3.5712266979663845,
+        "marketState": "",
+        "history": [
+          {
+            "price": 4.51,
+            "comm": 1,
+            "qty": 22,
+            "type": "Compra",
+            "date": "2026-05-06"
+          },
+          {
+            "price": 4.56,
+            "comm": 1,
+            "qty": 7.83,
+            "type": "Compra",
+            "date": "2026-05-18"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-05-29",
+            "qty": 10,
+            "price": 6.34,
+            "comm": 1
+          },
+          {
+            "comm": 1,
+            "qty": 10,
+            "price": 9.2,
+            "type": "Venta",
+            "date": "2026-06-02"
+          },
+          {
+            "type": "Venta",
+            "date": "2026-06-17",
+            "price": 9.43,
+            "comm": 1,
+            "qty": 15
+          },
+          {
+            "comm": 1,
+            "qty": 13.5,
+            "price": 5.26,
+            "type": "Compra",
+            "date": "2026-07-02"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-07-07",
+            "qty": 22,
+            "comm": 1,
+            "price": 4.086
+          },
+          {
+            "price": 2.05,
+            "comm": 0,
+            "qty": 14.61,
+            "type": "Compra",
+            "date": "2026-09-01"
+          },
+          {
+            "comm": 0,
+            "price": 3.04,
+            "qty": 9.88,
+            "type": "Compra",
+            "date": "2026-10-01"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-10-16",
+            "qty": 13.55,
+            "comm": 0,
+            "price": 2.21
+          },
+          {
+            "type": "Compra",
+            "date": "2026-11-02",
+            "qty": 13.789,
+            "comm": 0,
+            "price": 1.81
+          }
+        ]
+      },
+      {
+        "yahooTicker": "ONDS",
+        "name": "ONDAS",
+        "latentPct": -47.93757313274066,
+        "previousCloseMarketTime": 1795208400,
+        "history": [
+          {
+            "comm": 1,
+            "qty": 10,
+            "price": 8.24,
+            "type": "Compra",
+            "date": "2026-05-10"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-06-05",
+            "price": 9.06,
+            "qty": 10,
+            "comm": 1
+          },
+          {
+            "type": "Compra",
+            "date": "2026-06-22",
+            "qty": 10,
+            "comm": 1,
+            "price": 7.79
+          },
+          {
+            "comm": 1,
+            "qty": 20,
+            "price": 6.78,
+            "type": "Compra",
+            "date": "2026-06-24"
+          },
+          {
+            "price": 5.98,
+            "comm": 1,
+            "qty": 15,
+            "type": "Compra",
+            "date": "2026-10-09"
+          },
+          {
+            "price": 5.53,
+            "comm": 1,
+            "qty": 15,
+            "type": "Compra",
+            "date": "2026-10-14"
+          },
+          {
+            "comm": 1,
+            "price": 4.05,
+            "type": "Compra",
+            "date": "2026-11-05",
+            "qty": 10
+          },
+          {
+            "comm": 1,
+            "price": 5.04,
+            "type": "Compra",
+            "qty": 10,
+            "date": "2026-11-12"
+          }
+        ],
+        "capital": 658.05,
+        "lastMarketTime": 1795208400,
+        "ticker": "ONDS",
+        "currentPrice": 3.425968,
+        "category": "DEFENSA",
+        "wkn": "",
+        "latentProfit": -315.4531999999999,
+        "lastPriceUpdate": "2026-11-21T23:18:40.558Z",
+        "realizedProfit": 0,
+        "shares": 100,
+        "fxRateDate": "2026-11-21",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "marketValue": 342.59680000000003,
+        "fxToEUR": 0.9111617312072894,
+        "previousCloseEUR": 3.854214,
+        "realizedProfitByYear": {},
+        "commmissions": 8,
+        "assetType": "SMALLCAP",
+        "rawMarketPrice": 3.76,
+        "color": "#141515",
+        "marketState": "",
+        "priceCurrency": "USD",
+        "pmp": 6.5805,
+        "taxIRPF": 0,
+        "isin": "US68236H2040",
+        "priceSource": "Yahoo Finance"
+      },
+      {
+        "pmp": 0.8042045454545456,
+        "assetType": "SMALLCAP",
+        "isin": "US69012T3059",
+        "previousCloseMarketTime": 1795208400,
+        "taxIRPF": 0,
+        "priceCurrency": "USD",
+        "targetBuyPrice": null,
+        "rawMarketPrice": 0.39,
+        "targetBuyAlerted": false,
+        "realizedProfitByYear": {},
+        "targetSellAlerted": false,
+        "yahooTicker": "OTLK",
+        "fxToEUR": 0.9111617312072894,
+        "commmissions": 5,
+        "shares": 220,
+        "lastPriceUpdate": "2026-11-21T23:18:40.561Z",
+        "wkn": "",
+        "priceSource": "Yahoo Finance",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "latentPct": -55.81310724883426,
+        "category": "BIOTECH",
+        "latentProfit": -98.74734000000002,
+        "lastMarketTime": 1795208400,
+        "fxRateDate": "2026-11-21",
+        "realizedProfit": 0,
+        "color": "#10b981",
+        "capital": 176.925,
+        "marketState": "",
+        "previousCloseEUR": 0.365376,
+        "currentPrice": 0.355353,
+        "targetSellPrice": 5,
+        "name": "OUTLOOK",
+        "marketValue": 78.17765999999999,
+        "ticker": "OTLK",
+        "history": [
+          {
+            "comm": 1,
+            "qty": 25,
+            "price": 1.41,
+            "type": "Compra",
+            "date": "2026-06-17"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-07-20",
+            "price": 1.25,
+            "qty": 25,
+            "comm": 1
+          },
+          {
+            "comm": 1,
+            "price": 0.769,
+            "qty": 65,
+            "type": "Compra",
+            "date": "2026-07-29"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-08-31",
+            "price": 0.558,
+            "qty": 55,
+            "comm": 1
+          },
+          {
+            "comm": 1,
+            "qty": 50,
+            "type": "Compra",
+            "date": "2026-10-01",
+            "price": 0.495
+          }
+        ]
+      },
+      {
+        "fxToEUR": 1,
+        "previousCloseEUR": 51.400002,
+        "marketState": "",
+        "priceCurrency": "EUR",
+        "marketValue": 99.34,
+        "realizedProfitByYear": {},
+        "targetBuyPrice": 49,
+        "latentPct": 2.15960510078158,
+        "rawMarketPrice": 49.67,
+        "wkn": "",
+        "targetSellAlerted": false,
+        "commmissions": 1,
+        "name": "INDRA",
+        "taxIRPF": 0,
+        "priceSource": "Yahoo Finance",
+        "category": "DEFENSA",
+        "assetType": "MEDIA CAPITALIZACION",
+        "lastPriceUpdate": "2026-11-21T23:18:40.602Z",
+        "shares": 2,
+        "latentProfit": 2.1000000000000085,
+        "history": [
+          {
+            "price": 48.12,
+            "comm": 1,
+            "qty": 2,
+            "type": "Compra",
+            "date": "2026-06-18"
+          }
+        ],
+        "capital": 97.24,
+        "lastMarketTime": 1795192805,
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "yahooTicker": "IDR.MC",
+        "pmp": 48.62,
+        "previousCloseMarketTime": 1795192805,
+        "isin": "ES0118594417",
+        "realizedProfit": 0,
+        "targetSellPrice": null,
+        "targetBuyAlerted": false,
+        "ticker": "IDR.MC",
+        "fxRateDate": "2026-11-21",
+        "currentPrice": 49.67,
+        "color": "#f59e0b"
+      },
+      {
+        "capital": 40.4,
+        "yahooTicker": "ELTX",
+        "priceCurrency": "USD",
+        "commmissions": 1,
+        "category": "BIOTECH",
+        "wkn": "A3CY4J",
+        "history": [
+          {
+            "price": 3.94,
+            "comm": 1,
+            "qty": 10,
+            "type": "Compra",
+            "date": "2026-05-04"
+          }
+        ],
+        "isin": "US28657F1030",
+        "targetBuyAlerted": false,
+        "assetType": "SMALLCAP",
+        "targetBuyPrice": null,
+        "rawMarketPrice": 1.45,
+        "color": "#059669",
+        "targetSellAlerted": false,
+        "previousCloseMarketTime": 1795208401,
+        "fxRateDate": "2026-11-21",
+        "currentPrice": 1.321185,
+        "realizedProfitByYear": {},
+        "marketValue": 13.21185,
+        "pmp": 4.04,
+        "fxToEUR": 0.9111617312072894,
+        "marketState": "",
+        "realizedProfit": 0,
+        "previousCloseEUR": 1.366743,
+        "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+        "ticker": "ELTX",
+        "shares": 10,
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "name": "ELICIO",
+        "targetSellPrice": 5,
+        "lastMarketTime": 1795208401,
+        "priceSource": "Yahoo Finance",
+        "latentPct": -67.297400990099,
+        "taxIRPF": 0,
+        "latentProfit": -27.18815
+      },
+      {
+        "taxIRPF": 0,
+        "isin": "IE00BFMXXD54",
+        "marketValue": 289.75804,
+        "realizedProfit": 0,
+        "shares": 2.327,
+        "latentPct": -3.6195853671614313,
+        "marketState": "",
+        "color": "#8b5cf6",
+        "ticker": "VUAA.MI",
+        "fxToEUR": 1,
+        "commmissions": 1,
+        "wkn": "A2PFN2",
+        "priceSource": "Yahoo Finance",
+        "lastMarketTime": 1795192514,
+        "realizedProfitByYear": {},
+        "assetType": "ETFS",
+        "priceCurrency": "EUR",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "fxRateDate": "2026-11-21",
+        "yahooTicker": "VUAA.MI",
+        "previousCloseMarketTime": 1795192514,
+        "category": "INDICES",
+        "latentProfit": -10.88191999999998,
+        "lastPriceUpdate": "2026-11-21T23:18:40.592Z",
+        "history": [
+          {
+            "price": 126.31,
+            "comm": 1,
+            "qty": 0.395,
+            "type": "Compra",
+            "date": "2026-06-03"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-07-03",
+            "qty": 0.395,
+            "comm": 0,
+            "price": 126.46
+          },
+          {
+            "price": 127.03,
+            "comm": 0,
+            "qty": 0.393,
+            "type": "Compra",
+            "date": "2026-08-02"
+          },
+          {
+            "type": "Compra",
+            "qty": 0.39,
+            "date": "2026-09-02",
+            "comm": 0,
+            "price": 127.98
+          },
+          {
+            "comm": 0,
+            "price": 132.94,
+            "qty": 0.376,
+            "type": "Compra",
+            "date": "2026-10-02"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-11-02",
+            "qty": 0.378,
+            "comm": 0,
+            "price": 132.21
+          }
+        ],
+        "currentPrice": 124.52,
+        "previousCloseEUR": 128.899994,
+        "rawMarketPrice": 124.52,
+        "pmp": 129.1963730124624,
+        "capital": 300.63996,
+        "name": "S&P 500"
+      },
+      {
+        "assetType": "ETFS",
+        "rawMarketPrice": 11.058,
+        "priceCurrency": "EUR",
+        "ticker": "L0CK.DE",
+        "lastPriceUpdate": "2026-11-21T23:18:40.621Z",
+        "commmissions": 1,
+        "wkn": "A2JMGE",
+        "previousCloseEUR": 11.658,
+        "capital": 116.27023000000003,
+        "realizedProfitByYear": {},
+        "shares": 10.534,
+        "isin": "IE00BG0J4C88",
+        "yahooTicker": "L0CK.DE",
+        "category": "TECH",
+        "color": "#6366f1",
+        "history": [
+          {
+            "comm": 1,
+            "qty": 2,
+            "price": 10.64,
+            "type": "Compra",
+            "date": "2026-06-02"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-07-02",
+            "qty": 1.927,
+            "comm": 0,
+            "price": 10.38
+          },
+          {
+            "type": "Compra",
+            "date": "2026-08-02",
+            "qty": 1.8965,
+            "comm": 0,
+            "price": 10.55
+          },
+          {
+            "comm": 0,
+            "price": 10.67,
+            "type": "Compra",
+            "qty": 1.3115,
+            "date": "2026-09-02"
+          },
+          {
+            "comm": 0,
+            "qty": 1.685,
+            "type": "Compra",
+            "price": 11.87,
+            "date": "2026-10-02"
+          },
+          {
+            "type": "Compra",
+            "date": "2026-11-02",
+            "qty": 1.714,
+            "comm": 0,
+            "price": 11.66
+          }
+        ],
+        "fxRateDate": "2026-11-21",
+        "currentPrice": 11.058,
+        "priceSource": "Yahoo Finance",
+        "lastMarketTime": 1795192551,
+        "previousCloseMarketTime": 1795192551,
+        "pmp": 11.03761439149421,
+        "latentPct": 0.18469216066741473,
+        "name": "DIGITAL SECURITY",
+        "taxIRPF": 0,
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "marketState": "",
+        "realizedProfit": 0,
+        "fxToEUR": 1,
+        "marketValue": 116.484972,
+        "latentProfit": 0.21474199999997268
+      },
+      {
+        "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+        "marketValue": 127.22358,
+        "assetType": "ETFS",
+        "priceCurrency": "EUR",
+        "history": [
+          {
+            "type": "Compra",
+            "date": "2026-07-02",
+            "qty": 0.493,
+            "price": 60.82,
+            "comm": 0
+          },
+          {
+            "comm": 0,
+            "qty": 0.523,
+            "type": "Compra",
+            "date": "2026-08-02",
+            "price": 57.29
+          },
+          {
+            "qty": 0.516,
+            "comm": 0,
+            "price": 58.05,
+            "type": "Compra",
+            "date": "2026-09-02"
+          },
+          {
+            "price": 63.76,
+            "comm": 0,
+            "qty": 0.392,
+            "type": "Compra",
+            "date": "2026-10-02"
+          },
+          {
+            "comm": 0,
+            "price": 59.13,
+            "type": "Compra",
+            "date": "2026-11-02",
+            "qty": 0.422
+          }
+        ],
+        "lastMarketTime": 1795192580,
+        "capital": 139.84751,
+        "marketState": "",
+        "commmissions": 0,
+        "realizedProfitByYear": {},
+        "category": "TECH",
+        "realizedProfit": 0,
+        "priceSource": "Yahoo Finance",
+        "name": "NASDAQ 100",
+        "fxRateDate": "2026-11-21",
+        "wkn": "A2QJU3",
+        "yahooTicker": "XNAS.MI",
+        "previousCloseMarketTime": 1795192580,
+        "fxToEUR": 1,
+        "rawMarketPrice": 54.23,
+        "shares": 2.346,
+        "currentPrice": 54.23,
+        "isin": "IE00BMFKG444",
+        "previousCloseEUR": 57.509998,
+        "latentPct": -9.026925112931936,
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "taxIRPF": 0,
+        "ticker": "XNAS.MI",
+        "pmp": 59.61104433077578,
+        "color": "#a855f7",
+        "latentProfit": -12.623930000000001
+      },
+      {
+        "rawMarketPrice": 62.595,
+        "taxIRPF": 0,
+        "lastPriceUpdate": "2026-11-21T23:18:40.595Z",
+        "fxRateDate": "2026-11-21",
+        "priceSource": "Yahoo Finance",
+        "previousCloseEUR": 65.084999,
+        "currentPrice": 62.595,
+        "realizedProfitByYear": {},
+        "priceCurrency": "EUR",
+        "fxToEUR": 1,
+        "latentProfit": -7.460125000000005,
+        "name": "ORO (ETC)",
+        "pmp": 76.53915887850468,
+        "marketValue": 33.488325,
+        "category": "METALES",
+        "marketState": "",
+        "assetType": "METALES",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "lastMarketTime": 1795192562,
+        "commmissions": 1,
+        "color": "#eab308",
+        "isin": "IE00B4ND3602",
+        "previousCloseMarketTime": 1795192562,
+        "ticker": "SGLN.L",
+        "wkn": "A1KWPQ",
+        "shares": 0.535,
+        "yahooTicker": "PPFB.DE",
+        "history": [
+          {
+            "comm": 1,
+            "price": 74.67,
+            "type": "Compra",
+            "qty": 0.535,
+            "date": "2026-06-03"
+          }
+        ],
+        "latentPct": -18.218333050457353,
+        "capital": 40.94845000000001,
+        "realizedProfit": 0
+      },
+      {
+        "pmp": 63.095536394372964,
+        "category": "METALES",
+        "currentPrice": 35.878773,
+        "targetBuyPrice": 40,
+        "rawMarketPrice": 3007,
+        "marketState": "",
+        "targetSellPrice": null,
+        "targetBuyAlerted": true,
+        "marketValue": 17.626200690483003,
+        "fxRateDate": "2026-11-21",
+        "priceCurrency": "GBp",
+        "assetType": "METALES",
+        "fxRateSource": "Yahoo Finance · pares EUR",
+        "capital": 30.99700726,
+        "targetSellAlerted": false,
+        "priceSource": "Yahoo Finance",
+        "previousCloseMarketTime": 1795192524,
+        "isin": "IE00B4NCWG09",
+        "lastPriceUpdate": "2026-11-21T23:18:53.462Z",
+        "history": [
+          {
+            "price": 61.06,
+            "comm": 1,
+            "qty": 0.491271,
+            "type": "Compra",
+            "date": "2026-06-03"
+          }
+        ],
+        "latentProfit": -13.370806569516997,
+        "name": "PLATA (ETC)",
+        "lastMarketTime": 1795192524,
+        "wkn": "A1KWPR",
+        "shares": 0.491271,
+        "latentPct": -43.135798425196086,
+        "yahooTicker": "SSLN.L",
+        "commmissions": 1,
+        "taxIRPF": 0,
+        "realizedProfitByYear": {},
+        "previousCloseEUR": 38.71853,
+        "ticker": "SSLN.MI",
+        "fxToEUR": 0.011931750387781888,
+        "realizedProfit": 0,
+        "color": "#94a3b8"
+      }
+    ],
+    "micartera_r31k0_benchmark_flows_v1": [],
+    "portfolio_performance_history_v1": [
+      {
+        "totalPurchases": 2080.43,
+        "date": "2026-11-14",
+        "totalProfit": -414.87,
+        "returnPct": -19.9414,
+        "marketValue": 1434.12
+      },
+      {
+        "returnPct": -19.9433,
+        "date": "2026-11-15",
+        "totalPurchases": 2080.43,
+        "totalProfit": -414.91,
+        "marketValue": 1434.08
+      },
+      {
+        "date": "2026-11-16",
+        "totalProfit": -414.85,
+        "returnPct": -19.9404,
+        "marketValue": 1434.14,
+        "totalPurchases": 2080.43
+      },
+      {
+        "marketValue": 1221.87,
+        "returnPct": -30.1435,
+        "totalPurchases": 2080.43,
+        "date": "2026-11-21",
+        "totalProfit": -627.12
+      }
+    ]
+  }
+}
