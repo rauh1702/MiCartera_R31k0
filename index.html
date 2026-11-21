@@ -920,7 +920,7 @@
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por sector</h3><p class="text-xs text-slate-500 mt-1 mb-4">Agrupación según el sector asignado a cada activo.</p><div id="risk-by-sector" class="space-y-3"></div></div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por tipo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Acciones, ETF, ETC y demás tipos configurados.</p><div id="risk-by-type" class="space-y-3"></div></div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-                      <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-extrabold text-slate-900">Exposición geográfica</h3><p class="text-xs text-slate-500 mt-1">País de las empresas y distribución conocida de los fondos.</p></div><button type="button" onclick="refreshRiskLookthrough(true)" class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
+                      <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-extrabold text-slate-900">Exposición geográfica</h3><p class="text-xs text-slate-500 mt-1">País de empresas identificadas y distribución conocida de los fondos; cobertura parcial en ETF.</p></div><button type="button" onclick="refreshRiskLookthrough(true)" class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
                       <p id="risk-lookthrough-status" class="my-3 text-xs text-slate-500" aria-live="polite">Pulsa actualizar para consultar la composición disponible.</p>
                       <div id="risk-by-country" class="space-y-3"><p class="text-xs text-slate-400">Todavía no hay datos geográficos.</p></div>
                     </div>
@@ -4064,59 +4064,98 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const aliases={"VUAA":"VUAA.L","XNAS":"XNAS.DE","L0CK":"LOCK.L","PPFB":"PPFB.DE","PPFD":"PPFD.DE"};
             return aliases[raw]||raw;
         }
+        function riskAssetIdentity(asset){
+            return [asset.ticker,asset.yahooSymbol,asset.symbol,asset.name,asset.isin,asset.wkn]
+                .filter(Boolean).join(" ").toLowerCase();
+        }
+        function riskKnownCountry(asset){
+            const id=riskAssetIdentity(asset);
+            if(/sive\.st|\bsive\b|sivers/.test(id))return "Suecia";
+            if(/\bonds\b|ondas/.test(id))return "Estados Unidos";
+            if(/\botlk\b|outlook therapeutics/.test(id))return "Estados Unidos";
+            if(/\bidr(?:\.mc)?\b|indra sistemas|indra/.test(id))return "España";
+            if(/\b9ha\b|elicio therapeutics|elicio/.test(id))return "Estados Unidos";
+            return "";
+        }
         function riskIsFund(asset){
             const type=String(asset.assetType||asset.type||"").toLowerCase();
-            return /etf|fondo|fund|ucits/.test(type);
+            const identity=riskAssetIdentity(asset);
+            return /etf|fondo|fund|ucits/.test(type)||/\bvuaa\b|\bxnas\b|\bl0ck\b|\block\b/.test(identity);
         }
         function riskFormatPct(value){return (Number(value)||0).toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1})+" %";}
         function renderRiskLookthrough(){
             const countryMap=new Map(), fundRows=[];
-            let knownValue=0, totalValue=0, errors=0, fundCount=0;
+            let knownValue=0, totalValue=0, errors=0, fallbackCount=0, unknownCount=0;
             const positions=assetsData.filter(a=>(Number(a.shares)||0)>0&&(Number(a.marketValue)||0)>0);
             for(const a of positions){
                 const value=Number(a.marketValue)||0; totalValue+=value;
                 const data=riskLookthroughCache[riskYahooSymbol(a)];
-                if(!data){errors++;continue;}
-                if(data.error){errors++;continue;}
                 if(riskIsFund(a)){
-                    fundCount++;
-                    const holdings=Array.isArray(data.holdings)?data.holdings:[];
-                    if(holdings.length) fundRows.push({name:a.name||a.ticker||"ETF",value,holdings});
-                    let attributed=0;
-                    for(const h of holdings){
-                        const weight=Number(h.weight)||0, country=String(h.country||"").trim();
-                        if(country&&weight>0){const contribution=value*weight/100;countryMap.set(country,(countryMap.get(country)||0)+contribution);attributed+=contribution;}
-                    }
-                    knownValue+=attributed;
+                    if(data&&!data.error){
+                        const holdings=Array.isArray(data.holdings)?data.holdings:[];
+                        if(holdings.length)fundRows.push({name:a.name||a.ticker||"ETF",value,holdings});
+                        let attributed=0;
+                        for(const h of holdings){
+                            const weight=Number(h.weight)||0, country=String(h.country||"").trim();
+                            if(country&&weight>0){const contribution=value*weight/100;countryMap.set(country,(countryMap.get(country)||0)+contribution);attributed+=contribution;}
+                        }
+                        knownValue+=attributed;
+                        if(!attributed)unknownCount++;
+                    }else{errors++;unknownCount++;}
+                    continue;
+                }
+                const yahooCountry=String(data&&!data.error?data.country||"": "").trim();
+                const country=yahooCountry||riskKnownCountry(a);
+                if(country){
+                    countryMap.set(country,(countryMap.get(country)||0)+value);
+                    knownValue+=value;
+                    if(!yahooCountry)fallbackCount++;
                 }else{
-                    const country=String(data.country||"").trim();
-                    if(country){countryMap.set(country,(countryMap.get(country)||0)+value);knownValue+=value;}
+                    unknownCount++;
+                    if(!data||data.error)errors++;
                 }
             }
             const countryEl=document.getElementById("risk-by-country"), holdingsEl=document.getElementById("risk-fund-holdings"), status=document.getElementById("risk-lookthrough-status");
             if(countryEl){
                 const rows=[...countryMap.entries()].map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
-                countryEl.innerHTML=rows.length?rows.map(r=>'<div><div class="flex justify-between gap-2 text-xs"><span class="font-semibold text-slate-700">'+escapeHtml(r.name)+'</span><span class="font-bold text-slate-900">'+riskFormatPct(r.value/totalValue*100)+'</span></div><div class="mt-1 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full bg-violet-500" style="width:'+Math.min(100,r.value/totalValue*100).toFixed(2)+'%"></div></div></div>').join(""):'<p class="text-xs text-slate-500">No hay datos geográficos disponibles. Puedes actualizar la consulta o completar el país de los activos cuando exista ese campo.</p>';
+                countryEl.innerHTML=rows.length?rows.map(r=>'<div><div class="flex justify-between gap-2 text-xs"><span class="font-semibold text-slate-700">'+escapeHtml(r.name)+'</span><span class="font-bold text-slate-900">'+riskFormatPct(r.value/totalValue*100)+'</span></div><div class="mt-1 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full bg-violet-500" style="width:'+Math.min(100,r.value/totalValue*100).toFixed(2)+'%"></div></div></div>').join(""):'<p class="text-xs text-slate-500">No hay datos geográficos disponibles para las posiciones actuales.</p>';
             }
             if(holdingsEl){
                 holdingsEl.innerHTML=fundRows.length?fundRows.map(f=>'<div class="border-b border-slate-100 pb-3 last:border-0"><div class="flex justify-between gap-2 mb-2"><span class="text-sm font-bold text-slate-800">'+escapeHtml(f.name)+'</span><span class="text-xs text-slate-500">'+riskFormatPct(f.value/totalValue*100)+' cartera</span></div><div class="space-y-1.5">'+f.holdings.slice(0,10).map(h=>'<div class="flex justify-between gap-2 text-xs"><span class="min-w-0 truncate text-slate-700">'+escapeHtml(h.name||h.symbol||"Posición")+'</span><span class="shrink-0 font-semibold text-slate-900">'+riskFormatPct(h.weight)+'</span></div>').join("")+'</div></div>').join(""):'<p class="text-xs text-slate-500">Yahoo Finance no ha devuelto principales posiciones para los ETF consultados. No se mostrarán datos estimados como si fueran reales.</p>';
             }
-            if(status)status.textContent="Datos geográficos conocidos: "+riskFormatPct(totalValue?knownValue/totalValue*100:0)+" del valor de cartera. "+errors+" activo(s) sin datos suficientes. La cobertura de ETF depende de las posiciones publicadas por el proveedor.";
+            if(status)status.textContent="País conocido: "+riskFormatPct(totalValue?knownValue/totalValue*100:0)+" del valor de cartera. "+fallbackCount+" empresa(s) con país asignado por identificación del activo; "+unknownCount+" posición(es) sin atribución geográfica. La cobertura de ETF es parcial y depende de los datos publicados por Yahoo.";
         }
         async function refreshRiskLookthrough(force){
             if(riskLookthroughBusy)return;
             const status=document.getElementById("risk-lookthrough-status");
-            if(!force&&Object.keys(riskLookthroughCache).length){renderRiskLookthrough();return;}
             const positions=assetsData.filter(a=>(Number(a.shares)||0)>0&&(Number(a.marketValue)||0)>0);
-            if(!positions.length)return;
-            riskLookthroughBusy=true;if(status)status.textContent="Consultando distribución geográfica y principales posiciones…";
+            if(!positions.length){if(status)status.textContent="Esperando a que la cartera tenga posiciones valoradas…";return;}
             const symbols=[...new Set(positions.map(riskYahooSymbol).filter(Boolean))];
+            const pending=force?symbols:symbols.filter(symbol=>!riskLookthroughCache[symbol]||riskLookthroughCache[symbol].error);
+            if(!pending.length){renderRiskLookthrough();return;}
+            riskLookthroughBusy=true;
+            if(status)status.textContent="Consultando distribución geográfica y principales posiciones…";
             try{
-                const results=await Promise.all(symbols.map(async symbol=>{
-                    try{const r=await fetchJsonWithTimeout(RISK_LOOKTHROUGH_WORKER+"/risk-profile?symbol="+encodeURIComponent(symbol),25000);return [symbol,r];}
-                    catch(e){return [symbol,{error:String(e.message||e)}];}
-                }));
-                results.forEach(([symbol,data])=>riskLookthroughCache[symbol]=data);
+                // Limita concurrencia para no saturar Yahoo/Cloudflare con todas las posiciones a la vez.
+                let cursor=0;
+                const worker=async()=>{
+                    while(cursor<pending.length){
+                        const symbol=pending[cursor++];
+                        let result;
+                        for(let attempt=0;attempt<2;attempt++){
+                            try{
+                                result=await fetchJsonWithTimeout(RISK_LOOKTHROUGH_WORKER+"/risk-profile?symbol="+encodeURIComponent(symbol),25000);
+                                break;
+                            }catch(e){
+                                result={error:String(e.message||e)};
+                                if(attempt===0)await new Promise(resolve=>setTimeout(resolve,700));
+                            }
+                        }
+                        riskLookthroughCache[symbol]=result;
+                        renderRiskLookthrough();
+                    }
+                };
+                await Promise.all(Array.from({length:Math.min(2,pending.length)},()=>worker()));
                 renderRiskLookthrough();
             }catch(e){if(status)status.textContent="No se pudieron consultar los datos: "+String(e.message||e);}
             finally{riskLookthroughBusy=false;}
