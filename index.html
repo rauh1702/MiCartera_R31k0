@@ -3297,27 +3297,36 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             const comm = parseFloat(document.getElementById('tx-comm').value) || 0;
             const asset = assetsData.find(a => a.name === assetName);
             if (!asset) return;
-            if (!date || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0 || comm < 0) {
-                alert('Revisa la fecha, cantidad, precio y comisión.');
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0 || !Number.isFinite(comm) || comm < 0 || !['Compra','Venta'].includes(type)) {
+                alert('Revisa la fecha, tipo de operación, cantidad, precio y comisión.');
                 return;
             }
+            // Validamos todo el historial en orden cronológico antes de guardar.
+            // Evita que una venta antigua consuma acciones compradas posteriormente.
             const candidate = { date, type, qty, price, comm };
-            if (editingTransactionIndex !== null) {
-                const revisedHistory = asset.history.map((tx, i) => i === editingTransactionIndex ? candidate : tx)
-                    .map((tx, i) => ({ tx, i }))
-                    .sort((a,b) => new Date(a.tx.date) - new Date(b.tx.date) || a.i - b.i);
-                let runningShares = 0;
-                for (const entry of revisedHistory) {
-                    const tx = entry.tx;
-                    if (tx.type === 'Compra') runningShares += Number(tx.qty) || 0;
-                    else if (tx.type === 'Venta') {
-                        if ((Number(tx.qty) || 0) > runningShares + 1e-8) {
-                            alert(`No se puede guardar: la venta del ${tx.date} supera las acciones disponibles en esa fecha (${runningShares.toLocaleString('es-ES')}).`);
-                            return;
-                        }
-                        runningShares -= Number(tx.qty) || 0;
-                    }
+            const history = asset.history || [];
+            const revisedHistory = history.map((tx, i) => ({ tx: i === editingTransactionIndex ? candidate : tx, i }))
+                .filter(entry => editingTransactionIndex === null || entry.i !== editingTransactionIndex);
+            if (editingTransactionIndex === null) revisedHistory.push({ tx: candidate, i: history.length });
+            revisedHistory.sort((a,b) => String(a.tx.date || '').localeCompare(String(b.tx.date || '')) || a.i - b.i);
+            let runningShares = 0;
+            for (const entry of revisedHistory) {
+                const tx = entry.tx;
+                const txQty = Number(tx.qty);
+                if (!tx || !/^\d{4}-\d{2}-\d{2}$/.test(String(tx.date || '')) || !Number.isFinite(txQty) || txQty <= 0 || !['Compra','Venta'].includes(tx.type)) {
+                    alert('No se puede guardar: el historial contiene una operación con datos no válidos. Corrige primero esa operación.');
+                    return;
                 }
+                if (tx.type === 'Compra') runningShares += txQty;
+                else {
+                    if (txQty > runningShares + 1e-8) {
+                        alert(`No se puede guardar: la venta del ${tx.date} supera las acciones disponibles en esa fecha (${runningShares.toLocaleString('es-ES')}).`);
+                        return;
+                    }
+                    runningShares -= txQty;
+                }
+            }
+            if (editingTransactionIndex !== null) {
                 asset.history[editingTransactionIndex] = candidate;
                 savePortfolioData();
                 recalculatePortfolioCalculations();
@@ -3327,10 +3336,6 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                 renderDashboard();
                 if (currentActiveAsset && currentActiveAsset.name === assetNameForToast) openModal(assetNameForToast);
                 showToast(`Operación de ${assetNameForToast} modificada correctamente`);
-                return;
-            }
-            if (type === 'Venta' && qty > asset.shares) {
-                alert(`No puedes vender ${qty} acciones porque solo tienes ${asset.shares} acciones vivas en ${asset.name}.`);
                 return;
             }
             asset.history.push(candidate);
