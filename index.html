@@ -3163,6 +3163,16 @@ function renderAssetNews(){const box=document.getElementById("asset-news-list");
 async function refreshAssetNews(force){const status=document.getElementById("asset-news-status"),updated=document.getElementById("asset-news-updated"),button=document.getElementById("asset-news-refresh");if(!status)return;const assets=assetNewsSymbols();if(!assets.length){status.textContent="No hay activos con ticker para consultar.";return;}status.textContent=force?"Solicitando actualización…":"Consultando noticias disponibles…";if(button)button.disabled=true;try{const list=assets.map(x=>x.symbol);const registry=await fetch(ASSET_NEWS_WORKER+"/symbols",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assets:assets.map(({symbol,name})=>({symbol,name}))})});if(!registry.ok)throw Error("No se pudieron registrar los activos para noticias");if(force){const rr=await fetch(ASSET_NEWS_WORKER+"/refresh",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assets:assets.map(({symbol,name})=>({symbol,name}))})});if(!rr.ok){const e=await rr.json().catch(()=>({}));throw Error(e.error||"No se pudo forzar la actualización");}}const r=await fetch(ASSET_NEWS_WORKER+"/news?symbols="+encodeURIComponent(list.join(",")));if(!r.ok)throw Error("Servicio de noticias HTTP "+r.status);const data=await r.json(),groups=new Map(assets.map(x=>[x.symbol.toUpperCase(),x.group]));assetNewsItems=(data.items||[]).map(n=>({...n,groups:[...new Set((n.symbols||[]).map(s=>groups.get(String(s).toUpperCase())).filter(Boolean))]})).sort((a,b)=>(b.publishedAt||"").localeCompare(a.publishedAt||""));localStorage.setItem(ASSET_NEWS_KEY,JSON.stringify(assetNewsItems));updated.textContent="Última actualización: "+(data.updatedAt?new Date(data.updatedAt).toLocaleString("es-ES"):"pendiente");status.textContent="Noticias cargadas.";renderAssetNews();}catch(e){status.textContent="No se pudieron cargar las noticias: "+e.message;}finally{if(button)button.disabled=false;}}
 function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
+
+        async function fetchTradeRepublicQuotesBatch(isins) {
+            const unique = [...new Set((isins || []).filter(isin => /^[A-Z0-9]{12}$/i.test(String(isin || "").trim())).map(isin => String(isin).trim().toUpperCase()))].slice(0, 30);
+            if (!unique.length) return new Map();
+            const url = ASSET_NEWS_WORKER + "/tr-quotes?isins=" + encodeURIComponent(unique.join(","));
+            const data = await fetchJsonWithTimeout(url, 12000);
+            const rows = Array.isArray(data.quotes) ? data.quotes : [];
+            return new Map(rows.filter(row => row.isin).map(row => [String(row.isin).toUpperCase(), row]));
+        }
+
         async function fetchYahooQuotesBatch(symbols) {
             const unique = [...new Set((symbols || []).filter(Boolean))].slice(0, 40);
             if (!unique.length) return new Map();
@@ -3275,7 +3285,30 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             throw new Error(`Divisa no soportada o sin tipo de cambio: ${currency}`);
         }
 
-        async function fetchAssetQuote(asset, rates, liveQuotes = new Map()) {
+        async function fetchAssetQuote(asset, rates, liveQuotes = new Map(), tradeRepublicQuotes = new Map()) {
+            const isin = String(asset.isin || "").trim().toUpperCase();
+            const trQuote = tradeRepublicQuotes.get(isin) || null;
+            if (trQuote) {
+                const last = Number(trQuote.last?.price), bid = Number(trQuote.bid?.price), ask = Number(trQuote.ask?.price), pre = Number(trQuote.pre?.price);
+                const midpoint = bid > 0 && ask >= bid ? (bid + ask) / 2 : 0;
+                const selectedPrice = last > 0 ? last : (midpoint > 0 ? midpoint : (bid > 0 ? bid : ask));
+                if (selectedPrice > 0) {
+                    const quoteTime = Number(trQuote.last?.time || trQuote.bid?.time || trQuote.ask?.time || 0);
+                    return {
+                        price: Number(selectedPrice.toFixed(6)), rawPrice: selectedPrice, fxToEUR: 1,
+                        fxRateDate: rates.rateDate || null, fxRateSource: "Trade Republic · cotización ya expresada en EUR (LSX)",
+                        previousCloseEUR: pre > 0 ? Number(pre.toFixed(6)) : null,
+                        symbol: asset.yahooTicker || asset.ticker || isin, currency: "EUR",
+                        quoteSource: "Trade Republic · LSX · " + (last > 0 ? "último precio" : "bid/ask"),
+                        bidRaw: bid > 0 ? bid : null, askRaw: ask > 0 ? ask : null,
+                        selectedSide: last > 0 ? "last" : (midpoint > 0 ? "midpoint" : (bid > 0 ? "bid" : "ask")),
+                        marketTime: quoteTime || null, marketState: trQuote.qualityId || "LSX",
+                        exchangeName: "Lang & Schwarz (LSX)", fullExchangeName: "Lang & Schwarz (LSX)",
+                        instrumentType: "", regularMarketPrice: last > 0 ? last : selectedPrice,
+                        previousCloseRaw: pre > 0 ? pre : null, lastCandleTime: null
+                    };
+                }
+            }
             const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
             let lastError, bestQuote = null;
             for (const symbol of symbols) {
@@ -3360,13 +3393,16 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             try {
                 const fxRates = await getExchangeRates();
                 const quoteSymbols = assetsData.flatMap(asset => YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean));
+                let tradeRepublicQuotes = new Map();
+                try { tradeRepublicQuotes = await fetchTradeRepublicQuotesBatch(assetsData.map(asset => asset.isin)); }
+                catch (trError) { console.warn("Cotización pública de Trade Republic no disponible; se mantiene Yahoo como respaldo:", trError); }
                 let liveQuotes = new Map();
                 try { liveQuotes = await fetchYahooQuotesBatch(quoteSymbols); }
                 catch (quoteError) { console.warn("Cotización directa Yahoo no disponible; se usa gráfico:", quoteError); }
                 await Promise.all(assetsData.map(async asset => {
                     if (!asset.ticker || asset.ticker === 'VAR:ACT') return;
                     try {
-                        const quote = await fetchAssetQuote(asset, fxRates, liveQuotes);
+                        const quote = await fetchAssetQuote(asset, fxRates, liveQuotes, tradeRepublicQuotes);
                         applyPriceAndCheckAlerts(asset, quote.price);
                         // Guarda también el cierre anterior convertido a euros: lo usa
                         // el modo «Variación del día» del Resumen diario.
@@ -3376,7 +3412,7 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                             asset.previousCloseEUR = Number(quote.previousCloseEUR);
                             asset.previousCloseMarketTime = quote.marketTime || null;
                         }
-                        asset.yahooTicker = quote.symbol;
+                        if (quote.symbol) asset.yahooTicker = quote.symbol;
                         asset.priceCurrency = quote.currency;
                         asset.rawMarketPrice = quote.rawPrice;
                         asset.fxToEUR = quote.fxToEUR;
