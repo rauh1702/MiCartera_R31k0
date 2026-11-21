@@ -469,6 +469,7 @@
                         <button type="button" onclick="runMenuAction(exportDataToFile)"><i class="fa-solid fa-file-arrow-down"></i>Hacer copia JSON</button>
                         <button type="button" onclick="runMenuAction(downloadCompleteBackupZip)"><i class="fa-solid fa-box-archive"></i>Copia completa en mi PC (ZIP)</button>
                         <button type="button" onclick="runMenuAction(createGitHubBackup)"><i class="fa-brands fa-github"></i>Copia completa en GitHub</button>
+                        <button type="button" onclick="runMenuAction(restoreGitHubBackup)"><i class="fa-solid fa-clock-rotate-left"></i>Restaurar copia desde GitHub</button>
                         <button type="button" onclick="runMenuAction(triggerImportJson)"><i class="fa-solid fa-upload"></i>Importar copia JSON</button>
                         <button type="button" onclick="runMenuAction(resetToInitialData)" class="text-rose-300"><i class="fa-solid fa-trash-arrow-up"></i>Restablecer datos origen</button>
                     </div>
@@ -1820,6 +1821,61 @@
                 console.error('Copia GitHub:', error);
                 alert('No se pudo guardar la copia en GitHub: ' + (error.message || error) + '\n\nComprueba que el Worker tenga configurados GITHUB_TOKEN y BACKUP_ACCESS_KEY.');
             }
+        }
+
+        async function restoreGitHubBackup() {
+            const accessKey = prompt('Introduce la clave de copia configurada en Cloudflare. No es tu contraseña de GitHub:');
+            if (!accessKey) return;
+            const workerUrl = 'https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev';
+            try {
+                showToast('Buscando copias guardadas en GitHub...');
+                const listResponse = await fetch(workerUrl + '/backups', {method:'POST', headers:{'X-Backup-Key':accessKey}});
+                const listResult = await listResponse.json().catch(() => ({}));
+                if (!listResponse.ok || !listResult.ok) throw new Error(listResult.error || ('Error HTTP ' + listResponse.status));
+                const backups = Array.isArray(listResult.backups) ? listResult.backups : [];
+                if (!backups.length) { alert('No se han encontrado copias completas en GitHub.'); return; }
+                const choices = backups.map((item,index) => (index+1)+'. '+(item.exportedAt ? new Date(item.exportedAt).toLocaleString('es-ES') : item.folder)).join('\n');
+                const selected = prompt('Elige la copia escribiendo su número:\n\n'+choices+'\n\nLa restauración sustituirá los datos actuales.');
+                if (selected === null) return;
+                const index = Number.parseInt(selected,10)-1;
+                if (!Number.isInteger(index) || index<0 || index>=backups.length) { alert('Selección no válida. No se ha modificado ningún dato.'); return; }
+                const chosen = backups[index];
+                if (!confirm('Vas a restaurar la copia del '+(chosen.exportedAt ? new Date(chosen.exportedAt).toLocaleString('es-ES') : chosen.folder)+'. Se sustituirán los datos locales actuales. ¿Continuar?')) return;
+                showToast('Descargando la copia seleccionada...');
+                const response = await fetch(workerUrl+'/backup/restore', {
+                    method:'POST', headers:{'Content-Type':'application/json','X-Backup-Key':accessKey},
+                    body:JSON.stringify({folder:chosen.folder})
+                });
+                const result = await response.json().catch(()=>({}));
+                if (!response.ok || !result.ok || !result.backup) throw new Error(result.error || ('Error HTTP '+response.status));
+                applyCompleteBackupData(result.backup);
+                showToast('Copia de GitHub restaurada correctamente.');
+                alert('Restauración completada. Se han recuperado la cartera y los datos locales.\nFecha: '+(chosen.exportedAt ? new Date(chosen.exportedAt).toLocaleString('es-ES') : chosen.folder)+'\n\nRecarga la aplicación si alguna pantalla no se actualiza.');
+            } catch(error) {
+                console.error('Restauración GitHub:',error);
+                alert('No se pudo restaurar la copia de GitHub: '+(error.message || error));
+            }
+        }
+
+        function applyCompleteBackupData(importedData) {
+            if (!importedData || typeof importedData!=='object' || !Array.isArray(importedData.assets) || !importedData.assets.length) throw new Error('La copia no contiene una cartera válida.');
+            if (importedData.localStorage && typeof importedData.localStorage==='object') {
+                for (const [key,value] of Object.entries(importedData.localStorage)) {
+                    if (!/auth|token|credential|password|secret|session/i.test(key)) localStorage.setItem(key,typeof value==='string'?value:JSON.stringify(value));
+                }
+            }
+            assetsData=importedData.assets;
+            savePortfolioData();
+            if (Array.isArray(importedData.watchlist)) { watchlistData=importedData.watchlist; persistWatchlist(); }
+            if (Array.isArray(importedData.priceAlertHistory)) { priceAlertHistory=importedData.priceAlertHistory; persistPriceAlertHistory(); renderPriceAlertHistory(); }
+            if (Array.isArray(importedData.strategies)) { strategiesData=importedData.strategies; if(typeof persistStrategies==='function') persistStrategies(); }
+            if (Array.isArray(importedData.performanceHistory)) localStorage.setItem(PERFORMANCE_HISTORY_KEY,JSON.stringify(importedData.performanceHistory));
+            if (Array.isArray(importedData.financialEvents)) { financialEventsData=importedData.financialEvents; persistFinancialEvents(); }
+            if (typeof importedData.financialEventsSync==='string') localStorage.setItem(FINANCIAL_EVENTS_SYNC_KEY,importedData.financialEventsSync);
+            if (Array.isArray(importedData.investmentJournal)) { investmentJournalData=importedData.investmentJournal; persistInvestmentJournal(); }
+            recalculatePortfolioCalculations();
+            renderDashboard();
+            if (typeof updateStrategyReviewBadge==='function') updateStrategyReviewBadge();
         }
 
         function exportDataToFile() {
