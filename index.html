@@ -2724,12 +2724,23 @@
                 const json=await fetchJsonWithTimeout(url,20000);
                 const result=json.quoteSummary?.result?.[0];
                 if(!result)throw new Error(json.quoteSummary?.error?.description||json.error||"El servicio no ha devuelto fundamentales para "+symbol);
+                // quoteSummary dejó de ofrecer estados completos; se consultan por fundamentals-timeseries.
+                let financialHistoryError="";
+                try{
+                    const historyUrl=workerBase+"/financial-history?symbol="+encodeURIComponent(symbol)+"&_="+Date.now();
+                    const historyJson=await fetchJsonWithTimeout(historyUrl,30000);
+                    const statements=historyJson.financialHistory?.statements;
+                    if(statements&&typeof statements==="object")Object.assign(result,statements);
+                    else financialHistoryError=historyJson.error||"Yahoo no devolvió series financieras.";
+                }catch(historyError){financialHistoryError=historyError.message||"No se pudo consultar el histórico financiero.";}
                 const rates=await getExchangeRates();
                 if(requestId!==watchFundamentalsRequestId||watchlistData[watchDetailIndex]?.symbol!==symbol)return;
                 const currency=result.price?.currency||result.summaryDetail?.currency||item.currency||"EUR";
                 recordAnalystTargetSnapshot(item,result,currency);
                 renderWatchFundamentals(result,currency,rates);
                 renderWatchFinancialHistory(result,currency,rates);
+                const financialStatus=document.getElementById("watch-financial-history-status");
+                if(financialHistoryError&&financialStatus)financialStatus.textContent+=" · Error en fuente de series: "+financialHistoryError;
                 const profile=result.price?.shortName||result.price?.longName||item.name||symbol;
                 if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · Yahoo Finance mediante servicio seguro · consulta: "+new Date().toLocaleString("es-ES")+".";
             }catch(error){
