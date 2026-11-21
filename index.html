@@ -2679,8 +2679,16 @@
                 const records=direct||findStatementArray(moduleData)||[];
                 const rows=Array.isArray(records)?records.slice().sort((a,b)=>(raw(b.endDate)||0)-(raw(a.endDate)||0)).slice(0,quarterly?8:5):[];
                 const sample=rows[0]||{};
-                const presentKeys=Object.keys(sample);
-                diagnostics.push({title,module,modulePresent:moduleData!=null,moduleType:Array.isArray(moduleData)?"array":typeof moduleData,topKeys:moduleData&&typeof moduleData==="object"?Object.keys(moduleData):[],arrayCount:rows.length,sampleKeys:presentKeys});
+                const presentKeys=[...new Set(rows.flatMap(row=>Object.keys(row||{})))];
+                const metricChecks=metrics.map(([label,metricKey])=>{
+                    const candidates=aliases[metricKey]||[metricKey];
+                    const matched=candidates.find(k=>rows.some(row=>row&&row[k]!=null));
+                    const validCount=matched?rows.filter(row=>raw(row[matched])!==null&&!Number.isNaN(raw(row[matched]))).length:0;
+                    const example=matched?rows.map(row=>row?.[matched]).find(v=>v!=null):null;
+                    const exampleText=example&&typeof example==="object"?JSON.stringify({raw:example.raw??null,fmt:example.fmt??null}):String(example??"sin valor");
+                    return {label,matched:matched||"no encontrado",validCount,example:exampleText};
+                });
+                diagnostics.push({title,module,modulePresent:moduleData!=null,moduleType:Array.isArray(moduleData)?"array":typeof moduleData,topKeys:moduleData&&typeof moduleData==="object"?Object.keys(moduleData):[],arrayCount:rows.length,sampleKeys:presentKeys,metricChecks});
                 if(!rows.length)return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-slate-200 mb-2">'+title+'</h5><p class="text-xs text-slate-500">Yahoo Finance no ofrece datos '+(quarterly?"trimestrales":"anuales")+' para este apartado.</p></section>';
                 totalRows+=rows.length;
                 const head='<thead><tr><th class="sticky left-0 z-10 bg-slate-900 px-3 py-2 text-left text-slate-400">Indicador</th>'+rows.map(r=>'<th class="whitespace-nowrap px-3 py-2 text-right text-slate-400">'+esc(periodLabel(r))+'</th>').join("")+'</tr></thead>';
@@ -2699,7 +2707,8 @@
             if(diagnostic){
                 diagnostic.innerHTML=diagnostics.map(x=>{
                     const state=!x.modulePresent?"módulo ausente":x.arrayCount+" registros";
-                    return '<div class="border-t border-slate-700 py-2"><p class="font-semibold text-slate-200">'+esc(x.title)+' · '+esc(x.module)+' · '+state+'</p><p class="mt-1 break-words text-slate-400">Claves del módulo: '+esc(x.topKeys.join(", ")||"ninguna")+'</p><p class="mt-1 break-words text-slate-400">Claves del primer registro: '+esc(x.sampleKeys.join(", ")||"ninguna")+'</p></div>';
+                    const checks=(x.metricChecks||[]).map(m=>'<li>'+esc(m.label)+': campo '+esc(m.matched)+' · valores válidos '+m.validCount+'/'+x.arrayCount+' · ejemplo '+esc(m.example)+'</li>').join("");
+                    return '<div class="border-t border-slate-700 py-2"><p class="font-semibold text-slate-200">'+esc(x.title)+' · '+esc(x.module)+' · '+state+'</p><p class="mt-1 break-words text-slate-400">Claves del módulo: '+esc(x.topKeys.join(", ")||"ninguna")+'</p><p class="mt-1 break-words text-slate-400">Claves encontradas en todos los periodos: '+esc(x.sampleKeys.join(", ")||"ninguna")+'</p><ul class="mt-1 list-disc pl-4 text-slate-400">'+checks+'</ul></div>';
                 }).join("");
             }
         }
