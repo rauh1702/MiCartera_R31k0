@@ -918,7 +918,7 @@
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Concentración por activo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Peso de cada posición sobre el valor total.</p><div id="risk-by-asset" class="space-y-3"></div></div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por sector</h3><p class="text-xs text-slate-500 mt-1 mb-4">Agrupación según el sector asignado a cada activo.</p><div id="risk-by-sector" class="space-y-3"></div></div>
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por tipo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Acciones, ETF, ETC y demás tipos configurados.</p><div id="risk-by-type" class="space-y-3"></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-slate-900">Exposición por tipo</h3><p class="text-xs text-slate-500 mt-1 mb-4">Acciones, ETF, ETC y demás tipos configurados.</p><div id="risk-by-type" class="space-y-3"></div></div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                       <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-extrabold text-slate-900">Exposición geográfica</h3><p class="text-xs text-slate-500 mt-1">País de las empresas y distribución conocida de los fondos.</p></div><button type="button" onclick="refreshRiskLookthrough(true)" class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
                       <p id="risk-lookthrough-status" class="my-3 text-xs text-slate-500" aria-live="polite">Pulsa actualizar para consultar la composición disponible.</p>
@@ -935,7 +935,7 @@
                         <div class="rounded-xl bg-slate-50 p-3"><p class="text-[11px] font-bold uppercase text-slate-500">Índice HHI</p><p id="risk-hhi" class="mt-1 text-2xl font-black text-slate-900">—</p><p class="text-[11px] text-slate-500">Más alto significa mayor concentración.</p></div>
                       </div>
                       <p id="risk-diversification-note" class="mt-3 text-xs text-slate-600">Este indicador mide el reparto entre posiciones, no la correlación ni el riesgo de pérdida.</p>
-                    </div></div>
+                    </div>
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-amber-950">Cómo interpretar este análisis</h3><ul class="mt-3 space-y-2 text-xs text-amber-900 list-disc pl-4"><li>Una posición por encima del 20 % se marca como concentración elevada.</li><li>Un sector por encima del 35 % se marca como exposición elevada.</li><li>Los porcentajes se calculan sobre el valor de mercado actual.</li><li>Son avisos orientativos: no miden volatilidad, correlación ni riesgo de pérdida.</li></ul></div>
                 </div>
                 <p class="text-[11px] text-slate-400">Solo se incluyen posiciones con unidades y valor de mercado positivo. Los activos sin sector o tipo asignado aparecen como «Sin clasificar».</p>
