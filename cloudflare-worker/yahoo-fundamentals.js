@@ -320,21 +320,21 @@ async function fetchArticleText(articleUrl) {
     const html = (await response.text()).slice(0, 900000);
     const candidates = [];
     const clean = value => String(value || "")
-      .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
-      .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
-      .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, " ")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;|&#160;/gi, " ")
       .replace(/&amp;/gi, "&")
       .replace(/&quot;/gi, '"')
       .replace(/&#39;|&apos;/gi, "'")
-      .replace(/&#(\\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
       .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-      .replace(/\\s+/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
 
     // Extrae metadatos aunque los atributos HTML estén en distinto orden.
-    for (const match of html.matchAll(/<meta\\b[^>]*>/gi)) {
+    for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
       const tag = match[0];
       const key = (tag.match(/(?:name|property)=["']([^"']+)["']/i)?.[1] || "").toLowerCase();
       const value = tag.match(/content=["']([^"']+)["']/i)?.[1];
@@ -342,7 +342,7 @@ async function fetchArticleText(articleUrl) {
     }
 
     // JSON-LD puede contener varios bloques y estructuras anidadas.
-    for (const match of html.matchAll(/<script[^>]+type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi)) {
+    for (const match of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
       try {
         const parsed = JSON.parse(match[1]);
         const visit = node => {
@@ -356,10 +356,10 @@ async function fetchArticleText(articleUrl) {
     }
 
     // Recupera párrafos de article/main cuando no hay metadatos suficientes.
-    const body = html.match(/<article\\b[\\s\\S]*?<\\/article>/i)?.[0] ||
-      html.match(/<main\\b[\\s\\S]*?<\\/main>/i)?.[0] || "";
+    const body = html.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ||
+      html.match(/<main\b[\s\S]*?<\/main>/i)?.[0] || "";
     if (body) {
-      const paragraphs = [...body.matchAll(/<p\\b[^>]*>([\\s\\S]*?)<\\/p>/gi)]
+      const paragraphs = [...body.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
         .map(match => clean(match[1]))
         .filter(value => value.length > 45);
       if (paragraphs.length) candidates.push(paragraphs.join(" "));
