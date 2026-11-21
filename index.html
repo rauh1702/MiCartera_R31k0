@@ -3459,18 +3459,20 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             try {
                 const fxRates = await getExchangeRates();
                 const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
+                let tradeRepublicQuotes = new Map();
+                try { tradeRepublicQuotes = await fetchTradeRepublicQuotesBatch([asset.isin]); } catch (trError) { console.warn("Cotización pública de Trade Republic no disponible; se mantiene Yahoo como respaldo:", trError); }
                 let liveQuotes = new Map();
                 try { liveQuotes = await fetchYahooQuotesBatch(symbols); } catch (quoteError) { console.warn("Cotización directa Yahoo no disponible; se usa gráfico:", quoteError); }
-                const quote = await fetchAssetQuote(asset, fxRates, liveQuotes);
+                const quote = await fetchAssetQuote(asset, fxRates, liveQuotes, tradeRepublicQuotes);
                 applyPriceAndCheckAlerts(asset, quote.price);
                 if (Number.isFinite(Number(quote.previousCloseEUR)) && Number(quote.previousCloseEUR) > 0) { asset.previousCloseEUR = quote.previousCloseEUR; asset.previousCloseMarketTime = quote.marketTime || null; }
-                asset.yahooTicker = quote.symbol;
+                if (quote.symbol) asset.yahooTicker = quote.symbol;
                 asset.priceCurrency = quote.currency;
                 asset.rawMarketPrice = quote.rawPrice;
                 asset.fxToEUR = quote.fxToEUR;
                 asset.fxRateDate = quote.fxRateDate;
                 asset.fxRateSource = quote.fxRateSource;
-                asset.priceSource = "Yahoo Finance";
+                asset.priceSource = quote.quoteSource || "Yahoo Finance";
                 asset.marketState = quote.marketState || asset.marketState || "";
                 asset.marketExchange = quote.fullExchangeName || quote.exchangeName || asset.marketExchange || '';
                 asset.marketInstrumentType = quote.instrumentType || asset.marketInstrumentType || '';
