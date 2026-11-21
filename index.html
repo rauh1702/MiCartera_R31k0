@@ -3163,6 +3163,15 @@ function renderAssetNews(){const box=document.getElementById("asset-news-list");
 async function refreshAssetNews(force){const status=document.getElementById("asset-news-status"),updated=document.getElementById("asset-news-updated"),button=document.getElementById("asset-news-refresh");if(!status)return;const assets=assetNewsSymbols();if(!assets.length){status.textContent="No hay activos con ticker para consultar.";return;}status.textContent=force?"Solicitando actualización…":"Consultando noticias disponibles…";if(button)button.disabled=true;try{const list=assets.map(x=>x.symbol);const registry=await fetch(ASSET_NEWS_WORKER+"/symbols",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assets:assets.map(({symbol,name})=>({symbol,name}))})});if(!registry.ok)throw Error("No se pudieron registrar los activos para noticias");if(force){const rr=await fetch(ASSET_NEWS_WORKER+"/refresh",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assets:assets.map(({symbol,name})=>({symbol,name}))})});if(!rr.ok){const e=await rr.json().catch(()=>({}));throw Error(e.error||"No se pudo forzar la actualización");}}const r=await fetch(ASSET_NEWS_WORKER+"/news?symbols="+encodeURIComponent(list.join(",")));if(!r.ok)throw Error("Servicio de noticias HTTP "+r.status);const data=await r.json(),groups=new Map(assets.map(x=>[x.symbol.toUpperCase(),x.group]));assetNewsItems=(data.items||[]).map(n=>({...n,groups:[...new Set((n.symbols||[]).map(s=>groups.get(String(s).toUpperCase())).filter(Boolean))]})).sort((a,b)=>(b.publishedAt||"").localeCompare(a.publishedAt||""));localStorage.setItem(ASSET_NEWS_KEY,JSON.stringify(assetNewsItems));updated.textContent="Última actualización: "+(data.updatedAt?new Date(data.updatedAt).toLocaleString("es-ES"):"pendiente");status.textContent="Noticias cargadas.";renderAssetNews();}catch(e){status.textContent="No se pudieron cargar las noticias: "+e.message;}finally{if(button)button.disabled=false;}}
 function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));document.getElementById('watchlist-view').classList.remove('hidden');document.getElementById('headerToolbar').classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));renderWatchlist();window.scrollTo({top:0,behavior:'smooth'});}
 
+        async function fetchYahooQuotesBatch(symbols) {
+            const unique = [...new Set((symbols || []).filter(Boolean))].slice(0, 40);
+            if (!unique.length) return new Map();
+            const url = ASSET_NEWS_WORKER + "/quotes?symbols=" + encodeURIComponent(unique.join(","));
+            const data = await fetchJsonWithTimeout(url, 12000);
+            const rows = Array.isArray(data.quotes) ? data.quotes : [];
+            return new Map(rows.filter(row => row.symbol).map(row => [row.symbol, row]));
+        }
+
         async function yahooChart(symbol) {
             const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1mo&interval=1d`;
             const errors = [];
@@ -3266,13 +3275,41 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             throw new Error(`Divisa no soportada o sin tipo de cambio: ${currency}`);
         }
 
-        async function fetchAssetQuote(asset, rates) {
+        async function fetchAssetQuote(asset, rates, liveQuotes = new Map()) {
             const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
             let lastError, bestQuote = null;
             for (const symbol of symbols) {
                 try {
-                    const quote = await yahooChart(symbol);
-                    const eurPrice = convertToEUR(quote.price, quote.currency, rates);
+                    let quote = liveQuotes.get(symbol) || null;
+                    let quoteSource = "Yahoo Finance · gráfico";
+                    if (quote && Number(quote.regularMarketPrice) > 0) {
+                        const state = String(quote.marketState || "").toUpperCase();
+                        const bid = Number(quote.bid), ask = Number(quote.ask);
+                        const spread = bid > 0 && ask >= bid ? (ask - bid) / ((ask + bid) / 2) : Infinity;
+                        // Durante la sesión usamos el bid como valor de salida de una posición,
+                        // siempre que el spread sea coherente. Fuera de sesión usamos el último.
+                        const useBid = state === "REGULAR" && bid > 0 && ask > 0 && spread <= 0.03;
+                        quote = {
+                            ...quote,
+                            price: useBid ? bid : Number(quote.regularMarketPrice),
+                            previousClose: null,
+                            marketTime: quote.regularMarketTime || null,
+                            exchangeName: quote.exchange || "",
+                            fullExchangeName: quote.exchange || "",
+                            instrumentType: quote.quoteType || "",
+                            regularMarketPrice: Number(quote.regularMarketPrice),
+                            previousCloseRaw: null,
+                            lastCandleTime: null,
+                            bid: bid > 0 ? bid : null,
+                            ask: ask > 0 ? ask : null,
+                            selectedSide: useBid ? "bid" : "last",
+                            quoteSource: "Yahoo Finance v7 quote"
+                        };
+                        quoteSource = quote.quoteSource + (useBid ? " · bid" : " · último precio");
+                    } else {
+                        quote = await yahooChart(symbol);
+                    }
+                    const eurPrice = convertToEUR(quote.price, quote.currency || "EUR", rates);
                     const previousCloseEUR = quote.previousClose ? convertToEUR(quote.previousClose, quote.currency, rates) : null;
                     const candidate = {
                         price: Number(eurPrice.toFixed(6)),
@@ -3282,7 +3319,11 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                         fxRateSource: rates.rateSource || "Fuente no identificada",
                         previousCloseEUR: Number.isFinite(previousCloseEUR) && previousCloseEUR > 0 ? Number(previousCloseEUR.toFixed(6)) : null,
                         symbol,
-                        currency: quote.currency,
+                        currency: quote.currency || "EUR",
+                        quoteSource,
+                        bidRaw: quote.bid ?? null,
+                        askRaw: quote.ask ?? null,
+                        selectedSide: quote.selectedSide || "chart",
                         marketTime: quote.marketTime || null,
                         marketState: quote.marketState || '',
                         exchangeName: quote.exchangeName || '',
@@ -3317,10 +3358,14 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             const failures = [];
             try {
                 const fxRates = await getExchangeRates();
+                const quoteSymbols = assetsData.flatMap(asset => YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean));
+                let liveQuotes = new Map();
+                try { liveQuotes = await fetchYahooQuotesBatch(quoteSymbols); }
+                catch (quoteError) { console.warn("Cotización directa Yahoo no disponible; se usa gráfico:", quoteError); }
                 await Promise.all(assetsData.map(async asset => {
                     if (!asset.ticker || asset.ticker === 'VAR:ACT') return;
                     try {
-                        const quote = await fetchAssetQuote(asset, fxRates);
+                        const quote = await fetchAssetQuote(asset, fxRates, liveQuotes);
                         applyPriceAndCheckAlerts(asset, quote.price);
                         // Guarda también el cierre anterior convertido a euros: lo usa
                         // el modo «Variación del día» del Resumen diario.
@@ -3336,11 +3381,14 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                         asset.fxToEUR = quote.fxToEUR;
                         asset.fxRateDate = quote.fxRateDate;
                         asset.fxRateSource = quote.fxRateSource;
-                        asset.priceSource = "Yahoo Finance";
+                        asset.priceSource = quote.quoteSource || "Yahoo Finance";
                         asset.marketState = quote.marketState || asset.marketState || '';
                         asset.marketExchange = quote.fullExchangeName || quote.exchangeName || asset.marketExchange || '';
                         asset.marketInstrumentType = quote.instrumentType || asset.marketInstrumentType || '';
                         asset.yahooRegularMarketPrice = quote.regularMarketPrice ?? asset.yahooRegularMarketPrice ?? null;
+                        asset.yahooBid = quote.bidRaw ?? asset.yahooBid ?? null;
+                        asset.yahooAsk = quote.askRaw ?? asset.yahooAsk ?? null;
+                        asset.yahooSelectedSide = quote.selectedSide || asset.yahooSelectedSide || "chart";
                         asset.yahooPreviousClose = quote.previousCloseRaw ?? asset.yahooPreviousClose ?? null;
                         asset.yahooLastCandleTime = quote.lastCandleTime || asset.yahooLastCandleTime || null;
                         asset.lastMarketTime = quote.marketTime || asset.lastMarketTime || null;
@@ -3373,7 +3421,10 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             if (!asset) return;
             try {
                 const fxRates = await getExchangeRates();
-                const quote = await fetchAssetQuote(asset, fxRates);
+                const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
+                let liveQuotes = new Map();
+                try { liveQuotes = await fetchYahooQuotesBatch(symbols); } catch (quoteError) { console.warn("Cotización directa Yahoo no disponible; se usa gráfico:", quoteError); }
+                const quote = await fetchAssetQuote(asset, fxRates, liveQuotes);
                 applyPriceAndCheckAlerts(asset, quote.price);
                 if (Number.isFinite(Number(quote.previousCloseEUR)) && Number(quote.previousCloseEUR) > 0) { asset.previousCloseEUR = quote.previousCloseEUR; asset.previousCloseMarketTime = quote.marketTime || null; }
                 asset.yahooTicker = quote.symbol;
@@ -3387,6 +3438,9 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
                 asset.marketExchange = quote.fullExchangeName || quote.exchangeName || asset.marketExchange || '';
                 asset.marketInstrumentType = quote.instrumentType || asset.marketInstrumentType || '';
                 asset.yahooRegularMarketPrice = quote.regularMarketPrice ?? asset.yahooRegularMarketPrice ?? null;
+                        asset.yahooBid = quote.bidRaw ?? asset.yahooBid ?? null;
+                        asset.yahooAsk = quote.askRaw ?? asset.yahooAsk ?? null;
+                        asset.yahooSelectedSide = quote.selectedSide || asset.yahooSelectedSide || "chart";
                 asset.yahooPreviousClose = quote.previousCloseRaw ?? asset.yahooPreviousClose ?? null;
                 asset.yahooLastCandleTime = quote.lastCandleTime || asset.yahooLastCandleTime || null;
                 asset.lastMarketTime = quote.marketTime || asset.lastMarketTime || null;
