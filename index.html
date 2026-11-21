@@ -989,7 +989,15 @@
                     <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-extrabold text-white text-lg">Análisis fundamental</h3><p class="text-xs text-slate-400 mt-1">Valoración, crecimiento, rentabilidad y salud financiera.</p></div><button type="button" id="watch-fundamentals-refresh" onclick="loadWatchFundamentals()" class="rounded-xl border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-2"></i>Actualizar fundamentales</button></div>
                     <p id="watch-fundamentals-status" class="text-sm text-slate-300" aria-live="polite">Consultando datos fundamentales…</p>
                     <div id="watch-fundamentals-content" class="grid grid-cols-1 lg:grid-cols-3 gap-3"></div>
-                    <p class="text-[11px] text-slate-500">Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>
+                    <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div><h4 class="font-bold text-cyan-300">Histórico financiero</h4><p class="text-xs text-slate-400 mt-1">Cifras publicadas por Yahoo Finance. Consulta anual y trimestral cuando exista cobertura.</p></div>
+                            <div class="flex gap-2"><button type="button" id="watch-financial-annual" onclick="setWatchFinancialHistoryMode('annual')" class="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-bold text-white">Anual</button><button type="button" id="watch-financial-quarterly" onclick="setWatchFinancialHistoryMode('quarterly')" class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-300">Trimestral</button></div>
+                        </div>
+                        <p id="watch-financial-history-status" class="text-xs text-slate-400" aria-live="polite">Esperando estados financieros…</p>
+                        <div id="watch-financial-history-content" class="space-y-4"></div>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>Fuente: Yahoo Finance. Las métricas dependen de la cobertura de cada activo y pueden no estar disponibles para ETF, fondos o determinados mercados. Los importes se convierten a euros con el tipo de cambio actual; no son datos auditados en tiempo real.</p>
                 </section>
                 <section class="rounded-2xl border border-violet-500/30 bg-slate-900 p-4 sm:p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-extrabold text-white text-lg"><i class="fa-solid fa-calendar-days text-violet-300 mr-2"></i>Próximos eventos</h3><p class="text-xs text-slate-400 mt-1">Resultados y acontecimientos vinculados a este activo.</p></div><button type="button" onclick="openWatchFinancialEvent()" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-plus mr-1"></i>Añadir evento</button></div>
@@ -2611,6 +2619,49 @@
             const groupsHtml=groups.map(([title,rows])=>'<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4"><h4 class="font-bold text-cyan-300 mb-3">'+escape(title)+'</h4><dl class="space-y-3">'+rows.map(([label,value])=>{const check=checks.find(x=>x.name===checkByLabel[label]);const scoreValue=check&&check.value!==null?check.score(check.value):null;const badge=scoreValue===null?'':'<span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold '+(scoreValue>=0.7?'bg-emerald-500/15 text-emerald-300':scoreValue>=0.4?'bg-amber-500/15 text-amber-300':'bg-rose-500/15 text-rose-300')+'">'+(scoreValue>=0.7?'Favorable':scoreValue>=0.4?'Mixto':'Débil')+'</span>';return '<div class="flex justify-between items-start gap-3 border-b border-slate-800 pb-2 last:border-0"><div class="min-w-0"><dt class="text-xs text-slate-400">'+escape(label)+'</dt>'+(badge?'<div class="mt-1">'+badge+'</div>':'')+'</div><dd class="text-sm font-bold text-slate-100 text-right">'+escape(value)+'</dd></div>';}).join("")+'</dl></div>').join("");
             host.innerHTML=semaforoHtml+groupsHtml+renderAnalystTargetHistory(watchlistData[watchDetailIndex],rates);
         }
+        let watchFinancialHistoryMode="annual";
+        let watchFinancialHistoryData=null;
+        let watchFinancialHistoryCurrency="EUR";
+        let watchFinancialHistoryRates={};
+        function setWatchFinancialHistoryMode(mode){
+            watchFinancialHistoryMode=mode==="quarterly"?"quarterly":"annual";
+            const annual=document.getElementById("watch-financial-annual"),quarterly=document.getElementById("watch-financial-quarterly");
+            if(annual)annual.className=watchFinancialHistoryMode==="annual"?"rounded-lg bg-cyan-600 px-3 py-2 text-xs font-bold text-white":"rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-300";
+            if(quarterly)quarterly.className=watchFinancialHistoryMode==="quarterly"?"rounded-lg bg-cyan-600 px-3 py-2 text-xs font-bold text-white":"rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-300";
+            renderWatchFinancialHistory();
+        }
+        function renderWatchFinancialHistory(data,sourceCurrency,rates){
+            if(data){watchFinancialHistoryData=data;watchFinancialHistoryCurrency=sourceCurrency||"EUR";watchFinancialHistoryRates=rates||{};}
+            const host=document.getElementById("watch-financial-history-content"),status=document.getElementById("watch-financial-history-status");
+            if(!host||!watchFinancialHistoryData)return;
+            const d=watchFinancialHistoryData,quarterly=watchFinancialHistoryMode==="quarterly";
+            const modules=quarterly?[
+                ["Resultados","incomeStatementHistoryQuarterly","incomeStatementHistory",[["Ingresos","totalRevenue"],["Beneficio bruto","grossProfit"],["Resultado operativo","operatingIncome"],["Beneficio neto","netIncome"],["Beneficio por acción diluido","dilutedEPS"]]],
+                ["Balance","balanceSheetHistoryQuarterly","balanceSheetStatements",[["Activos totales","totalAssets"],["Efectivo y equivalentes","cash"],["Deuda total","totalDebt"],["Patrimonio neto","totalStockholderEquity"],["Activos corrientes","totalCurrentAssets"],["Pasivos corrientes","totalCurrentLiabilities"]]],
+                ["Flujos de caja","cashflowStatementHistoryQuarterly","cashflowStatements",[["Flujo de caja operativo","totalCashFromOperatingActivities"],["Inversión / CAPEX","capitalExpenditures"],["Flujo de caja libre","freeCashFlow"],["Variación neta de efectivo","changeInCash"]]]
+            ]:[
+                ["Resultados","incomeStatementHistory","incomeStatementHistory",[["Ingresos","totalRevenue"],["Beneficio bruto","grossProfit"],["Resultado operativo","operatingIncome"],["Beneficio neto","netIncome"],["Beneficio por acción diluido","dilutedEPS"]]],
+                ["Balance","balanceSheetHistory","balanceSheetStatements",[["Activos totales","totalAssets"],["Efectivo y equivalentes","cash"],["Deuda total","totalDebt"],["Patrimonio neto","totalStockholderEquity"],["Activos corrientes","totalCurrentAssets"],["Pasivos corrientes","totalCurrentLiabilities"]]],
+                ["Flujos de caja","cashflowStatementHistory","cashflowStatements",[["Flujo de caja operativo","totalCashFromOperatingActivities"],["Inversión / CAPEX","capitalExpenditures"],["Flujo de caja libre","freeCashFlow"],["Variación neta de efectivo","changeInCash"]]]
+            ];
+            const raw=v=>{if(v==null)return null;if(typeof v==="number")return Number.isFinite(v)?v:null;if(typeof v==="object"){if(v.raw!=null)return Number(v.raw);if(v.fmt!=null&&v.fmt!=="")return Number(String(v.fmt).replace(/,/g,""));}return null;};
+            const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+            const money=v=>{const n=raw(v);if(n===null)return "—";try{return formatFundamentalNumber(convertToEUR(n,watchFinancialHistoryCurrency,watchFinancialHistoryRates),0)+" €";}catch(_){return formatFundamentalNumber(n,0)+" "+watchFinancialHistoryCurrency;}};
+            const periodLabel=row=>{const n=raw(row.endDate);const date=n?new Date(n*1000):null;return date&&!Number.isNaN(date.getTime())?date.toLocaleDateString("es-ES",{month:"short",year:"numeric"}):"Periodo";};
+            let totalRows=0;
+            const sections=modules.map(([title,module,key,metrics])=>{
+                const records=d[module]?.[key]||[];
+                const rows=Array.isArray(records)?records.slice().sort((a,b)=>(raw(b.endDate)||0)-(raw(a.endDate)||0)).slice(0,quarterly?8:5):[];
+                if(!rows.length)return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-slate-200 mb-2">'+title+'</h5><p class="text-xs text-slate-500">Yahoo Finance no ofrece datos '+(quarterly?"trimestrales":"anuales")+' para este apartado.</p></section>';
+                totalRows+=rows.length;
+                const head='<thead><tr><th class="sticky left-0 z-10 bg-slate-900 px-3 py-2 text-left text-slate-400">Indicador</th>'+rows.map(r=>'<th class="whitespace-nowrap px-3 py-2 text-right text-slate-400">'+esc(periodLabel(r))+'</th>').join("")+'</tr></thead>';
+                const body=metrics.map(([label,key])=>'<tr class="border-t border-slate-800"><th class="sticky left-0 bg-slate-950 px-3 py-2 text-left font-medium text-slate-300">'+esc(label)+'</th>'+rows.map(r=>'<td class="whitespace-nowrap px-3 py-2 text-right font-semibold text-slate-100">'+(key==="dilutedEPS"?(raw(r[key])===null?"—":formatFundamentalNumber(raw(r[key]),2)+" "+watchFinancialHistoryCurrency):money(r[key]))+'</td>').join("")+'</tr>').join("");
+                return '<section class="rounded-lg border border-slate-700 p-3"><h5 class="font-bold text-cyan-300 mb-2">'+title+'</h5><div class="overflow-x-auto"><table class="min-w-full text-xs">'+head+'<tbody>'+body+'</tbody></table></div></section>';
+            }).join("");
+            host.innerHTML=sections;
+            if(status)status.textContent=totalRows?"Periodos disponibles: "+(quarterly?"trimestrales":"anuales")+". Las fechas corresponden al cierre de cada periodo; importes convertidos a euros al tipo de cambio actual.":"No hay estados financieros históricos disponibles para este activo en Yahoo Finance.";
+        }
+
         async function loadWatchFundamentals(){
             const item=watchlistData[watchDetailIndex];if(!item)return;
             const requestId=++watchFundamentalsRequestId,symbol=item.symbol;
@@ -2627,6 +2678,7 @@
                 const currency=result.price?.currency||result.summaryDetail?.currency||item.currency||"EUR";
                 recordAnalystTargetSnapshot(item,result,currency);
                 renderWatchFundamentals(result,currency,rates);
+                renderWatchFinancialHistory(result,currency,rates);
                 const profile=result.price?.shortName||result.price?.longName||item.name||symbol;
                 if(status)status.textContent="Datos fundamentales recibidos para "+profile+" · Yahoo Finance mediante servicio seguro · consulta: "+new Date().toLocaleString("es-ES")+".";
             }catch(error){
