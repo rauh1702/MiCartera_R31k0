@@ -571,7 +571,7 @@
             <div class="glass-card p-4 rounded-2xl shadow-sm border border-amber-200/80 bg-gradient-to-br from-amber-50/50 to-white hover:shadow-md transition" role="button" tabindex="0" onclick="openKpiDetail('kpi-impuestos-total')" onkeydown="if(event.key==='Enter'||event.key===' ')openKpiDetail('kpi-impuestos-total')" style="cursor:pointer">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">Impuestos IRPF (FIFO)</p>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">IRPF estimado · año actual</p>
                         <h3 class="text-xl font-bold text-amber-600 mt-1" id="kpi-impuestos-total">0.00 €</h3>
                     </div>
                     <div class="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
@@ -579,7 +579,7 @@
                     </div>
                 </div>
                 <div class="mt-2 text-[11px] text-amber-800 font-medium">
-                    Tramos Renta España (19%-28%)
+                    Base del ahorro · 19%-30% · neto anual
                 </div>
             </div>
 
@@ -762,7 +762,7 @@
                             <th class="py-3.5 px-4 text-right">Capital Invert.</th>
                             <th class="py-3.5 px-4 text-right">Valor Mercado</th>
                             <th class="py-3.5 px-4 text-right text-cyan-800 bg-cyan-50/50">G/P Latente (€ / %)</th>
-                            <th class="py-3.5 px-4 text-right text-amber-700 bg-amber-50/50">IRPF (FIFO)</th>
+                            <th class="py-3.5 px-4 text-right text-amber-700 bg-amber-50/50">IRPF año actual</th>
                             <th class="py-3.5 px-4 text-center">Acción</th>
                         </tr>
                     </thead>
@@ -1245,7 +1245,7 @@
                         <span id="modal-profit" class="font-bold text-emerald-600 text-xs">0.00 €</span>
                     </div>
                     <div>
-                        <span class="text-[10px] text-amber-700 font-semibold block uppercase">IRPF (FIFO)</span>
+                        <span class="text-[10px] text-amber-700 font-semibold block uppercase">IRPF asignado · año actual</span>
                         <span id="modal-tax" class="font-bold text-amber-600 text-xs">0.00 €</span>
                     </div>
                 </div>
@@ -2058,47 +2058,41 @@
         }
 
         function calculateSpanishTax(gain) {
-            if (gain <= 0) return 0;
+            // Escala estatal + autonómica de la base del ahorro para residentes en España.
+            // Desde 2025, el último tramo aplica el 30% a partir de 300.000 €.
+            if (!Number.isFinite(gain) || gain <= 0) return 0;
             let tax = 0;
             let remaining = gain;
 
-            const t1 = Math.min(remaining, 6000);
-            tax += t1 * 0.19;
-            remaining -= t1;
+            const brackets = [
+                { limit: 6000, rate: 0.19 },
+                { limit: 44000, rate: 0.21 },
+                { limit: 150000, rate: 0.23 },
+                { limit: 100000, rate: 0.27 },
+                { limit: Infinity, rate: 0.30 }
+            ];
 
-            if (remaining > 0) {
-                const t2 = Math.min(remaining, 44000);
-                tax += t2 * 0.21;
-                remaining -= t2;
+            for (const bracket of brackets) {
+                if (remaining <= 0) break;
+                const taxable = Math.min(remaining, bracket.limit);
+                tax += taxable * bracket.rate;
+                remaining -= taxable;
             }
-
-            if (remaining > 0) {
-                const t3 = Math.min(remaining, 150000);
-                tax += t3 * 0.23;
-                remaining -= t3;
-            }
-
-            if (remaining > 0) {
-                const t4 = Math.min(remaining, 100000);
-                tax += t4 * 0.27;
-                remaining -= t4;
-            }
-
-            if (remaining > 0) {
-                tax += remaining * 0.28;
-            }
-
             return tax;
         }
 
         function recalculatePortfolioCalculations() {
+            const currentTaxYear = String(new Date().getFullYear());
+
             assetsData.forEach(asset => {
                 let accumulatedShares = 0;
                 let currentCapitalVivo = 0;
                 let currentPMP = 0;
                 let totalCommissions = 0;
                 let totalRealizedProfit = 0;
+                const realizedProfitByYear = {};
 
+                if (!Array.isArray(asset.history)) asset.history = [];
                 asset.history.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 let fifoQueue = [];
@@ -2139,6 +2133,11 @@
                         const opProfitFIFO = netSaleProceeds - costBasisFIFO;
                         totalRealizedProfit += opProfitFIFO;
 
+                        const saleYear = String(tx.date || '').slice(0, 4);
+                        if (/^\\d{4}$/.test(saleYear)) {
+                            realizedProfitByYear[saleYear] = (realizedProfitByYear[saleYear] || 0) + opProfitFIFO;
+                        }
+
                         accumulatedShares -= qty;
                         if (accumulatedShares <= 0) {
                             accumulatedShares = 0;
@@ -2151,9 +2150,7 @@
                     }
                 });
 
-                // El PMP y el capital vivo se calculan sobre los lotes que siguen
-                // abiertos (FIFO). Así, al vender se descuentan primero las acciones
-                // más antiguas, igual que en el cálculo FIFO del beneficio realizado.
+                // Coste vivo y PMP calculados sobre los lotes que siguen abiertos (FIFO).
                 const fifoRemainingShares = fifoQueue.reduce((sum, lot) => sum + lot.qty, 0);
                 const fifoRemainingCapital = fifoQueue.reduce((sum, lot) => sum + (lot.qty * lot.unitCost), 0);
                 accumulatedShares = fifoRemainingShares;
@@ -2165,13 +2162,34 @@
                 asset.capital = currentCapitalVivo;
                 asset.commmissions = totalCommissions;
                 asset.realizedProfit = totalRealizedProfit;
-                asset.taxIRPF = calculateSpanishTax(totalRealizedProfit);
+                asset.realizedProfitByYear = realizedProfitByYear;
+                asset.taxIRPF = 0;
 
                 const price = parseFloat(asset.currentPrice) || currentPMP;
                 asset.currentPrice = price;
                 asset.marketValue = accumulatedShares * price;
                 asset.latentProfit = accumulatedShares > 0 ? (asset.marketValue - currentCapitalVivo) : 0;
                 asset.latentPct = currentCapitalVivo > 0 ? ((asset.latentProfit / currentCapitalVivo) * 100) : 0;
+            });
+
+            // El IRPF se estima sobre el resultado neto anual de toda la cartera,
+            // no aplicando de nuevo el primer tramo fiscal a cada activo.
+            let portfolioCurrentYearResult = 0;
+            let positiveAssetGains = 0;
+            assetsData.forEach(asset => {
+                const annualResult = Number(asset.realizedProfitByYear && asset.realizedProfitByYear[currentTaxYear]) || 0;
+                portfolioCurrentYearResult += annualResult;
+                if (annualResult > 0) positiveAssetGains += annualResult;
+            });
+
+            const portfolioCurrentYearTax = calculateSpanishTax(Math.max(0, portfolioCurrentYearResult));
+            assetsData.forEach(asset => {
+                const annualResult = Number(asset.realizedProfitByYear && asset.realizedProfitByYear[currentTaxYear]) || 0;
+                // Reparto informativo proporcional entre activos con ganancias; las pérdidas
+                // de otros activos ya reducen la base neta antes de calcular la cuota total.
+                asset.taxIRPF = positiveAssetGains > 0 && annualResult > 0
+                    ? portfolioCurrentYearTax * (annualResult / positiveAssetGains)
+                    : 0;
             });
         }
 
@@ -2260,7 +2278,7 @@
               'kpi-capital-total': {title:'Capital invertido', subtitle:'Capital actualmente invertido por posición', field:'capital', label:'Capital invertido'},
               'kpi-beneficio-latente': {title:'Ganancia / pérdida latente', subtitle:'Resultado no realizado por activo según cotización actual', field:'latentProfit', label:'Ganancia / pérdida latente'},
               'kpi-beneficio-total': {title:'Beneficio realizado', subtitle:'Resultado de ventas calculado mediante FIFO', field:'realizedProfit', label:'Beneficio realizado'},
-              'kpi-impuestos-total': {title:'Impuesto IRPF', subtitle:'Impuesto estimado FIFO por activo', field:'taxIRPF', label:'IRPF estimado'},
+              'kpi-impuestos-total': {title:'IRPF estimado del año actual', subtitle:'Cuota orientativa sobre el resultado neto anual de todos los activos; reparto por contribución positiva', field:'taxIRPF', label:'IRPF asignado'},
               'kpi-comisiones-total': {title:'Total comisiones', subtitle:'Comisiones acumuladas por activo', field:'commmissions', label:'Comisiones'},
               'kpi-mayor-activo': {title:'Posiciones actuales', subtitle:'Valor de mercado actual de cada posición', field:'marketValue', label:'Valor actual'}
             };
