@@ -3710,14 +3710,38 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
 
         function deleteTransaction(index) {
-            if (!currentActiveAsset) return;
-            if (confirm("¿Deseas eliminar esta transacción? Se recalcularán automáticamente el PMP, FIFO e impuestos del activo.")) {
-                currentActiveAsset.history.splice(index, 1);
-                savePortfolioData();
-                renderDashboard();
-                openModal(currentActiveAsset.name);
-                showToast("Transacción eliminada");
+            if (!currentActiveAsset || !Array.isArray(currentActiveAsset.history) || !currentActiveAsset.history[index]) return;
+            if (!confirm("¿Deseas eliminar esta transacción? Se recalcularán automáticamente el PMP, FIFO e impuestos del activo.")) return;
+
+            // No permitimos borrar una compra si deja ventas posteriores sin acciones suficientes.
+            const revisedHistory = currentActiveAsset.history
+                .filter((tx, i) => i !== index)
+                .map((tx, i) => ({ tx, i }))
+                .sort((a,b) => String(a.tx.date || '').localeCompare(String(b.tx.date || '')) || a.i - b.i);
+            let runningShares = 0;
+            for (const entry of revisedHistory) {
+                const tx = entry.tx;
+                const qty = Number(tx.qty);
+                if (!tx || !Number.isFinite(qty) || qty <= 0 || !['Compra','Venta'].includes(tx.type)) {
+                    alert('No se puede eliminar: el historial contiene una operación con datos no válidos. Corrige primero esa operación.');
+                    return;
+                }
+                if (tx.type === 'Compra') runningShares += qty;
+                else {
+                    if (qty > runningShares + 1e-8) {
+                        alert(`No se puede eliminar: la venta del ${tx.date} quedaría sin acciones suficientes (${runningShares.toLocaleString('es-ES')} disponibles).`);
+                        return;
+                    }
+                    runningShares -= qty;
+                }
             }
+
+            currentActiveAsset.history.splice(index, 1);
+            savePortfolioData();
+            savePerformanceSnapshot(false);
+            renderDashboard();
+            openModal(currentActiveAsset.name);
+            showToast("Transacción eliminada y cartera recalculada");
         }
 
         function quickAddTransactionForCurrent() {
@@ -3729,11 +3753,13 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function deleteCurrentAsset() {
             if (!currentActiveAsset) return;
             if (confirm(`¿Seguro que deseas eliminar por completo el activo ${currentActiveAsset.name} de la cartera?`)) {
-                assetsData = assetsData.filter(a => a.name !== currentActiveAsset.name);
+                const deletedName = currentActiveAsset.name;
+                assetsData = assetsData.filter(a => a.name !== deletedName);
                 savePortfolioData();
+                savePerformanceSnapshot(false);
                 closeModal();
                 renderDashboard();
-                showToast(`Activo ${currentActiveAsset.name} eliminado`);
+                showToast(`Activo ${deletedName} eliminado y evolución actualizada`);
             }
         }
 
