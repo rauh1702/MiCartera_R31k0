@@ -4151,6 +4151,11 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const assetName=a.name||a.ticker||a.symbol||"Activo";
                 const profile=riskGeoProfile(a);
                 if(profile?.kind==="countries"){
+                    // El perfil geográfico estático no debe impedir mostrar las principales posiciones
+                    // que devuelve Yahoo para el mismo ETF.
+                    const fundData=riskLookthroughCache[riskYahooSymbol(a)];
+                    const fundHoldings=Array.isArray(fundData&&!fundData.error?fundData.holdings:null)?fundData.holdings:[];
+                    if(fundHoldings.length)fundRows.push({name:assetName,value,holdings:fundHoldings});
                     for(const [country,weight] of profile.rows){
                         const contribution=value*weight/100;
                         addCountry(country,contribution,{name:assetName,detail:"Exposición agregada del ETF; el desglose por empresas no está disponible en este perfil"});
