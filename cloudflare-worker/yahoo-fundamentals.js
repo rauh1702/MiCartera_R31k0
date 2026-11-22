@@ -619,8 +619,20 @@ async function fetchTradeRepublicTickers(isins) {
 
 
 
-function validationRaw(v){if(v&&typeof v==="object"){if(v.raw!=null)return Number(v.raw);if(v.value!=null)return Number(v.value);}return Number(v);}
-function validationRows(h,m,c){const x=h?.statements?.[m]||h?.[m]||{};const a=x?.[c]||x?.[m]||[];return Array.isArray(a)?a.filter(r=>r&&r.endDate?.raw):[];}
+function validationRaw(v){if(v===null||v===undefined||v==="")return NaN;if(v&&typeof v==="object"){if(v.raw!=null)return Number(v.raw);if(v.value!=null)return Number(v.value);}return Number(v);}
+function validationRows(h,m,c){
+ const canonical=m==="incomeStatementHistoryQuarterly"?h?.quarterlyIncome:m==="balanceSheetHistoryQuarterly"?h?.quarterlyBalanceSheet:m==="cashflowStatementHistoryQuarterly"?h?.quarterlyCashFlow:null;
+ const stamp=r=>{if(r?.endDate?.raw!=null)return Number(r.endDate.raw);const d=String(r?.date||r?.endDate?.fmt||"").slice(0,10);const t=Date.parse(d+"T00:00:00Z");return Number.isFinite(t)?Math.floor(t/1000):null;};
+ if(Array.isArray(canonical))return canonical.map(r=>{const end=stamp(r);if(!r||end==null)return null;const out={...r,endDate:{raw:end}};
+  if(m==="incomeStatementHistoryQuarterly"){out.totalRevenue=r.totalRevenue??r.revenue;out.grossProfit=r.grossProfit;out.operatingIncome=r.operatingIncome;out.netIncome=r.netIncome;}
+  else if(m==="balanceSheetHistoryQuarterly"){out.ordinarySharesNumber=r.ordinarySharesNumber??r.sharesOutstanding;out.cash=r.cash;out.totalDebt=r.totalDebt;out.totalStockholderEquity=r.equity;out.totalCurrentAssets=r.currentAssets;out.totalCurrentLiabilities=r.currentLiabilities;}
+  else{out.totalCashFromOperatingActivities=r.totalCashFromOperatingActivities??r.operatingCashFlow;out.freeCashFlow=r.freeCashFlow;out.capitalExpenditures=r.capitalExpenditure??r.capitalExpenditures;}
+  return out;
+ }).filter(Boolean);
+ const x=h?.statements?.[m]||h?.[m]||{};
+ const a=Array.isArray(x)?x:(x?.[c]||x?.[m]||[]);
+ return Array.isArray(a)?a.filter(r=>r&&stamp(r)!=null).map(r=>r.endDate?.raw!=null?r:{...r,endDate:{raw:stamp(r)}}):[];
+}
 function validationFindMetric(o,keys,d=0){if(!o||typeof o!=="object"||d>5)return null;for(const[k,v]of Object.entries(o)){if(keys.includes(k.toLowerCase())){const n=validationRaw(v);if(Number.isFinite(n))return{key:k,value:n};}}for(const v of Object.values(o)){const x=validationFindMetric(v,keys,d+1);if(x)return x;}return null;}
 
 function validationFindMetricContainer(o,required,d=0){if(!o||typeof o!=="object"||d>6)return null;const keys=Object.keys(o).map(k=>k.toLowerCase());if(required.every(k=>keys.includes(k)))return o;for(const v of Object.values(o)){const found=validationFindMetricContainer(v,required,d+1);if(found)return found;}return null;}
@@ -640,7 +652,10 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  while((m=commercial.exec(body))!==null){if(potential(m.index))continue;const documented=/(concentraci[oó]n de clientes|principal cliente|porcentaje de ventas|customer concentration|top customer|acuerdo comercial|contrato adjudicado|contrato firmado|order intake|backlog)/i.test(evidence);if(!documented)add("commercial_claim_unverified","El análisis atribuye concentración de clientes o crecimiento a acuerdos/contratos puntuales sin evidencia explícita identificable. Si es una hipótesis, etiquetarla como riesgo potencial.",m[0].trim());}
  const severe=/(situaci[oó]n financiera precaria|insolvencia|quiebra|al borde de la quiebra|riesgo de insolvencia|situaci[oó]n financiera cr[ií]tica|financieramente inviable)/gi;
  while((m=severe.exec(body))!==null)add("strong_financial_conclusion","Se utiliza una conclusión financiera muy contundente. Debe presentarse como interpretación y justificarse con liquidez, deuda, vencimientos y flujos comparables; no como hecho demostrado por un único ratio.",m[0].trim());
- if(/runway[^.!?]{0,70}\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)|\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)[^.!?]{0,50}runway/i.test(body))add("runway_claim_unverified","Se cuantifica el runway sin un cálculo verificable basado en caja disponible y consumo operativo comparable.");
+ if(/runway[^.!?]{0,70}\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)|\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)[^.!?]{0,50}runway|efectivo[^.!?]{0,65}(?:agot[aá]ndose|se agota|agotamiento)[^.!?]{0,35}(?:r[aá]pidamente|acelerado)|(?:agot[aá]ndose|se agota)[^.!?]{0,40}efectivo/i.test(body))add("runway_claim_unverified","Se sugiere un agotamiento rápido de caja o un runway sin una serie comparable de caja y consumo operativo que permita calcularlo.");
+ const financeClaim=/(dependencia de financiaci[oó]n externa|depende de financiaci[oó]n externa|requiere financiaci[oó]n externa|necesita financiaci[oó]n externa|financiarse externamente|capitalizaci[oó]n[^.!?]{0,100}efectivo[^.!?]{0,100}implica[^.!?]{0,60}financiaci[oó]n)/gi;
+ const financingEvidence=/(financiaci[oó]n obtenida|ampliaci[oó]n de capital anunciada|emisi[oó]n de acciones anunciada|l[ií]nea de cr[eé]dito|credit facility|deuda con vencimiento|debt maturity|incumplimiento de covenant|going concern|duda material sobre empresa en funcionamiento|liquidity shortfall)/i.test(evidence);
+ while((m=financeClaim.exec(body))!==null){if(!financingEvidence)add("external_financing_claim_unverified","La dependencia de financiación externa no queda demostrada por comparar capitalización y efectivo ni por un único trimestre de flujo de caja negativo. Harían falta vencimientos, financiación disponible/obtenida o una advertencia explícita de liquidez.",m[0].trim());}
  if(/diluci[oó]n confirmada|ha diluido|diluci[oó]n hist[oó]rica confirmada/i.test(body)&&base?.warnings?.some(x=>x.code==="shares_history_missing"))add("dilution_claim_unverified","Se afirma dilución confirmada pese a no disponer de dos cifras comparables de acciones en circulación.");
  const fd=validationFindMetricContainer(data?.fundamentals,["totalrevenue","grossprofits"]);
  if(fd){const n=v=>Number(v?.raw??v?.value??v),revenue=n(fd.totalRevenue),gross=n(fd.grossProfits),reported=n(fd.grossMargins);if(revenue>0&&Number.isFinite(gross)&&Number.isFinite(reported)){const calc=gross/revenue,diff=Math.abs(calc-reported);checks.push({code:"fundamentals_gross_margin_recalculated",revenue,grossProfit:gross,reportedGrossMargin:reported,calculatedGrossMargin:calc,difference:diff});if(diff>0.05)add("gross_margin_inconsistency","El margen bruto comunicado no coincide razonablemente con beneficio bruto dividido por ingresos dentro del mismo bloque de fundamentales. Revisar periodo y fuente antes de escoger una cifra.","Informado: "+(reported*100).toFixed(2)+"%; recalculado: "+(calc*100).toFixed(2)+"%; diferencia: "+(diff*100).toFixed(2)+" puntos.");}}
@@ -1296,7 +1311,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v4:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v5:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
