@@ -560,6 +560,7 @@
                         <button type="button" onclick="showCompanyComparatorView()"><i class="fa-solid fa-building-columns"></i>Comparador de empresas</button>
                         <button type="button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved"></i>Riesgo</button>
                         <button type="button" onclick="showPortfolioHealthView()"><i class="fa-solid fa-heart-pulse"></i>Salud de cartera</button>
+                        <button type="button" onclick="showCompanyDeepDiveView()"><i class="fa-solid fa-magnifying-glass-chart"></i>Análisis profundo de empresa</button>
                         <button type="button" onclick="showPortfolioAnalystView()"><i class="fa-solid fa-brain"></i>Analista IA</button>
                         <button type="button" onclick="showScenarioSimulatorView()"><i class="fa-solid fa-flask"></i>Simulador de escenarios</button>
                         <button type="button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line"></i>Rentabilidad</button>
@@ -926,6 +927,20 @@
                 <div id="portfolio-analyst-result" class="hidden whitespace-pre-wrap rounded-xl border border-slate-700 bg-slate-900/80 p-4 text-sm leading-6 text-slate-200"></div>
             </div>
             <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-xs text-slate-400">Este análisis es informativo, no es asesoramiento financiero personalizado ni una orden de compra o venta. No modifica posiciones, operaciones, PMP ni históricos. Los datos enviados al servicio son cifras de cartera, tickers, categorías y noticias; no se envían credenciales bancarias.</div>
+        </section>
+
+        <section id="company-deep-dive-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-fuchsia-300">Análisis individual · Inteligencia artificial</p><h2 class="mt-1 text-2xl sm:text-3xl font-black text-white">Análisis profundo de empresa</h2><p class="mt-1 text-sm text-slate-300">Combina fundamentales públicos, tu posición, operaciones registradas, riesgos observables y noticias disponibles.</p></div>
+                <button type="button" onclick="showPortfolioAnalystView()" class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Volver al Analista IA</button>
+            </div>
+            <div class="rounded-2xl border border-fuchsia-400/25 bg-slate-800/80 p-4 sm:p-5 space-y-3">
+                <label for="company-deep-dive-select" class="block text-sm font-bold text-slate-200">Empresa o activo</label>
+                <div class="flex flex-col sm:flex-row gap-2"><select id="company-deep-dive-select" class="min-w-0 flex-1 rounded-xl border border-slate-600 bg-slate-900 text-white px-3 py-3"><option value="">Selecciona una posición</option></select><button id="company-deep-dive-button" type="button" onclick="generateCompanyDeepDiveAI()" class="rounded-xl bg-fuchsia-700 hover:bg-fuchsia-600 disabled:opacity-50 px-4 py-3 text-sm font-bold text-white"><i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Analizar empresa</button></div>
+                <p id="company-deep-dive-status" class="text-xs text-slate-400" aria-live="polite">Selecciona un activo y solicita el análisis. La consulta fundamental puede tardar unos segundos.</p>
+                <div id="company-deep-dive-result" class="hidden whitespace-pre-wrap rounded-xl border border-slate-700 bg-slate-900/80 p-4 text-sm leading-6 text-slate-200"></div>
+            </div>
+            <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-xs text-slate-400">Los fundamentales proceden de Yahoo Finance y pueden faltar o tener retraso. La IA no sustituye el análisis de los informes oficiales ni ofrece una recomendación automática de compra o venta. No se modifican tus operaciones ni tu cartera.</div>
         </section>
 
         <section id="investment-journal-view" class="hidden space-y-6">
@@ -2694,6 +2709,95 @@
 
 
         const MONTHLY_REPORT_AI_WORKER = "https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev";
+        function companyDeepDiveCandidates(){
+            const rows=(Array.isArray(assetsData)?assetsData:[]).filter(a=>(Number(a.shares)||0)>0).map(a=>({
+                key:String(a.isin||a.ticker||a.symbol||a.name||''),
+                name:String(a.name||a.companyName||a.ticker||a.symbol||'Activo'),
+                ticker:String(a.ticker||a.symbol||''),
+                yahooSymbol:riskYahooSymbol(a),
+                asset:a
+            }));
+            return rows.filter(x=>x.yahooSymbol).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+        }
+        function showCompanyDeepDiveView(){
+            ['dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('company-deep-dive-view')?.classList.remove('hidden');
+            document.getElementById('headerToolbar')?.classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            const select=document.getElementById('company-deep-dive-select');
+            const candidates=companyDeepDiveCandidates();
+            if(select){
+                const previous=select.value;
+                select.innerHTML='<option value="">Selecciona una posición</option>'+candidates.map(x=>'<option value="'+escapeStrategyHtml(x.key)+'">'+escapeStrategyHtml(x.name)+' · '+escapeStrategyHtml(x.ticker||x.yahooSymbol)+'</option>').join('');
+                if(candidates.some(x=>x.key===previous))select.value=previous;
+                else if(candidates.length)select.value=candidates[0].key;
+            }
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function deepDiveRaw(value){
+            if(value==null)return null;
+            if(typeof value==='number')return Number.isFinite(value)?value:null;
+            if(typeof value==='string')return value;
+            if(typeof value==='object'){
+                if(value.raw!=null){const n=Number(value.raw);return Number.isFinite(n)?n:null;}
+                if(value.fmt!=null)return String(value.fmt);
+                if(value.longFmt!=null)return String(value.longFmt);
+            }
+            return null;
+        }
+        function deepDiveMetric(obj,path){
+            return path.split('.').reduce((v,k)=>v&&v[k]!=null?v[k]:null,obj);
+        }
+        function buildCompanyDeepDiveFundamentals(data){
+            const paths={
+                companyName:'price.longName',shortName:'price.shortName',sector:'assetProfile.sector',industry:'assetProfile.industry',
+                marketCap:'price.marketCap',currency:'price.currency',exchange:'price.exchangeName',
+                trailingPE:'summaryDetail.trailingPE',forwardPE:'summaryDetail.forwardPE',priceToSales:'summaryDetail.priceToSalesTrailing12Months',
+                revenueGrowth:'financialData.revenueGrowth',earningsGrowth:'financialData.earningsGrowth',
+                grossMargins:'financialData.grossMargins',operatingMargins:'financialData.operatingMargins',profitMargins:'financialData.profitMargins',
+                returnOnEquity:'financialData.returnOnEquity',debtToEquity:'financialData.debtToEquity',
+                currentRatio:'financialData.currentRatio',totalCash:'financialData.totalCash',totalDebt:'financialData.totalDebt',
+                freeCashflow:'financialData.freeCashflow',operatingCashflow:'financialData.operatingCashflow',
+                targetMeanPrice:'financialData.targetMeanPrice',recommendationKey:'financialData.recommendationKey',
+                numberOfAnalystOpinions:'financialData.numberOfAnalystOpinions',beta:'summaryDetail.beta',
+                fiftyTwoWeekLow:'summaryDetail.fiftyTwoWeekLow',fiftyTwoWeekHigh:'summaryDetail.fiftyTwoWeekHigh'
+            };
+            const out={};
+            Object.entries(paths).forEach(([key,path])=>{const value=deepDiveRaw(deepDiveMetric(data,path));if(value!==null)out[key]=value;});
+            return out;
+        }
+        async function generateCompanyDeepDiveAI(){
+            const button=document.getElementById('company-deep-dive-button'),status=document.getElementById('company-deep-dive-status'),result=document.getElementById('company-deep-dive-result'),select=document.getElementById('company-deep-dive-select');
+            if(!button||!status||!result||!select)return;
+            const selected=companyDeepDiveCandidates().find(x=>x.key===select.value);
+            if(!selected){status.textContent='Selecciona una posición válida.';return;}
+            button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>Consultando…';status.textContent='Consultando fundamentales públicos y preparando el contexto de tu posición…';result.classList.add('hidden');
+            try{
+                const fundamentalsResponse=await fetch(ASSET_NEWS_WORKER+'/fundamentals?symbol='+encodeURIComponent(selected.yahooSymbol)+'&_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
+                const fundamentalsJson=await fundamentalsResponse.json().catch(()=>({}));
+                if(!fundamentalsResponse.ok)throw new Error(fundamentalsJson.error||'No se pudieron consultar los fundamentales (HTTP '+fundamentalsResponse.status+').');
+                const raw=fundamentalsJson?.quoteSummary?.result?.[0];
+                if(!raw)throw new Error(fundamentalsJson?.quoteSummary?.error?.description||'Yahoo Finance no devolvió fundamentales para '+selected.yahooSymbol+'.');
+                const asset=selected.asset;
+                const totalValue=(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).reduce((sum,a)=>sum+(Number(a.marketValue)||0),0);
+                const tx=(Array.isArray(asset.history)?asset.history:[]).slice(-20).map(t=>({date:String(t.date||'').slice(0,10),type:String(t.type||''),quantity:Number(t.qty)||0,price:Number(t.price)||0,commission:Number(t.comm)||0}));
+                const relevantNews=(Array.isArray(assetNewsItems)?assetNewsItems:[]).filter(n=>(n.symbols||[]).some(sym=>String(sym).toUpperCase()===selected.ticker.toUpperCase()||String(sym).toUpperCase()===selected.yahooSymbol.toUpperCase())).slice(0,10).map(n=>({title:String(n.title||'').slice(0,180),summary:String(n.summary||'').slice(0,300),impact:String(n.impact||'neutral'),date:String(n.publishedAt||n.date||'').slice(0,30)}));
+                const payload={
+                    asset:{name:selected.name,ticker:selected.ticker,yahooSymbol:selected.yahooSymbol,isin:String(asset.isin||''),category:String(asset.category||'Sin clasificar'),type:String(asset.assetType||asset.type||'Sin clasificar'),currency:String(asset.currency||'EUR'),shares:Number(asset.shares)||0,currentPrice:Number(asset.currentPrice)||null,marketValueEUR:Number(asset.marketValue)||0,investedEUR:Number(asset.currentCapitalVivo??asset.investedCapital??asset.totalInvested)||0,unrealizedProfitEUR:Number(asset.latentProfit)||0,realizedProfitEUR:Number(asset.realizedProfit)||0,portfolioWeightPct:totalValue>0?Number(((Number(asset.marketValue)||0)/totalValue*100).toFixed(2)):null,transactions:tx},
+                    fundamentals:buildCompanyDeepDiveFundamentals(raw),
+                    news:relevantNews,
+                    portfolioContext:{openPositions:(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).length,totalMarketValueEUR:Number(totalValue.toFixed(2))},
+                    limitations:{transactionHistoryIncluded:tx.length,newsItems:relevantNews.length,fundamentalsSource:'Yahoo Finance'}
+                };
+                const response=await fetch(ASSET_NEWS_WORKER+'/ai/company-deep-dive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                const data=await response.json().catch(()=>({}));
+                if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
+                result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
+                status.textContent='Análisis de '+selected.name+' generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+(data.cached?' · resultado en caché':'');
+            }catch(error){status.textContent='No se pudo completar el análisis: '+error.message;}
+            finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Analizar empresa';}
+        }
+
         function showPortfolioAnalystView(){
             ['dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
             document.getElementById('portfolio-analyst-view')?.classList.remove('hidden');
