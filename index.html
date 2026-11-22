@@ -483,6 +483,7 @@
                         <button type="button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced"></i>Comparativa</button>
                         <button type="button" onclick="showCompanyComparatorView()"><i class="fa-solid fa-building-columns"></i>Comparador de empresas</button>
                         <button type="button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved"></i>Riesgo</button>
+                        <button type="button" onclick="showScenarioSimulatorView()"><i class="fa-solid fa-flask"></i>Simulador de escenarios</button>
                         <button type="button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line"></i>Rentabilidad</button>
                         <button type="button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open"></i>Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
                     </div>
@@ -969,6 +970,42 @@
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-amber-950">Cómo interpretar este análisis</h3><ul class="mt-3 space-y-2 text-xs text-amber-900 list-disc pl-4"><li>Una posición por encima del 20 % se marca como concentración elevada.</li><li>Un sector por encima del 35 % se marca como exposición elevada.</li><li>Los porcentajes se calculan sobre el valor de mercado actual.</li><li>Son avisos orientativos: no miden volatilidad, correlación ni riesgo de pérdida.</li></ul></div>
                 </div>
                 <p class="text-[11px] text-slate-400">Solo se incluyen posiciones con unidades y valor de mercado positivo. Los activos sin sector o tipo asignado aparecen como «Sin clasificar».</p>
+            </div>
+        </section>
+
+
+        <!-- Simulador de escenarios de cartera -->
+        <section id="scenario-simulator-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-violet-600">Planificación · Simulación</p><h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Simulador de escenarios</h2><p class="text-sm text-slate-500 mt-1">Comprueba cómo cambiaría el valor de tu cartera si cada activo subiera o bajara. No modifica tus operaciones ni tus cotizaciones reales.</p></div>
+                <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"><i class="fa-solid fa-arrow-left mr-2"></i>Volver a Mi cartera</button>
+            </div>
+            <div class="rounded-2xl border border-violet-200 bg-violet-50 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div><h3 class="font-extrabold text-violet-950">Escenarios rápidos</h3><p class="mt-1 text-xs text-violet-800">Aplica una variación uniforme a todas las posiciones y después ajusta cada activo individualmente.</p></div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="applyPortfolioScenario(-20)" class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-700">Crisis −20 %</button>
+                        <button type="button" onclick="applyPortfolioScenario(-10)" class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-700">Corrección −10 %</button>
+                        <button type="button" onclick="applyPortfolioScenario(10)" class="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-700">Subida +10 %</button>
+                        <button type="button" onclick="applyPortfolioScenario(20)" class="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-700">Subida +20 %</button>
+                        <button type="button" onclick="applyPortfolioScenario(0)" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700">Restablecer</button>
+                    </div>
+                </div>
+                <label class="mt-4 block text-xs font-bold text-violet-950">Nombre del escenario<input id="scenario-name" type="text" maxlength="60" value="Escenario personalizado" class="mt-1 w-full rounded-lg border border-violet-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"></label>
+            </div>
+            <div id="scenario-simulator-empty" class="hidden rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No hay posiciones abiertas con valor de mercado para simular.</div>
+            <div id="scenario-simulator-content" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Valor actual</p><p id="scenario-current-total" class="mt-1 text-2xl font-black text-slate-900">—</p></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Valor simulado</p><p id="scenario-projected-total" class="mt-1 text-2xl font-black text-slate-900">—</p></div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-xs font-bold uppercase text-slate-500">Impacto estimado</p><p id="scenario-impact-total" class="mt-1 text-2xl font-black text-slate-900">—</p><p id="scenario-impact-percent" class="mt-1 text-xs text-slate-500">—</p></div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                    <div class="mb-4"><h3 class="font-extrabold text-slate-900">Ajusta la variación de cada activo</h3><p class="mt-1 text-xs text-slate-500">Introduce un porcentaje positivo o negativo. Por ejemplo, −15 significa que simulas una caída del 15 % en ese activo.</p></div>
+                    <div class="overflow-x-auto"><table class="w-full min-w-[650px] text-sm"><thead><tr class="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-500"><th class="px-2 py-3">Activo</th><th class="px-2 py-3 text-right">Valor actual</th><th class="px-2 py-3 text-right">Variación</th><th class="px-2 py-3 text-right">Valor simulado</th><th class="px-2 py-3 text-right">Impacto €</th></tr></thead><tbody id="scenario-assets-body"></tbody></table></div>
+                    <p class="mt-3 text-[11px] text-slate-400">La simulación supone que el número de unidades permanece constante. No incorpora compras futuras, ventas, comisiones, impuestos, dividendos, divisas ni correlaciones entre activos.</p>
+                </div>
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900"><strong class="block mb-1">Importante</strong>Es una prueba de sensibilidad, no una predicción. Los porcentajes son hipótesis que eliges tú; no se extrapolan datos históricos ni se generan recomendaciones automáticas.</div>
             </div>
         </section>
 
@@ -5264,6 +5301,69 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             renderRiskHistoryChart();
             refreshRiskLookthrough(false);
         }
+
+        function scenarioPortfolioPositions() {
+            recalculatePortfolioCalculations();
+            return assetsData.filter(a=>(Number(a.shares)||0)>0&&(Number(a.marketValue)||0)>0)
+                .map((a,index)=>({index,name:a.name||a.ticker||'Activo',ticker:a.ticker||'',value:Number(a.marketValue)||0}))
+                .sort((a,b)=>b.value-a.value);
+        }
+        function scenarioMoney(value) {
+            return Number(value||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+        }
+        function applyPortfolioScenario(change) {
+            const positions=scenarioPortfolioPositions();
+            positions.forEach(p=>{const input=document.querySelector('[data-scenario-index="'+p.index+'"]');if(input)input.value=Number(change).toFixed(2);});
+            const name=document.getElementById('scenario-name');
+            if(name)name.value=change===0?'Escenario base':(change<0?'Caída ':'Subida ')+(change>0?'+':'')+change+' %';
+            calculatePortfolioScenario();
+        }
+        function calculatePortfolioScenario() {
+            const positions=scenarioPortfolioPositions();
+            const body=document.getElementById('scenario-assets-body');
+            if(!body)return;
+            let total=0,projected=0;
+            const rows=positions.map(p=>{
+                const input=document.querySelector('[data-scenario-index="'+p.index+'"]');
+                const raw=Number(input?.value||0);
+                const change=Number.isFinite(raw)?Math.max(-1000,Math.min(1000,raw)):0;
+                const next=p.value*(1+change/100);
+                const impact=next-p.value;
+                total+=p.value;projected+=next;
+                return {...p,change,next,impact};
+            });
+            const delta=projected-total,deltaPct=total>0?delta/total*100:0;
+            const currentEl=document.getElementById('scenario-current-total');
+            const projectedEl=document.getElementById('scenario-projected-total');
+            const impactEl=document.getElementById('scenario-impact-total');
+            const impactPctEl=document.getElementById('scenario-impact-percent');
+            if(currentEl)currentEl.textContent=scenarioMoney(total);
+            if(projectedEl)projectedEl.textContent=scenarioMoney(projected);
+            if(impactEl){impactEl.textContent=(delta>0?'+':'')+scenarioMoney(delta);impactEl.className='mt-1 text-2xl font-black '+(delta>0?'text-emerald-700':delta<0?'text-rose-700':'text-slate-900');}
+            if(impactPctEl){impactPctEl.textContent=(deltaPct>0?'+':'')+deltaPct.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' % sobre el valor actual';impactPctEl.className='mt-1 text-xs '+(delta>0?'text-emerald-700':delta<0?'text-rose-700':'text-slate-500');}
+            rows.sort((a,b)=>a.index-b.index);
+            body.innerHTML=rows.map(p=>'<tr class="border-b border-slate-100 last:border-0"><td class="px-2 py-3"><div class="font-bold text-slate-800">'+escapeHtml(p.name)+'</div><div class="text-[11px] text-slate-400">'+escapeHtml(p.ticker)+'</div></td><td class="px-2 py-3 text-right font-semibold text-slate-700">'+scenarioMoney(p.value)+'</td><td class="px-2 py-3 text-right"><div class="inline-flex items-center gap-1"><input type="number" step="0.1" min="-100" max="1000" data-scenario-index="'+p.index+'" value="'+p.change.toFixed(2)+'" oninput="calculatePortfolioScenario()" class="w-24 rounded-lg border border-slate-300 bg-white px-2 py-2 text-right text-sm font-bold text-slate-900"><span class="text-xs text-slate-500">%</span></div></td><td class="px-2 py-3 text-right font-semibold text-slate-700">'+scenarioMoney(p.next)+'</td><td class="px-2 py-3 text-right font-bold '+(p.impact>0?'text-emerald-700':p.impact<0?'text-rose-700':'text-slate-500')+'">'+(p.impact>0?'+':'')+scenarioMoney(p.impact)+'</td></tr>').join('')||'<tr><td colspan="5" class="px-2 py-6 text-center text-slate-400">Sin posiciones para simular.</td></tr>';
+        }
+        function renderScenarioSimulator() {
+            const positions=scenarioPortfolioPositions();
+            const empty=document.getElementById('scenario-simulator-empty');
+            const content=document.getElementById('scenario-simulator-content');
+            if(!positions.length){empty?.classList.remove('hidden');content?.classList.add('hidden');return;}
+            empty?.classList.add('hidden');content?.classList.remove('hidden');
+            const body=document.getElementById('scenario-assets-body');
+            if(!body)return;
+            body.innerHTML=positions.map(p=>'<tr class="border-b border-slate-100 last:border-0"><td class="px-2 py-3"><div class="font-bold text-slate-800">'+escapeHtml(p.name)+'</div><div class="text-[11px] text-slate-400">'+escapeHtml(p.ticker)+'</div></td><td class="px-2 py-3 text-right font-semibold text-slate-700">'+scenarioMoney(p.value)+'</td><td class="px-2 py-3 text-right"><div class="inline-flex items-center gap-1"><input type="number" step="0.1" min="-100" max="1000" data-scenario-index="'+p.index+'" value="0" oninput="calculatePortfolioScenario()" class="w-24 rounded-lg border border-slate-300 bg-white px-2 py-2 text-right text-sm font-bold text-slate-900"><span class="text-xs text-slate-500">%</span></div></td><td class="px-2 py-3 text-right font-semibold text-slate-700">'+scenarioMoney(p.value)+'</td><td class="px-2 py-3 text-right font-bold text-slate-500">0,00 €</td></tr>').join('');
+            calculatePortfolioScenario();
+        }
+        function showScenarioSimulatorView() {
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('scenario-simulator-view')?.classList.remove('hidden');
+            document.getElementById('headerToolbar')?.classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            renderScenarioSimulator();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
         function showRiskAnalysisView() {
             ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','financial-calendar-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('risk-analysis-view').classList.remove('hidden');
