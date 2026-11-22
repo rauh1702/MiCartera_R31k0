@@ -425,7 +425,15 @@
         .watch-card .watch-price{font-size:25px;font-weight:900;color:#fff}.watch-card .watch-meta{font-size:11px;color:#a9c7e2}
         @media(max-width:640px){.asset-search-results{max-height:55vh}.asset-search-result{padding:10px;font-size:12px}}
 
-    </style>
+            @media (max-width: 640px) {
+            header > div > div:first-child { flex-wrap:wrap !important; }
+            header > div > div:first-child > div:first-child { flex:1 1 calc(100% - 84px); min-width:0; }
+            #warren-open-button { order:3; flex:1 0 100%; width:100%; justify-content:center; min-height:42px; margin-top:2px; }
+            #warren-open-button > span:last-child { letter-spacing:.16em; }
+            #cloud-sync-badge { order:2; }
+            header > div > div:first-child > div:first-child p { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        }
+</style>
 <style id="r31-analysis-dark-theme">
 
     /* Tema oscuro coherente con Comparativa de mercado en Riesgo, Simulador y Rentabilidad */
@@ -501,11 +509,19 @@
         color: #f1f5f9 !important;
     }
 
-    .warren-messages{min-height:340px;max-height:62vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at top right,rgba(180,130,35,.08),transparent 55%),#0b1220}
-    .warren-bubble{max-width:min(92%,850px);white-space:pre-wrap;overflow-wrap:anywhere;border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.65}
-    .warren-bubble.user{margin-left:auto;background:#78350f;color:#fff7ed;border:1px solid rgba(251,191,36,.25);border-bottom-right-radius:5px}
-    .warren-bubble.assistant{margin-right:auto;background:#172235;color:#e2e8f0;border:1px solid #334155;border-bottom-left-radius:5px}
-    .warren-bubble .warren-role{display:block;margin-bottom:5px;font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24}
+    .warren-messages{min-height:340px;max-height:68vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at top right,rgba(180,130,35,.08),transparent 55%),#0b1220;scrollbar-width:thin;scrollbar-color:#475569 transparent}
+    .warren-bubble{width:fit-content;max-width:min(94%,900px);white-space:pre-wrap;overflow-wrap:anywhere;border-radius:17px;padding:13px 15px;font-size:13px;line-height:1.75;box-shadow:0 8px 24px rgba(0,0,0,.12);animation:warrenMessageIn .18s ease-out}
+    .warren-bubble.user{margin-left:auto;background:linear-gradient(145deg,#78350f,#713f12);color:#fff7ed;border:1px solid rgba(251,191,36,.3);border-bottom-right-radius:5px}
+    .warren-bubble.assistant{margin-right:auto;background:linear-gradient(145deg,#1b2a40,#172235);color:#e2e8f0;border:1px solid #3b4b61;border-bottom-left-radius:5px}
+    .warren-message-top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid rgba(148,163,184,.17)}
+    .warren-bubble .warren-role{display:block;margin:0;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#fbbf24}
+    .warren-message-tools{display:flex;align-items:center;gap:9px}
+    .warren-message-time{font-size:9px;color:#94a3b8}
+    .warren-copy-button{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:5px 8px;background:rgba(15,23,42,.55);color:#cbd5e1;font-size:10px;font-weight:700;transition:.15s}
+    .warren-copy-button:hover,.warren-copy-button.copied{border-color:rgba(251,191,36,.55);color:#fde68a;background:rgba(120,53,15,.35)}
+    .warren-message-content{white-space:pre-wrap;overflow-wrap:anywhere}
+    @keyframes warrenMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:640px){.warren-messages{min-height:300px;max-height:65vh;padding:12px!important}.warren-bubble{max-width:100%;padding:11px 12px;font-size:12px}.warren-copy-button{padding:5px 7px}.warren-copy-button span{display:none}}
     .warren-suggestion{display:block;width:100%;border:1px solid #334155;border-radius:10px;background:#172235;padding:9px 10px;text-align:left;color:#cbd5e1;font-size:11px;line-height:1.45;transition:.15s}
     .warren-suggestion:hover{border-color:#d6a63b;background:#1e293b;color:#fff}
     #warren-chat-input{color-scheme:dark}
@@ -2913,7 +2929,7 @@
             const health={critical:Number(document.getElementById('health-critical-count')?.textContent)||0,warnings:Number(document.getElementById('health-warning-count')?.textContent)||0,openPositions:Number(document.getElementById('health-open-count')?.textContent)||0,okPositions:Number(document.getElementById('health-ok-count')?.textContent)||0,overall:String(document.getElementById('health-overall-badge')?.textContent||'No calculado')};
             const strategies=(Array.isArray(strategiesData)?strategiesData:[]).slice(0,35).map(x=>({id:x.id,name:x.name||x.title||'',asset:x.asset||x.ticker||'',status:x.status||'',entry:x.entry??x.entryPrice??null,exit:x.exit??x.exitPrice??null,capital:x.capital??null,thesis:x.thesis||x.notes||x.description||'',reviewDate:x.reviewDate||null}));
             const journal=(Array.isArray(investmentJournalData)?investmentJournalData:[]).slice(-30).map(x=>({date:x.date||'',asset:x.asset||'',action:x.action||'',thesis:x.thesis||x.reason||x.notes||'',expectation:x.expectation||'',risks:x.risks||'',reviewDate:x.reviewDate||'',reviewed:!!x.reviewed}));
-            return {generatedAt:new Date().toISOString(),portfolioSummary:{openPositions:positions.length,totalMarketValueEUR:Number(totalValue.toFixed(2)),totalInvestedEUR:Number(totalInvested.toFixed(2)),unrealizedProfitEUR:Number(totalLatent.toFixed(2)),realizedProfitEUR:Number(totalRealized.toFixed(2)),totalResultEUR:Number((totalLatent+totalRealized).toFixed(2)),categoryWeights},positions,concentration,recentPerformanceSnapshots:recentHistory,watchlist:watch,recentNews:news,portfolioHealth:health,strategies,journal,dataLimitations:{historyPoints:history.length,newsCount:news.length,watchlistCount:watch.length,strategyCount:(strategiesData||[]).length,journalCount:(investmentJournalData||[]).length}};
+            return {generatedAt:new Date().toISOString(),portfolioSummary:{openPositions:positions.length,totalMarketValueEUR:Number(totalValue.toFixed(2)),totalInvestedEUR:Number(totalInvested.toFixed(2)),unrealizedProfitEUR:Number(totalLatent.toFixed(2)),realizedProfitEUR:Number(totalRealized.toFixed(2)),totalResultEUR:Number((totalLatent+totalRealized).toFixed(2)),categoryWeights},positions,concentration,recentPerformanceSnapshots:recentHistory,watchlist:watch,recentNews:news,portfolioHealth:health,strategies,journal,dilutionAnalysisPolicy:{enabled:true,requiresPrimaryEvidence:true,distinguishOutstandingFromPotential:true},dataLimitations:{historyPoints:history.length,newsCount:news.length,watchlistCount:watch.length,strategyCount:(strategiesData||[]).length,journalCount:(investmentJournalData||[]).length}};
         }
         async function generatePortfolioAnalystAI(){
             const button=document.getElementById('portfolio-analyst-button'),status=document.getElementById('portfolio-analyst-status'),result=document.getElementById('portfolio-analyst-result');
@@ -2936,10 +2952,28 @@
         let warrenMessages=[],warrenBusy=false;
         function loadWarrenChat(){try{const saved=JSON.parse(localStorage.getItem(WARREN_CHAT_KEY)||'[]');warrenMessages=Array.isArray(saved)?saved.filter(x=>x&&['user','assistant'].includes(x.role)&&typeof x.content==='string').slice(-40):[];}catch(_){warrenMessages=[];}renderWarrenMessages();}
         function saveWarrenChat(){try{localStorage.setItem(WARREN_CHAT_KEY,JSON.stringify(warrenMessages.slice(-40)));}catch(e){console.warn('No se pudo guardar el chat WARREN',e);}}
+        async function copyWarrenMessage(index,button){
+            const content=String(warrenMessages[index]?.content||'');if(!content)return;
+            try{
+                if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(content);
+                else{const area=document.createElement('textarea');area.value=content;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();if(!ok)throw new Error('Copia no disponible');}
+                const previous=button.innerHTML;button.innerHTML='<i class="fa-solid fa-check"></i> Copiado';button.classList.add('copied');setTimeout(()=>{button.innerHTML=previous;button.classList.remove('copied');},1500);
+            }catch(_){showToast('No se pudo copiar el mensaje.','fa-triangle-exclamation');}
+        }
         function renderWarrenMessages(){
             const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
-            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='mx-auto my-8 max-w-xl text-center text-sm leading-6 text-slate-400';welcome.innerHTML='<div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-2xl text-amber-300"><i class="fa-solid fa-comments-dollar"></i></div><p class="text-lg font-black text-white">Buenas. Soy WARREN.</p><p class="mt-2">Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.</p>';host.appendChild(welcome);return;}
-            warrenMessages.forEach(m=>{const bubble=document.createElement('div');bubble.className='warren-bubble '+(m.role==='user'?'user':'assistant');const role=document.createElement('span');role.className='warren-role';role.textContent=m.role==='user'?'TÚ':'WARREN';const body=document.createElement('div');body.textContent=m.content;bubble.append(role,body);host.appendChild(bubble);});host.scrollTop=host.scrollHeight;
+            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-8 max-w-xl text-center text-sm leading-6 text-slate-400';welcome.innerHTML='<div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-2xl text-amber-300"><i class="fa-solid fa-comments-dollar"></i></div><p class="text-lg font-black text-white">Buenas. Soy WARREN.</p><p class="mt-2">Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.</p>';host.appendChild(welcome);return;}
+            warrenMessages.forEach((m,index)=>{
+                const bubble=document.createElement('article');bubble.className='warren-bubble '+(m.role==='user'?'user':'assistant');
+                const top=document.createElement('div');top.className='warren-message-top';
+                const role=document.createElement('span');role.className='warren-role';role.textContent=m.role==='user'?'TÚ':'WARREN';
+                const tools=document.createElement('div');tools.className='warren-message-tools';
+                const time=document.createElement('span');time.className='warren-message-time';if(m.at){const d=new Date(m.at);if(!Number.isNaN(d.getTime()))time.textContent=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+                const copy=document.createElement('button');copy.type='button';copy.className='warren-copy-button';copy.title='Copiar mensaje';copy.setAttribute('aria-label','Copiar mensaje');copy.innerHTML='<i class="fa-regular fa-copy"></i><span>Copiar</span>';copy.addEventListener('click',()=>copyWarrenMessage(index,copy));
+                tools.append(time,copy);top.append(role,tools);
+                const body=document.createElement('div');body.className='warren-message-content';body.textContent=m.content;
+                bubble.append(top,body);host.appendChild(bubble);
+            });host.scrollTop=host.scrollHeight;
         }
         function showWarrenChatView(){
             ['warren-chat-view','dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view','company-deep-dive-view','warren-chat-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
