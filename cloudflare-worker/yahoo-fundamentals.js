@@ -738,7 +738,7 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
   const ratioSpecs=[
    ["debt_to_cash","(?:deuda\\s*[/\\-]\\s*caja|deuda\\s*[/\\-]\\s*cash|debt\\s*[/\\-]\\s*cash|relaci[oó]n deuda.?caja)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*(?:veces|x)?",calculatedRatios.debtToCash,0.12,false],
    ["debt_to_equity","(?:deuda.?capital|deuda.?equity|debt.?to.?equity)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*%",calculatedRatios.debtToEquityPct,1.5,true],
-   ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\\*{1,2})?\\s*[:：=]\\s*(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
+   ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)\\s*[:：=](?:\\*{1,2})?\\s*(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
   ];
   for(const [code,pattern,expected,tolerance,isPercent] of ratioSpecs){if(!Number.isFinite(expected))continue;const rx=new RegExp(pattern,"gi");for(const rm of body.matchAll(rx)){const stated=Number(rm[1].replace(",","."));if(Number.isFinite(stated)&&Math.abs(stated-expected)>tolerance)add("ratio_"+code+"_inconsistent","El ratio indicado por la IA no coincide con el cálculo del balance del mismo periodo. Corregirlo o explicar por qué se usa otra definición/fuente.","Calculado ("+calculatedRatios.periodEnd+"): "+expected.toFixed(isPercent?2:2)+(isPercent?"%":" veces")+"; texto IA: "+stated.toFixed(2)+(isPercent?"%":" veces")+".");}}
  }
@@ -1457,7 +1457,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v26:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v27:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
