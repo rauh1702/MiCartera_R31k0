@@ -672,12 +672,22 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
    text=text.replace(rx,(_,prefix)=>prefix+value.toFixed(2).replace(".",",")+"%");
   }
  }
- // No afirmar dependencia/ necesidad de financiación sin evidencia concreta. Reescribir
- // la línea completa para que no quede una segunda formulación contradictoria.
+ // La falta de datos para evaluar una posible financiación no constituye por sí sola
+ // un riesgo potencial. Reclasificar expresamente esas líneas como datos insuficientes.
  const lines=text.split("\n");
  for(let i=0;i<lines.length;i++){
-  if(/(?:depende|dependencia|depender|necesita|requiere|precisa|obliga)[^.\n]{0,120}(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital)|(?:financiaci[oó]n externa)[^.\n]{0,100}(?:para cubrir|para sostener|para mantener|para financiar)/i.test(lines[i])){
-   lines[i]="- **Datos insuficientes:** no hay evidencia suficiente para afirmar que la empresa dependa o necesite financiación externa. El flujo de caja negativo del periodo y la deuda total reportada superior al efectivo no demuestran por sí solos esa necesidad; faltan datos verificados de vencimientos, covenants o déficit de liquidez.";
+  const line=lines[i];
+  const fundingMention=/(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital|refinanciaci[oó]n)/i.test(line);
+  const uncertaintyAboutFunding=/(?:imposibilidad|no es posible|no se puede|no puede|no hay (?:datos|informaci[oó]n)|sin (?:datos|informaci[oó]n)|no est[aá] claro|no se dispone|incertidumbre|no permite determinar|no permite saber)/i.test(line);
+  const potentialLabel=/\bRIESGO\s+POTENCIAL\b/i.test(line);
+  if(fundingMention&&uncertaintyAboutFunding&&potentialLabel){
+   lines[i]="- **DATOS INSUFICIENTES:** No hay información suficiente para concluir que la compañía vaya a recurrir a financiación externa. Para evaluarlo se necesitan datos verificables sobre vencimientos, intereses, liquidez disponible y previsiones de tesorería.";
+   continue;
+  }
+  // No afirmar dependencia/necesidad de financiación sin evidencia concreta.
+  // Reescribir la línea completa para evitar que sobreviva una segunda formulación.
+  if(/(?:depende|dependencia|depender|necesita|requiere|precisa|obliga)[^.\n]{0,120}(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital)|(?:financiaci[oó]n externa)[^.\n]{0,100}(?:para cubrir|para sostener|para mantener|para financiar)/i.test(line)){
+   lines[i]="- **DATOS INSUFICIENTES:** No hay evidencia suficiente para afirmar que la empresa dependa o necesite financiación externa. El flujo de caja negativo de un periodo y la deuda total reportada superior al efectivo no demuestran por sí solos esa necesidad; faltan datos verificados de vencimientos, covenants o déficit de liquidez.";
   }
  }
  text=lines.join("\n");
@@ -1446,7 +1456,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v24:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v25:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
