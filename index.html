@@ -559,6 +559,7 @@
                         <button type="button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced"></i>Comparativa</button>
                         <button type="button" onclick="showCompanyComparatorView()"><i class="fa-solid fa-building-columns"></i>Comparador de empresas</button>
                         <button type="button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved"></i>Riesgo</button>
+                        <button type="button" onclick="showPortfolioHealthView()"><i class="fa-solid fa-heart-pulse"></i>Salud de cartera</button>
                         <button type="button" onclick="showScenarioSimulatorView()"><i class="fa-solid fa-flask"></i>Simulador de escenarios</button>
                         <button type="button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line"></i>Rentabilidad</button>
                         <button type="button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open"></i>Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
@@ -980,6 +981,53 @@
             <div class="rounded-xl border border-amber-500/20 bg-amber-950/30 p-4 text-xs leading-relaxed text-amber-100">
                 <strong class="block mb-1">Cómo interpretar esta comparativa</strong>
                 MiCartera solo contabiliza activos invertidos, no efectivo. Registra una aportación únicamente cuando incorporas dinero nuevo desde tu banco y lo inviertes en activos. Si vendes un activo y reinviertes el importe en otro, no registres ningún flujo. Si tras vender transfieres una parte o todo el dinero a tu banco, registra únicamente la cantidad realmente retirada y la fecha en que salió de tus inversiones. Las compras y ventas internas no son flujos externos. El TWR ajusta las valoraciones históricas por esos movimientos para medir el rendimiento de las inversiones. El seguimiento comienza en la línea base indicada; no reconstruye el histórico anterior. Los índices usan cierres históricos de Yahoo Finance y no incluyen dividendos, comisiones ni impuestos.
+            </div>
+        </section>
+
+        <section id="portfolio-health-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[.18em] text-cyan-300">Diagnóstico · MiCartera R31k0</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Salud de la cartera</h2>
+                    <p class="text-sm text-slate-300 mt-1">Revisión de operaciones, unidades, PMP, valoración, cotizaciones y divisas. No modifica tu histórico ni tus posiciones.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="renderPortfolioHealth(true)" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-stethoscope mr-2"></i>Revisar datos</button>
+                    <button type="button" onclick="runMenuAction(fetchGoogleFinancePrices)" class="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-2"></i>Actualizar cotizaciones</button>
+                    <button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-arrow-left mr-2"></i>Volver</button>
+                </div>
+            </div>
+            <div class="rounded-2xl border border-cyan-400/20 bg-slate-900/80 p-4 text-sm text-slate-300">
+                <i class="fa-solid fa-circle-info text-cyan-300 mr-2"></i>El diagnóstico comprueba los datos guardados en este dispositivo. La antigüedad de una cotización se evalúa con la hora de mercado disponible; una bolsa cerrada o un festivo pueden explicar que no haya un precio nuevo.
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-slate-500">Posiciones abiertas</p><p id="health-open-count" class="mt-1 text-2xl font-black text-slate-900">—</p><p class="text-xs text-slate-500 mt-1">Activos con unidades</p></div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-slate-500">Incidencias críticas</p><p id="health-critical-count" class="mt-1 text-2xl font-black text-rose-600">—</p><p class="text-xs text-slate-500 mt-1">Requieren revisión</p></div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-slate-500">Avisos</p><p id="health-warning-count" class="mt-1 text-2xl font-black text-amber-600">—</p><p class="text-xs text-slate-500 mt-1">Datos incompletos o antiguos</p></div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-slate-500">Activos sin incidencias</p><p id="health-ok-count" class="mt-1 text-2xl font-black text-emerald-600">—</p><p class="text-xs text-slate-500 mt-1">Comprobaciones superadas</p></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div><h3 class="font-extrabold text-slate-900">Estado general</h3><p id="health-last-check" class="text-xs text-slate-500 mt-1">Pendiente de revisión.</p></div>
+                    <span id="health-overall-badge" class="rounded-full px-3 py-1.5 text-xs font-black bg-slate-100 text-slate-600">Sin revisar</span>
+                </div>
+                <p id="health-overall-message" class="text-sm text-slate-600 mt-3">Ejecuta una revisión para comprobar la coherencia de los datos.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div><h3 class="font-extrabold text-slate-900">Diagnóstico por activo</h3><p class="text-xs text-slate-500 mt-1">Abre la auditoría individual para consultar el detalle del histórico y la valoración.</p></div>
+                    <span id="health-assets-summary" class="text-xs font-bold text-slate-500">—</span>
+                </div>
+                <div id="health-assets-list" class="space-y-2"><p class="text-sm text-slate-500">Todavía no se ha ejecutado la revisión.</p></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                <h3 class="font-extrabold text-slate-900">Qué comprueba esta pantalla</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs text-slate-600">
+                    <div class="rounded-xl bg-slate-50 p-3"><strong class="text-slate-800">Operaciones e inventario</strong><p class="mt-1">Fechas, cantidades, precios, comisiones, ventas superiores a las unidades disponibles y coherencia entre histórico y posición.</p></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><strong class="text-slate-800">Coste y resultados</strong><p class="mt-1">Recalcula de forma independiente el coste FIFO, PMP, capital vivo y beneficio realizado para compararlos con los datos guardados.</p></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><strong class="text-slate-800">Cotizaciones y valoración</strong><p class="mt-1">Comprueba que las posiciones abiertas tengan precio, fuente identificada, hora de mercado razonablemente reciente y valoración coherente.</p></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><strong class="text-slate-800">Divisas y clasificación</strong><p class="mt-1">Comprueba el factor de conversión a euros cuando la cotización original no está en EUR y señala activos sin sector o tipo asignado.</p></div>
+                </div>
             </div>
         </section>
 
@@ -3777,6 +3825,7 @@ function showWatchlistView(){['dashboard-view','scenario-simulator-view','daily-
                 }));
                 savePortfolioData();
                 renderDashboard();
+                if (!document.getElementById('portfolio-health-view')?.classList.contains('hidden')) renderPortfolioHealth(false);
                 if (updatedCount > 0) savePerformanceSnapshot(false);
                 const message = `${updatedCount} cotizaciones actualizadas` +
                     (failures.length ? `; ${failures.length} sin actualizar: ${failures.join(" | ")}` : "");
@@ -5495,6 +5544,176 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('headerToolbar')?.classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
             renderScenarioSimulator();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function portfolioHealthEpoch(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const numeric = Number(value);
+            if (Number.isFinite(numeric) && numeric > 0) return numeric < 100000000000 ? numeric * 1000 : numeric;
+            const parsed = Date.parse(String(value));
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function renderPortfolioHealth(showToastMessage = false) {
+            const host = document.getElementById('health-assets-list');
+            if (!host) return;
+            const now = Date.now();
+            const money = value => Number(value || 0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+            const quantity = value => Number(value || 0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:6});
+            const addIssue = (issues, level, message) => issues.push({level,message});
+            const results = [];
+            let criticalCount = 0, warningCount = 0, openCount = 0, okCount = 0;
+
+            (Array.isArray(assetsData) ? assetsData : []).forEach(asset => {
+                const issues = [];
+                const history = Array.isArray(asset.history) ? [...asset.history] : [];
+                const lots = [];
+                let realized = 0;
+                let hasInvalidOperation = false;
+                history.sort((a,b) => {
+                    const da = Date.parse(a?.date || ''), db = Date.parse(b?.date || '');
+                    return (Number.isFinite(da)?da:0) - (Number.isFinite(db)?db:0);
+                });
+
+                if (!history.length && (Number(asset.shares)||0) > 0) {
+                    addIssue(issues,'warning','Posición abierta sin operaciones en el histórico.');
+                }
+
+                history.forEach((tx,index) => {
+                    const qty = Number(tx?.qty), price = Number(tx?.price), comm = tx?.comm === undefined ? 0 : Number(tx.comm);
+                    const validDate = typeof tx?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(tx.date) && !Number.isNaN(Date.parse(tx.date+'T12:00:00'));
+                    if (!validDate) { addIssue(issues,'critical','Operación '+(index+1)+': fecha ausente o no válida.'); hasInvalidOperation=true; }
+                    if (!['Compra','Venta'].includes(tx?.type)) { addIssue(issues,'critical','Operación '+(index+1)+': tipo de operación desconocido.'); hasInvalidOperation=true; return; }
+                    if (!Number.isFinite(qty) || qty <= 0) { addIssue(issues,'critical','Operación '+(index+1)+': cantidad no válida.'); hasInvalidOperation=true; return; }
+                    if (!Number.isFinite(price) || price <= 0) { addIssue(issues,'critical','Operación '+(index+1)+': precio no válido.'); hasInvalidOperation=true; return; }
+                    if (!Number.isFinite(comm) || comm < 0) { addIssue(issues,'critical','Operación '+(index+1)+': comisión no válida.'); hasInvalidOperation=true; return; }
+
+                    if (tx.type === 'Compra') {
+                        lots.push({qty,unitCost:price+(comm/qty)});
+                    } else {
+                        let toSell = qty, costBasis = 0;
+                        const available = lots.reduce((sum,lot)=>sum+lot.qty,0);
+                        if (qty > available + 0.000001) {
+                            addIssue(issues,'critical','Venta de '+quantity(qty)+' unidades con solo '+quantity(available)+' disponibles en esa fecha.');
+                            hasInvalidOperation=true;
+                        }
+                        while (toSell > 0 && lots.length) {
+                            const lot = lots[0], used = Math.min(lot.qty,toSell);
+                            costBasis += used * lot.unitCost;
+                            lot.qty -= used;
+                            toSell -= used;
+                            if (lot.qty <= 0.000000001) lots.shift();
+                        }
+                        realized += (qty * price) - comm - costBasis;
+                    }
+                });
+
+                const expectedShares = lots.reduce((sum,lot)=>sum+lot.qty,0);
+                const expectedCapital = lots.reduce((sum,lot)=>sum+(lot.qty*lot.unitCost),0);
+                const expectedPmp = expectedShares > 0 ? expectedCapital/expectedShares : 0;
+                const storedShares = Number(asset.shares)||0;
+                const storedCapital = Number(asset.capital)||0;
+                const storedPmp = Number(asset.pmp)||0;
+                const currentPrice = Number(asset.currentPrice)||0;
+                const storedMarketValue = Number(asset.marketValue)||0;
+                const storedLatent = Number(asset.latentProfit)||0;
+                const storedRealized = Number(asset.realizedProfit)||0;
+                const toleranceQty = 0.00001, toleranceMoney = 0.05;
+
+                if (Math.abs(expectedShares-storedShares)>toleranceQty) addIssue(issues,'critical','Unidades: el histórico calcula '+quantity(expectedShares)+' y la posición guarda '+quantity(storedShares)+'.');
+                if (Math.abs(expectedCapital-storedCapital)>toleranceMoney) addIssue(issues,'critical','Capital vivo: diferencia de '+money(expectedCapital-storedCapital)+' respecto al cálculo FIFO.');
+                if (Math.abs(expectedPmp-storedPmp)>0.01) addIssue(issues,'critical','PMP: el histórico calcula '+money(expectedPmp)+' y la posición guarda '+money(storedPmp)+'.');
+                if (Math.abs(realized-storedRealized)>toleranceMoney) addIssue(issues,'critical','Beneficio realizado: diferencia de '+money(realized-storedRealized)+' respecto al cálculo FIFO.');
+
+                if (expectedShares > toleranceQty) {
+                    openCount++;
+                    if (!(currentPrice > 0)) addIssue(issues,'critical','La posición está abierta, pero no tiene una cotización válida.');
+                    if (!asset.priceSource) addIssue(issues,'warning','No consta la fuente de la cotización guardada.');
+                    const currency = String(asset.priceCurrency||'').toUpperCase();
+                    const fx = Number(asset.fxToEUR);
+                    if (currency && currency !== 'EUR' && !(Number.isFinite(fx)&&fx>0)) addIssue(issues,'critical','Falta un tipo de cambio válido para convertir '+currency+' a euros.');
+                    if (currentPrice > 0) {
+                        const expectedMarketValue = expectedShares * currentPrice;
+                        if (Math.abs(expectedMarketValue-storedMarketValue)>toleranceMoney) addIssue(issues,'critical','Valor de mercado: diferencia de '+money(expectedMarketValue-storedMarketValue)+' respecto a unidades × precio.');
+                        const expectedLatent = expectedMarketValue-expectedCapital;
+                        if (Math.abs(expectedLatent-storedLatent)>toleranceMoney) addIssue(issues,'critical','Resultado latente: diferencia de '+money(expectedLatent-storedLatent)+' respecto al cálculo independiente.');
+                    }
+                    const marketTime = portfolioHealthEpoch(asset.lastMarketTime || asset.yahooLastCandleTime);
+                    if (marketTime && now-marketTime > 7*24*60*60*1000) {
+                        const days = Math.floor((now-marketTime)/(24*60*60*1000));
+                        addIssue(issues,'warning','La hora de mercado guardada tiene '+days+' días; conviene actualizar la cotización.');
+                    } else if (!marketTime) {
+                        if (asset.lastPriceUpdate) addIssue(issues,'info','No se conserva una hora de mercado verificable para esta cotización.');
+                        else addIssue(issues,'warning','No consta cuándo se actualizó por última vez esta cotización.');
+                    }
+                    const updateTime = portfolioHealthEpoch(asset.lastPriceUpdate);
+                    if (updateTime && now-updateTime > 7*24*60*60*1000) {
+                        const days = Math.floor((now-updateTime)/(24*60*60*1000));
+                        addIssue(issues,'warning','MiCartera no actualiza este precio desde hace '+days+' días.');
+                    }
+                    if (!asset.category || !asset.assetType) addIssue(issues,'info','Falta clasificar el activo por sector o tipo.');
+                }
+                results.push({asset,issues,expectedShares,expectedCapital,expectedPmp,hasInvalidOperation});
+            });
+
+            const duplicates = new Map();
+            results.forEach(row=>{const isin=String(row.asset.isin||'').trim().toUpperCase();if(isin){if(!duplicates.has(isin))duplicates.set(isin,[]);duplicates.get(isin).push(row);}});
+            duplicates.forEach(rows=>{if(rows.length>1)rows.forEach(row=>addIssue(row.issues,'warning','El ISIN '+rows[0].asset.isin+' aparece en más de un activo.'));});
+
+            results.forEach(row=>{
+                criticalCount += row.issues.filter(x=>x.level==='critical').length;
+                warningCount += row.issues.filter(x=>x.level==='warning').length;
+                if (!row.issues.some(x=>x.level==='critical'||x.level==='warning')) okCount++;
+            });
+
+            const criticalEl=document.getElementById('health-critical-count');
+            const warningEl=document.getElementById('health-warning-count');
+            const openEl=document.getElementById('health-open-count');
+            const okEl=document.getElementById('health-ok-count');
+            if(openEl)openEl.textContent=String(openCount);
+            if(criticalEl)criticalEl.textContent=String(criticalCount);
+            if(warningEl)warningEl.textContent=String(warningCount);
+            if(okEl)okEl.textContent=String(okCount);
+            const badge=document.getElementById('health-overall-badge');
+            const message=document.getElementById('health-overall-message');
+            if(badge&&message){
+                if(criticalCount){badge.textContent='Requiere atención';badge.className='rounded-full px-3 py-1.5 text-xs font-black bg-rose-100 text-rose-700';message.textContent='Se han detectado '+criticalCount+' incidencia(s) crítica(s). Revisa los activos afectados antes de confiar en sus cálculos.';}
+                else if(warningCount){badge.textContent='Revisión recomendada';badge.className='rounded-full px-3 py-1.5 text-xs font-black bg-amber-100 text-amber-700';message.textContent='No hay incoherencias críticas, pero existen '+warningCount+' aviso(s) que conviene revisar.';}
+                else {badge.textContent='Datos coherentes';badge.className='rounded-full px-3 py-1.5 text-xs font-black bg-emerald-100 text-emerald-700';message.textContent='No se han encontrado incoherencias críticas ni avisos en las comprobaciones realizadas. Esto no garantiza que la fuente externa de cotización sea correcta.';}
+            }
+            const last=document.getElementById('health-last-check');
+            if(last)last.textContent='Última revisión: '+new Date().toLocaleString('es-ES')+' · '+results.length+' activos comprobados.';
+            const summary=document.getElementById('health-assets-summary');
+            if(summary)summary.textContent=results.length+' activos · '+openCount+' posiciones abiertas';
+            if(!results.length){host.innerHTML='<p class="text-sm text-slate-500">No hay activos cargados para revisar.</p>';}
+            else {
+                host.innerHTML=results.sort((a,b)=>{
+                    const score=x=>x.issues.some(i=>i.level==='critical')?0:x.issues.some(i=>i.level==='warning')?1:2;
+                    return score(a)-score(b)||String(a.asset.name||'').localeCompare(String(b.asset.name||''));
+                }).map(row=>{
+                    const critical=row.issues.filter(x=>x.level==='critical');
+                    const warnings=row.issues.filter(x=>x.level==='warning');
+                    const infos=row.issues.filter(x=>x.level==='info');
+                    const status=critical.length?'Crítico':warnings.length?'Avisos':'Correcto';
+                    const tone=critical.length?'border-rose-200 bg-rose-50':warnings.length?'border-amber-200 bg-amber-50':'border-emerald-200 bg-emerald-50';
+                    const badgeTone=critical.length?'bg-rose-100 text-rose-700':warnings.length?'bg-amber-100 text-amber-700':'bg-emerald-100 text-emerald-700';
+                    const name=escapeHtml(row.asset.name||row.asset.ticker||'Activo');
+                    const detail=[...critical,...warnings,...infos].map(x=>'<li class="mt-1">'+escapeHtml(x.message)+'</li>').join('');
+                    const assetKey=encodeURIComponent(String(row.asset.name||''));
+                    return '<article class="rounded-xl border '+tone+' p-3"><div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="font-extrabold text-slate-900">'+name+'</h4><p class="text-[11px] text-slate-500">'+escapeHtml(row.asset.ticker||row.asset.isin||'')+' · '+quantity(row.expectedShares)+' unidades · PMP '+money(row.expectedPmp)+'</p></div><div class="flex items-center gap-2"><span class="rounded-full px-2.5 py-1 text-[10px] font-black '+badgeTone+'">'+status+'</span><button type="button" onclick="openAssetAudit(decodeURIComponent(\''+assetKey+'\'))" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700">Auditoría</button></div></div>'+(detail?'<ul class="mt-2 border-t border-slate-200/80 pt-2 text-xs text-slate-700">'+detail+'</ul>':'<p class="mt-2 border-t border-slate-200/80 pt-2 text-xs text-emerald-800">Sin incidencias detectadas.</p>')+'</article>';
+                }).join('');
+            }
+            if(showToastMessage)showToast('Revisión completada: '+criticalCount+' incidencia(s) crítica(s) y '+warningCount+' aviso(s).');
+            return {criticalCount,warningCount,openCount,okCount,results};
+        }
+
+        function showPortfolioHealthView() {
+            ['dashboard-view','scenario-simulator-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('portfolio-health-view')?.classList.remove('hidden');
+            document.getElementById('headerToolbar')?.classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            renderPortfolioHealth(false);
             window.scrollTo({top:0,behavior:'smooth'});
         }
 
