@@ -2165,7 +2165,12 @@
                 asset.realizedProfitByYear = realizedProfitByYear;
                 asset.taxIRPF = 0;
 
-                // No sustituir una cotización ausente por el PMP: eso inventa una valoración de mercado.
+                // Fuente única para todas las pantallas de cartera:
+                // tabla, ficha del activo, KPIs, gráficos, riesgo y resumen diario.
+                // La ganancia latente y el valor de mercado se calculan siempre desde
+                // esta cotización canónica; el beneficio realizado sigue siendo FIFO
+                // y depende exclusivamente del histórico de operaciones.
+                // No sustituir una cotización ausente por el PMP: eso inventa una valoración.
                 const parsedMarketPrice = Number(asset.currentPrice);
                 const price = Number.isFinite(parsedMarketPrice) && parsedMarketPrice > 0 ? parsedMarketPrice : 0;
                 asset.currentPrice = price;
@@ -3285,35 +3290,52 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             throw new Error(`Divisa no soportada o sin tipo de cambio: ${currency}`);
         }
 
+        // Política única de precio para los activos de la cartera.
+        // Las pantallas y los cálculos no vuelven a elegir cotizaciones: consumen
+        // asset.currentPrice, que se actualiza exclusivamente con este precio canónico.
+        function selectCanonicalTradeRepublicPrice(isin, trQuote) {
+            if (!trQuote) return null;
+            const last = Number(trQuote.last?.price) || 0;
+            const bid = Number(trQuote.bid?.price) || 0;
+            const ask = Number(trQuote.ask?.price) || 0;
+            const pre = Number(trQuote.pre?.price) || 0;
+            const midpoint = bid > 0 && ask >= bid ? (bid + ask) / 2 : 0;
+            // Indra y Digital Security: punto medio. Oro y Plata: último precio.
+            // El resto mantiene el criterio general: último precio y, si falta,
+            // punto medio, bid o ask como alternativas.
+            const useMidpoint = isin === "ES0118594417" || isin === "IE00BG0J4C88";
+            const selectedPrice = useMidpoint && midpoint > 0
+                ? midpoint
+                : (last > 0 ? last : (midpoint > 0 ? midpoint : (bid > 0 ? bid : ask)));
+            if (!(selectedPrice > 0) || !Number.isFinite(selectedPrice)) return null;
+            const selectedSide = useMidpoint && midpoint > 0
+                ? "midpoint"
+                : (last > 0 ? "last" : (midpoint > 0 ? "midpoint" : (bid > 0 ? "bid" : "ask")));
+            const quoteTime = Number((selectedSide === "midpoint"
+                ? (trQuote.bid?.time || trQuote.ask?.time)
+                : trQuote.last?.time) || trQuote.last?.time || trQuote.bid?.time || trQuote.ask?.time || 0);
+            return {price:selectedPrice,last,bid,ask,pre,midpoint,selectedSide,quoteTime};
+        }
+
         async function fetchAssetQuote(asset, rates, liveQuotes = new Map(), tradeRepublicQuotes = new Map()) {
             const isin = String(asset.isin || "").trim().toUpperCase();
             const trQuote = tradeRepublicQuotes.get(isin) || null;
-            if (trQuote) {
-                const last = Number(trQuote.last?.price), bid = Number(trQuote.bid?.price), ask = Number(trQuote.ask?.price), pre = Number(trQuote.pre?.price);
-                const midpoint = bid > 0 && ask >= bid ? (bid + ask) / 2 : 0;
-                // Ajuste selectivo según la comparación con Trade Republic:
-                // Indra y Digital Security usan el punto medio; Oro y Plata conservan el último.
-                const useMidpoint = isin === "ES0118594417" || isin === "IE00BG0J4C88";
-                const selectedPrice = useMidpoint && midpoint > 0
-                    ? midpoint
-                    : (last > 0 ? last : (midpoint > 0 ? midpoint : (bid > 0 ? bid : ask)));
-                if (selectedPrice > 0) {
-                    const quoteTime = Number((useMidpoint ? (trQuote.bid?.time || trQuote.ask?.time) : trQuote.last?.time) || trQuote.last?.time || trQuote.bid?.time || trQuote.ask?.time || 0);
-                    const selectedSide = useMidpoint && midpoint > 0 ? "midpoint" : (last > 0 ? "last" : (midpoint > 0 ? "midpoint" : (bid > 0 ? "bid" : "ask")));
-                    return {
-                        price: Number(selectedPrice.toFixed(6)), rawPrice: selectedPrice, fxToEUR: 1,
-                        fxRateDate: rates.rateDate || null, fxRateSource: "Trade Republic · cotización ya expresada en EUR (LSX)",
-                        previousCloseEUR: pre > 0 ? Number(pre.toFixed(6)) : null,
-                        symbol: asset.yahooTicker || asset.ticker || isin, currency: "EUR",
-                        quoteSource: "Trade Republic · LSX · " + (selectedSide === "midpoint" ? "punto medio bid/ask" : selectedSide === "last" ? "último precio" : selectedSide),
-                        bidRaw: bid > 0 ? bid : null, askRaw: ask > 0 ? ask : null,
-                        selectedSide,
-                        marketTime: quoteTime || null, marketState: trQuote.qualityId || "LSX",
-                        exchangeName: "Lang & Schwarz (LSX)", fullExchangeName: "Lang & Schwarz (LSX)",
-                        instrumentType: "", regularMarketPrice: last > 0 ? last : selectedPrice,
-                        previousCloseRaw: pre > 0 ? pre : null, lastCandleTime: null
-                    };
-                }
+            const canonicalTR = selectCanonicalTradeRepublicPrice(isin, trQuote);
+            if (canonicalTR) {
+                const {price:selectedPrice,last,bid,ask,pre,selectedSide,quoteTime} = canonicalTR;
+                return {
+                    price: Number(selectedPrice.toFixed(6)), rawPrice: selectedPrice, fxToEUR: 1,
+                    fxRateDate: rates.rateDate || null, fxRateSource: "Trade Republic · cotización ya expresada en EUR (LSX)",
+                    previousCloseEUR: pre > 0 ? Number(pre.toFixed(6)) : null,
+                    symbol: asset.yahooTicker || asset.ticker || isin, currency: "EUR",
+                    quoteSource: "Trade Republic · LSX · " + (selectedSide === "midpoint" ? "punto medio bid/ask" : selectedSide === "last" ? "último precio" : selectedSide),
+                    bidRaw: bid > 0 ? bid : null, askRaw: ask > 0 ? ask : null,
+                    selectedSide,
+                    marketTime: quoteTime || null, marketState: trQuote.qualityId || "LSX",
+                    exchangeName: "Lang & Schwarz (LSX)", fullExchangeName: "Lang & Schwarz (LSX)",
+                    instrumentType: "", regularMarketPrice: last > 0 ? last : selectedPrice,
+                    previousCloseRaw: pre > 0 ? pre : null, lastCandleTime: null
+                };
             }
             const symbols = YAHOO_SYMBOLS[asset.name] || [asset.yahooTicker || asset.ticker].filter(Boolean);
             let lastError, bestQuote = null;
