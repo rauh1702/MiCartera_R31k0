@@ -5626,7 +5626,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 if (Math.abs(expectedPmp-storedPmp)>0.01) addIssue(issues,'critical','PMP: el histórico calcula '+money(expectedPmp)+' y la posición guarda '+money(storedPmp)+'.');
                 if (Math.abs(realized-storedRealized)>toleranceMoney) addIssue(issues,'critical','Beneficio realizado: diferencia de '+money(realized-storedRealized)+' respecto al cálculo FIFO.');
 
-                if (expectedShares > toleranceQty) {
+                const hasOpenPosition = expectedShares > toleranceQty || storedShares > toleranceQty;
+                if (hasOpenPosition) {
                     openCount++;
                     if (!(currentPrice > 0)) addIssue(issues,'critical','La posición está abierta, pero no tiene una cotización válida.');
                     if (!asset.priceSource) addIssue(issues,'warning','No consta la fuente de la cotización guardada.');
