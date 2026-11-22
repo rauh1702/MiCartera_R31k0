@@ -6688,7 +6688,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         function renderAIHistory(history){
             if(!Array.isArray(history)||!history.length)return '<p class="mt-3 text-xs text-slate-500">Aún no hay revisiones guardadas.</p>';
-            return '<div class="mt-3 space-y-3">'+history.slice(-3).reverse().map(h=>'<div class="border-t border-slate-700 pt-3"><p class="text-[10px] font-bold text-violet-300">'+(h.date?new Date(h.date).toLocaleString('es-ES'):'Análisis guardado')+'</p><p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-200">'+escapeHtml(h.analysis||'')+'</p></div>').join('')+'</div>';
+            return '<div class="mt-3 space-y-3">'+history.slice(-3).reverse().map(h=>'<div class="border-t border-slate-700 pt-3"><p class="text-[10px] font-bold text-violet-300">'+(h.date?new Date(h.date).toLocaleString('es-ES'):'Análisis guardado')+'</p><p class="mt-1 text-[10px] text-cyan-300">'+escapeHtml((h.provider==='openrouter'?'OpenRouter':h.provider==='cloudflare'?'Cloudflare Workers AI':'IA')+(h.model?' · '+h.model:' · modelo no registrado'))+'</p><p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-200">'+escapeHtml(h.analysis||'')+'</p></div>').join('')+'</div>';
         }
         function renderStrategyAISection(x){
             const history=Array.isArray(x.aiAnalysisHistory)?x.aiAnalysisHistory:[];
