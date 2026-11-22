@@ -2799,7 +2799,7 @@
         }
 
         function showPortfolioAnalystView(){
-            ['dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            ['dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','company-deep-dive-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
             document.getElementById('portfolio-analyst-view')?.classList.remove('hidden');
             document.getElementById('headerToolbar')?.classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
