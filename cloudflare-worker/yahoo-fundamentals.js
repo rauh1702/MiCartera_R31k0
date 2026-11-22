@@ -955,7 +955,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const warrenRequest = String(selection.section||"") === "warren";
     const outputBudgets = warrenRequest ? [650] : [3000, 5000];
     for (const outputBudget of outputBudgets) {
-      const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) }, 10000);
+      const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) }, 25000);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
       const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
