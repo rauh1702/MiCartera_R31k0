@@ -2963,17 +2963,22 @@
                 const matched=allAssets.filter(a=>{const ticker=String(a.ticker||a.symbol||'').toLowerCase(),name=String(a.name||'').toLowerCase();return (ticker&&q.includes(ticker))||(name.length>3&&q.includes(name));});
                 // No dispares investigación externa en todas las preguntas: solo cuando se mencione una empresa o se soliciten fundamentales/noticias.
                 const asksResearch=matched.length>0||/fundamental|resultados|ingresos|ventas|deuda|liquidez|flujo de caja|diluci|contratos|backlog|noticias|analiza.*empresa|analisis.*empresa/i.test(question);
-                const researchTargets=(matched.length?matched.slice(0,2):asksResearch?(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,1):[]).slice(0,2);
+                const researchTargets=(matched.length?matched.slice(0,1):asksResearch?(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,1):[]).slice(0,1);
+                context.externalResearch=[];
+                if(researchTargets.length&&contextStatus)contextStatus.textContent='Investigando una empresa en fuentes públicas (máximo 8 segundos)…';
                 context.externalResearch=await Promise.all(researchTargets.map(async asset=>{
                     const symbol=String(asset.ticker||asset.symbol||'').trim();if(!symbol)return null;
+                    const controller=new AbortController();let timer;
                     try{
-                        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+                        timer=setTimeout(()=>controller.abort(),8000);
                         const r=await fetch(ASSET_NEWS_WORKER+'/research/company?symbol='+encodeURIComponent(symbol)+'&name='+encodeURIComponent(String(asset.name||'')),{signal:controller.signal});
-                        clearTimeout(timer);const d=await r.json().catch(()=>({}));
+                        const d=await r.json().catch(()=>({}));
                         return r.ok?d:{symbol,error:d.error||'Investigación no disponible',limitations:d.limitations||[]};
-                    }catch(e){return{symbol,error:e.name==='AbortError'?'Tiempo límite de investigación externa (12 s).':String(e.message||e)};}
+                    }catch(e){return{symbol,error:e.name==='AbortError'?'Investigación externa agotó 8 segundos; se continúa con los datos de cartera.':String(e.message||e)};}
+                    finally{if(timer)clearTimeout(timer);}
                 }));
                 context.externalResearch=context.externalResearch.filter(Boolean);
+                if(contextStatus)contextStatus.textContent='Preparando contexto y consultando el motor IA…';
                 // Mantén todas las posiciones, pero limita el detalle accesorio para respetar el límite del Worker.
                 context.positions=(context.positions||[]).map(p=>({...p,transactions:(p.transactions||[]).slice(-5)}));
                 context.recentPerformanceSnapshots=(context.recentPerformanceSnapshots||[]).slice(-12);
