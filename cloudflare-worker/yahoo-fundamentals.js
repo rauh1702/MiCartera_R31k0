@@ -679,7 +679,7 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
   const line=lines[i];
   // Reescrituras completas para evitar restos de negritas o afirmaciones parciales.
   if(/deuda total supera (?:a )?la caja/i.test(line)&&/(?:debt.?to.?cash|deuda\\s*[/／-]\\s*caja)/i.test(line)){
-   lines[i]="- **Dato observado:** La deuda total reportada por Yahoo supera la caja (deuda/caja = 2,90). Esta comparación no demuestra por sí sola falta de liquidez, insolvencia ni necesidad de financiación. El current ratio de 1,64 indica que los activos corrientes superan los pasivos corrientes, aunque no garantiza caja disponible. Faltan composición de la deuda, vencimientos e intereses para valorar la presión financiera.";
+   lines[i]="- **Dato observado:** La deuda total reportada por Yahoo supera la caja (deuda/caja = "+(Number.isFinite(ratio?.debtToCash)?ratio.debtToCash.toFixed(2):"dato no disponible")+"). Esta comparación no demuestra por sí sola falta de liquidez, insolvencia ni necesidad de financiación. El current ratio de "+(Number.isFinite(ratio?.currentRatio)?ratio.currentRatio.toFixed(2):"dato no disponible")+" indica si los activos corrientes superan los pasivos corrientes, aunque no garantiza caja disponible. Faltan composición de la deuda, vencimientos e intereses para valorar la presión financiera.";
    continue;
   }
   if(/márgenes negativos/i.test(line)&&/(?:pérdida de rentabilidad|generando pérdidas|indica[n]? que la empresa)/i.test(line)){
@@ -705,7 +705,7 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
    continue;
   }
   if(/financiar el déficit operativo/i.test(line)){
-   lines[i]="- **Dato observado:** La deuda total reportada supera la caja (deuda/caja = 2,90), pero el current ratio calculado es 1,64. Esto no permite concluir que exista un déficit de liquidez ni que los activos corrientes estén disponibles para financiar operaciones; faltan vencimientos, composición de deuda e intereses.";
+   lines[i]="- **Dato observado:** La deuda total reportada supera la caja (deuda/caja = "+(Number.isFinite(ratio?.debtToCash)?ratio.debtToCash.toFixed(2):"dato no disponible")+") y el current ratio calculado es "+(Number.isFinite(ratio?.currentRatio)?ratio.currentRatio.toFixed(2):"dato no disponible")+". Esto no permite concluir que exista un déficit de liquidez ni que los activos corrientes estén disponibles para financiar operaciones; faltan vencimientos, composición de deuda e intereses.";
    continue;
   }
   // Neutralizar etiquetas de riesgo no justificadas por los datos disponibles.
@@ -1498,7 +1498,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v29:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v30:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
