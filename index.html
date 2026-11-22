@@ -901,6 +901,14 @@
                 </div>
                 <div id="monthly-report-notice" class="rounded-xl border border-cyan-400/20 bg-slate-800/80 p-3 text-xs text-slate-300">El informe se construye con los puntos de evolución guardados. No se inventan valoraciones históricas.</div>
                 <div id="monthly-report-content" class="space-y-4"><p class="text-sm text-slate-400">Todavía no hay datos suficientes para generar un informe mensual.</p></div>
+                <section class="rounded-xl border border-cyan-400/25 bg-slate-800/80 p-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div><h4 class="font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles text-cyan-300 mr-2"></i>Interpretación de tu cartera mediante IA</h4><p class="mt-1 text-xs text-slate-400">Analiza los datos del mes seleccionado, sus movimientos y la evolución por activo.</p></div>
+                        <button id="monthly-report-ai-button" type="button" onclick="generateMonthlyReportAI()" class="rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 px-4 py-2.5 text-xs font-bold text-white"><i class="fa-solid fa-brain mr-1"></i>Generar análisis IA</button>
+                    </div>
+                    <p id="monthly-report-ai-status" class="text-xs text-slate-400" aria-live="polite">El análisis se genera cuando lo solicites. No modifica los datos de tu cartera.</p>
+                    <div id="monthly-report-ai-result" class="hidden whitespace-pre-wrap rounded-xl border border-slate-700 bg-slate-900/80 p-4 text-sm leading-6 text-slate-200"></div>
+                </section>
             </section>
         </section>
         </section>
@@ -2667,6 +2675,84 @@
             if(notice){
                 const points=monthPoints.length;
                 notice.textContent='Informe de '+monthlyReportDateLabel(startDate)+' · '+points+' punto(s) guardados en el mes'+(firstPoint?' · primer punto: '+firstPoint.date:'')+(endPoint?' · último punto: '+endPoint.date:'')+'. El histórico comienza en la fecha de tu primer snapshot.';
+            }
+        }
+
+
+        const MONTHLY_REPORT_AI_WORKER = "https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev";
+        function buildMonthlyReportAIPayload() {
+            const select=document.getElementById('monthly-report-month');
+            const month=String(select?.value||'');
+            if(!/^\d{4}-\d{2}$/.test(month)) throw new Error('Selecciona un mes válido.');
+            const history=readPerformanceHistory().filter(p=>p&&p.date).sort((a,b)=>a.date.localeCompare(b.date));
+            const startDate=month+'-01';
+            const [year,monthNum]=month.split('-').map(Number);
+            const monthEnd=month+'-'+String(new Date(year,monthNum,0).getDate()).padStart(2,'0');
+            const monthPoints=history.filter(p=>p.date>=startDate&&p.date<=monthEnd);
+            const startPoint=[...history].filter(p=>p.date<startDate).pop()||null;
+            const endPoint=[...monthPoints].pop()||null;
+            const transactions=[];
+            (assetsData||[]).forEach(asset=>(asset.history||[]).forEach(tx=>{
+                const date=String(tx.date||'').slice(0,10);
+                if(date>=startDate&&date<=monthEnd){
+                    const qty=Number(tx.qty)||0, price=Number(tx.price)||0, comm=Number(tx.comm)||0;
+                    transactions.push({date,type:tx.type,asset:String(asset.name||asset.ticker||'Activo'),amountEUR:Number((tx.type==='Compra'?qty*price+comm:qty*price-comm).toFixed(2))});
+                }
+            }));
+            const assetMap=new Map();
+            if(startPoint?.assets&&endPoint?.assets){
+                const oldMap=new Map(startPoint.assets.map(a=>[a.name,a]));
+                const newMap=new Map(endPoint.assets.map(a=>[a.name,a]));
+                for(const name of new Set([...oldMap.keys(),...newMap.keys()])){
+                    const old=oldMap.get(name)||{},current=newMap.get(name)||{};
+                    assetMap.set(name,{asset:name,profitChange:Number(((Number(current.totalProfit)||0)-(Number(old.totalProfit)||0)).toFixed(2)),marketValueEUR:Number((Number(current.marketValue)||0).toFixed(2)),category:current.category||old.category||'Sin clasificar'});
+                }
+            }
+            const assets=[...assetMap.values()].sort((a,b)=>b.profitChange-a.profitChange);
+            const news=(Array.isArray(assetNewsItems)?assetNewsItems:[]).filter(n=>n&&n.title).slice(0,12).map(n=>({
+                title:String(n.title).slice(0,220),summary:String(n.summary||'').slice(0,420),
+                impact:String(n.impact||'neutral'),symbols:Array.isArray(n.symbols)?n.symbols.slice(0,5):[],
+                date:String(n.publishedAt||n.date||'').slice(0,30)
+            }));
+            const buys=transactions.filter(t=>t.type==='Compra');
+            const sells=transactions.filter(t=>t.type==='Venta');
+            return {
+                month,
+                historicalCoverage:{pointsInMonth:monthPoints.length,openingSnapshot:!!startPoint,closingSnapshot:!!endPoint,openingDate:startPoint?.date||null,closingDate:endPoint?.date||null},
+                performance:startPoint&&endPoint?{
+                    openingMarketValueEUR:Number(startPoint.marketValue)||0,closingMarketValueEUR:Number(endPoint.marketValue)||0,
+                    openingTotalProfitEUR:Number(startPoint.totalProfit)||0,closingTotalProfitEUR:Number(endPoint.totalProfit)||0,
+                    profitChangeEUR:Number(((Number(endPoint.totalProfit)||0)-(Number(startPoint.totalProfit)||0)).toFixed(2))
+                }:null,
+                trading:{buyCount:buys.length,sellCount:sells.length,buyVolumeEUR:Number(buys.reduce((s,t)=>s+t.amountEUR,0).toFixed(2)),netSellProceedsEUR:Number(sells.reduce((s,t)=>s+t.amountEUR,0).toFixed(2)),transactions:transactions.slice(0,60)},
+                assetEvolution:assets.slice(0,20),
+                currentPositions:(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).slice(0,25).map(a=>({asset:String(a.name||a.ticker||'Activo'),ticker:String(a.ticker||a.symbol||''),shares:Number(a.shares)||0,marketValueEUR:Number(a.marketValue)||0,unrealizedProfitEUR:Number(a.latentProfit)||0,realizedProfitEUR:Number(a.realizedProfit)||0,category:String(a.category||'Sin clasificar')})),
+                recentNews:news
+            };
+        }
+        async function generateMonthlyReportAI() {
+            const button=document.getElementById('monthly-report-ai-button');
+            const status=document.getElementById('monthly-report-ai-status');
+            const result=document.getElementById('monthly-report-ai-result');
+            if(!button||!status||!result)return;
+            button.disabled=true;
+            button.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>Analizando…';
+            status.textContent='Preparando datos del informe y solicitando el análisis…';
+            result.classList.add('hidden');
+            try {
+                const payload=buildMonthlyReportAIPayload();
+                const response=await fetch(MONTHLY_REPORT_AI_WORKER+'/ai/monthly-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                const data=await response.json().catch(()=>({}));
+                if(!response.ok)throw new Error(data.error||'No se pudo generar el análisis IA.');
+                if(!data.analysis)throw new Error('La IA no devolvió un análisis.');
+                result.textContent=data.analysis;
+                result.classList.remove('hidden');
+                status.textContent='Análisis generado el '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+(data.cached?' · respuesta reutilizada':'')+'. Revisa siempre los datos y las limitaciones del histórico.';
+            } catch(error) {
+                status.textContent=error.message||'No se pudo completar el análisis.';
+            } finally {
+                button.disabled=false;
+                button.innerHTML='<i class="fa-solid fa-brain mr-1"></i>Generar análisis IA';
             }
         }
 
