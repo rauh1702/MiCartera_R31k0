@@ -509,19 +509,27 @@
         color: #f1f5f9 !important;
     }
 
-    .warren-messages{min-height:340px;max-height:68vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at top right,rgba(180,130,35,.08),transparent 55%),#0b1220;scrollbar-width:thin;scrollbar-color:#475569 transparent}
-    .warren-bubble{width:fit-content;max-width:min(94%,900px);white-space:pre-wrap;overflow-wrap:anywhere;border-radius:17px;padding:13px 15px;font-size:13px;line-height:1.75;box-shadow:0 8px 24px rgba(0,0,0,.12);animation:warrenMessageIn .18s ease-out}
-    .warren-bubble.user{margin-left:auto;background:linear-gradient(145deg,#78350f,#713f12);color:#fff7ed;border:1px solid rgba(251,191,36,.3);border-bottom-right-radius:5px}
-    .warren-bubble.assistant{margin-right:auto;background:linear-gradient(145deg,#1b2a40,#172235);color:#e2e8f0;border:1px solid #3b4b61;border-bottom-left-radius:5px}
-    .warren-message-top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid rgba(148,163,184,.17)}
+    .warren-messages{min-height:380px;max-height:70vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at 92% 0%,rgba(180,130,35,.10),transparent 42%),radial-gradient(ellipse at 0% 100%,rgba(30,64,110,.12),transparent 45%),#080f1c;scrollbar-width:thin;scrollbar-color:#475569 transparent}
+    .warren-message-row{display:flex;align-items:flex-start;gap:10px;width:100%;animation:warrenMessageIn .2s ease-out}.warren-message-row.is-user{justify-content:flex-end}.warren-message-row.is-assistant{justify-content:flex-start}
+    .warren-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;border-radius:10px;font-size:12px;margin-top:5px}
+    .warren-avatar.assistant-avatar{background:linear-gradient(145deg,#78350f,#292014);border:1px solid rgba(251,191,36,.35);color:#fcd34d}.warren-avatar.user-avatar{background:#1e293b;border:1px solid #475569;color:#cbd5e1;order:2}
+    .warren-bubble{width:fit-content;max-width:min(88%,920px);min-width:90px;overflow-wrap:anywhere;border-radius:18px;padding:14px 16px;font-size:13px;line-height:1.75;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+    .warren-bubble.user{margin-left:0;background:linear-gradient(145deg,#713f12,#492b16);color:#fff7ed;border:1px solid rgba(251,191,36,.30);border-bottom-right-radius:5px}
+    .warren-bubble.assistant{margin-right:0;background:linear-gradient(145deg,rgba(27,42,64,.98),rgba(15,27,45,.98));color:#e2e8f0;border:1px solid rgba(100,116,139,.52);border-bottom-left-radius:5px}
+    .warren-message-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(148,163,184,.17)}
     .warren-bubble .warren-role{display:block;margin:0;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#fbbf24}
-    .warren-message-tools{display:flex;align-items:center;gap:9px}
-    .warren-message-time{font-size:9px;color:#94a3b8}
-    .warren-copy-button{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:5px 8px;background:rgba(15,23,42,.55);color:#cbd5e1;font-size:10px;font-weight:700;transition:.15s}
+    .warren-message-tools{display:flex;align-items:center;gap:8px;min-width:0}.warren-message-time{font-size:9px;color:#94a3b8;white-space:nowrap}
+    .warren-message-model{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid rgba(251,191,36,.2);border-radius:7px;background:rgba(120,53,15,.18);padding:3px 6px;color:#fcd34d;font-size:9px}
+    .warren-copy-button{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:5px 8px;background:rgba(15,23,42,.55);color:#cbd5e1;font-size:10px;font-weight:700;transition:.15s;white-space:nowrap}
     .warren-copy-button:hover,.warren-copy-button.copied{border-color:rgba(251,191,36,.55);color:#fde68a;background:rgba(120,53,15,.35)}
-    .warren-message-content{white-space:pre-wrap;overflow-wrap:anywhere}
-    @keyframes warrenMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-    @media(max-width:640px){.warren-messages{min-height:300px;max-height:65vh;padding:12px!important}.warren-bubble{max-width:100%;padding:11px 12px;font-size:12px}.warren-copy-button{padding:5px 7px}.warren-copy-button span{display:none}}
+    .warren-message-content{overflow-wrap:anywhere}.warren-report-section{margin:10px 0 13px;padding:12px 13px;border:1px solid rgba(100,116,139,.28);border-radius:13px;background:rgba(8,15,28,.38)}.warren-report-section:first-child{margin-top:0}.warren-report-section:last-child{margin-bottom:0}
+    .warren-report-heading{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:#fcd34d;font-size:13px;font-weight:900;line-height:1.45}.warren-report-heading:before{content:"";width:3px;height:17px;flex:0 0 3px;border-radius:4px;background:#d6a63b}
+    .warren-report-paragraph{margin:7px 0;color:#dbe4ef;line-height:1.75}.warren-report-list{margin:8px 0 10px;padding-left:21px;list-style:disc;color:#dbe4ef}.warren-report-list.ordered{list-style:decimal}.warren-report-list li{padding:2px 0 2px 3px}.warren-report-list li::marker{color:#fbbf24}
+    .warren-report-quote{margin:10px 0;padding:9px 12px;border-left:3px solid #d6a63b;border-radius:0 9px 9px 0;background:rgba(120,53,15,.16);color:#fde7b0}
+    .warren-report-divider{border:0;border-top:1px solid rgba(148,163,184,.2);margin:13px 0}.warren-report-section strong{color:#fff}.warren-report-section code{padding:2px 5px;border-radius:5px;background:#0b1220;color:#fcd34d;font-size:.92em}
+    .warren-table-wrap{width:100%;overflow-x:auto;margin:10px 0;border:1px solid rgba(100,116,139,.35);border-radius:10px}.warren-report-table{width:100%;border-collapse:collapse;min-width:320px;font-size:11px}.warren-report-table th{background:rgba(30,41,59,.95);color:#fcd34d;text-align:left;font-weight:800}.warren-report-table th,.warren-report-table td{padding:8px 10px;border-bottom:1px solid rgba(100,116,139,.24);vertical-align:top}.warren-report-table td{color:#dbe4ef}.warren-report-table tr:last-child td{border-bottom:0}.warren-report-table tr:nth-child(even) td{background:rgba(15,23,42,.35)}
+    @keyframes warrenMessageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:640px){.warren-messages{min-height:320px;max-height:68vh;padding:12px!important}.warren-message-row{gap:6px}.warren-avatar{flex-basis:26px;width:26px;height:26px;font-size:10px}.warren-bubble{max-width:calc(100% - 32px);min-width:0;padding:11px 12px;font-size:12px}.warren-message-model{display:none}.warren-copy-button{padding:5px 7px}.warren-copy-button span{display:none}.warren-report-section{padding:10px}.warren-report-table{font-size:10px}}
     .warren-suggestion{display:block;width:100%;border:1px solid #334155;border-radius:10px;background:#172235;padding:9px 10px;text-align:left;color:#cbd5e1;font-size:11px;line-height:1.45;transition:.15s}
     .warren-suggestion:hover{border-color:#d6a63b;background:#1e293b;color:#fff}
     #warren-chat-input{color-scheme:dark}
@@ -1013,7 +1021,7 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4">
                 <div class="min-w-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-xl">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-950/70 px-4 py-3"><div class="flex items-center gap-2 text-sm font-bold text-white"><span class="h-2 w-2 rounded-full bg-emerald-400"></span>Conversación con WARREN</div><p id="warren-model-status" class="text-[10px] text-slate-400">Preparado para analizar tu cartera</p></div>
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 bg-slate-950/90 px-4 py-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300"><i class="fa-solid fa-chart-line"></i></span><div><div class="flex items-center gap-2 text-sm font-black text-white">WARREN <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">ASISTENTE</span></div><p class="text-[10px] text-slate-500">Análisis independiente · MiCartera R31k0</p></div></div><div class="flex items-center gap-2"><p id="warren-model-status" class="max-w-[210px] text-right text-[10px] text-slate-400">Preparado para analizar tu cartera</p><button type="button" onclick="showWarrenHomeView()" class="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-[10px] font-bold text-slate-300 hover:border-amber-400/50 hover:text-amber-200"><i class="fa-solid fa-house mr-1"></i>Inicio</button></div></div>
                     <div id="warren-messages" class="warren-messages space-y-3 p-3 sm:p-5" aria-live="polite" aria-label="Mensajes de WARREN"></div>
                     <form id="warren-chat-form" onsubmit="sendWarrenMessage(event)" class="border-t border-slate-700 bg-slate-950/60 p-3 sm:p-4">
                         <label for="warren-chat-input" class="sr-only">Escribe tu consulta a WARREN</label><div class="flex items-end gap-2 rounded-2xl border border-slate-600 bg-slate-800 p-2 focus-within:border-amber-400/70"><textarea id="warren-chat-input" rows="2" maxlength="2500" placeholder="Pregúntame lo que quieras sobre tu cartera, una empresa o una estrategia…" class="max-h-36 min-h-[48px] flex-1 resize-y bg-transparent px-2 py-2 text-sm text-white placeholder-slate-400 outline-none" onkeydown="handleWarrenInputKeydown(event)"></textarea><button id="warren-send-button" type="submit" class="mb-0.5 inline-flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-50" title="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button></div>
@@ -2998,19 +3006,48 @@
                 const previous=button.innerHTML;button.innerHTML='<i class="fa-solid fa-check"></i> Copiado';button.classList.add('copied');setTimeout(()=>{button.innerHTML=previous;button.classList.remove('copied');},1500);
             }catch(_){showToast('No se pudo copiar el mensaje.','fa-triangle-exclamation');}
         }
+        function appendWarrenInlineText(parent,text){
+            const pattern=/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;let last=0,match;
+            while((match=pattern.exec(text))){if(match.index>last)parent.appendChild(document.createTextNode(text.slice(last,match.index)));const token=match[0],el=document.createElement(token.startsWith('`')?'code':token.startsWith('**')?'strong':'em');el.textContent=token.startsWith('`')?token.slice(1,-1):token.startsWith('**')?token.slice(2,-2):token.slice(1,-1);parent.appendChild(el);last=pattern.lastIndex;}
+            if(last<text.length)parent.appendChild(document.createTextNode(text.slice(last)));
+        }
+        function renderWarrenRichContent(host,content){
+            const lines=String(content||'').replace(/\r/g,'').split('\n');let i=0,section=null;
+            const addSection=(title='')=>{const card=document.createElement('section');card.className='warren-report-section';if(title){const head=document.createElement('h3');head.className='warren-report-heading';appendWarrenInlineText(head,title.replace(/^#+\s*/,''));card.appendChild(head);}host.appendChild(card);return card;};
+            const target=()=>section||host;
+            while(i<lines.length){
+                const line=lines[i].trim();if(!line){i++;continue;}
+                if(/^#{1,4}\s/.test(line)){section=addSection(line.replace(/^#{1,4}\s*/,''));i++;continue;}
+                if(/^\|.*\|$/.test(line)&&i+1<lines.length&&/^\|?\s*:?-{3,}/.test(lines[i+1].trim())){
+                    const rows=[];while(i<lines.length&&/^\|.*\|$/.test(lines[i].trim())){const row=lines[i].trim().split('|').slice(1,-1).map(x=>x.trim());if(!row.every(x=>/^:?-{3,}:?$/.test(x)))rows.push(row);i++;}
+                    const wrap=document.createElement('div');wrap.className='warren-table-wrap';const table=document.createElement('table');table.className='warren-report-table';
+                    rows.forEach((row,ri)=>{const tr=document.createElement('tr');row.forEach(cell=>{const el=document.createElement(ri===0?'th':'td');appendWarrenInlineText(el,cell);tr.appendChild(el);});table.appendChild(tr);});wrap.appendChild(table);target().appendChild(wrap);continue;
+                }
+                if(/^[-*•]\s+/.test(line)||/^\d+[.)]\s+/.test(line)){
+                    const ordered=/^\d+[.)]\s+/.test(line),list=document.createElement(ordered?'ol':'ul');list.className='warren-report-list '+(ordered?'ordered':''); 
+                    while(i<lines.length&&(/^[-*•]\s+/.test(lines[i].trim())||/^\d+[.)]\s+/.test(lines[i].trim()))){const li=document.createElement('li');appendWarrenInlineText(li,lines[i].trim().replace(/^([-*•]|\d+[.)])\s+/,'').trim());list.appendChild(li);i++;}target().appendChild(list);continue;
+                }
+                if(/^>\s?/.test(line)){const quote=document.createElement('blockquote');quote.className='warren-report-quote';appendWarrenInlineText(quote,line.replace(/^>\s?/,'').trim());target().appendChild(quote);i++;continue;}
+                if(/^[-_]{3,}$/.test(line)){const hr=document.createElement('hr');hr.className='warren-report-divider';target().appendChild(hr);i++;continue;}
+                const p=document.createElement('p');p.className='warren-report-paragraph';appendWarrenInlineText(p,line);target().appendChild(p);i++;
+            }
+        }
         function renderWarrenMessages(){
             const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
-            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-8 max-w-xl text-center text-sm leading-6 text-slate-400';welcome.innerHTML='<div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-2xl text-amber-300"><i class="fa-solid fa-comments-dollar"></i></div><p class="text-lg font-black text-white">Buenas. Soy WARREN.</p><p class="mt-2">Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.</p>';host.appendChild(welcome);return;}
+            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-10 max-w-xl text-center text-sm leading-6 text-slate-400';const icon=document.createElement('div');icon.className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-slate-800 text-2xl text-amber-300 shadow-lg shadow-amber-950/20';icon.innerHTML='<i class="fa-solid fa-comments-dollar"></i>';const title=document.createElement('p');title.className='text-xl font-black text-white';title.textContent='Buenas. Soy WARREN.';const desc=document.createElement('p');desc.className='mt-2';desc.textContent='Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.';welcome.append(icon,title,desc);host.appendChild(welcome);return;}
             warrenMessages.forEach((m,index)=>{
+                const row=document.createElement('div');row.className='warren-message-row '+(m.role==='user'?'is-user':'is-assistant');
+                const avatar=document.createElement('div');avatar.className='warren-avatar '+(m.role==='user'?'user-avatar':'assistant-avatar');avatar.innerHTML=m.role==='user'?'<i class="fa-solid fa-user"></i>':'<i class="fa-solid fa-chart-line"></i>';
                 const bubble=document.createElement('article');bubble.className='warren-bubble '+(m.role==='user'?'user':'assistant');
                 const top=document.createElement('div');top.className='warren-message-top';
                 const role=document.createElement('span');role.className='warren-role';role.textContent=m.role==='user'?'TÚ':'WARREN';
                 const tools=document.createElement('div');tools.className='warren-message-tools';
+                if(m.model){const model=document.createElement('span');model.className='warren-message-model';model.textContent=m.model;model.title='Motor y modelo que generaron esta respuesta';tools.appendChild(model);}
                 const time=document.createElement('span');time.className='warren-message-time';if(m.at){const d=new Date(m.at);if(!Number.isNaN(d.getTime()))time.textContent=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
                 const copy=document.createElement('button');copy.type='button';copy.className='warren-copy-button';copy.title='Copiar mensaje';copy.setAttribute('aria-label','Copiar mensaje');copy.innerHTML='<i class="fa-regular fa-copy"></i><span>Copiar</span>';copy.addEventListener('click',()=>copyWarrenMessage(index,copy));
                 tools.append(time,copy);top.append(role,tools);
-                const body=document.createElement('div');body.className='warren-message-content';body.textContent=m.content;
-                bubble.append(top,body);host.appendChild(bubble);
+                const body=document.createElement('div');body.className='warren-message-content';if(m.role==='assistant')renderWarrenRichContent(body,m.content);else body.textContent=m.content;
+                bubble.append(top,body);row.append(avatar,bubble);host.appendChild(row);
             });host.scrollTop=host.scrollHeight;
         }
         function showWarrenBaseView(){
@@ -3090,7 +3127,7 @@
                 try{response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')}),signal:aiController.signal});}
                 finally{clearTimeout(aiTimer);}
                 const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
-                warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
+                warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString(),model:formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo':'')});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
                 if(status)status.textContent='Respondido · '+formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo utilizado':'');if(contextStatus)contextStatus.textContent='Contexto actualizado: '+new Date(data.generatedAt||Date.now()).toLocaleTimeString('es-ES');
             }catch(error){warrenMessages.push({role:'assistant',content:'No he podido completar la respuesta: '+error.message+'\n\nTu pregunta sigue guardada. Puedes volver a enviarla cuando el servicio esté disponible.',at:new Date().toISOString()});saveWarrenChat();renderWarrenMessages();if(status)status.textContent='No se pudo completar la consulta.';if(contextStatus)contextStatus.textContent='No se pudo actualizar el contexto.';}
             finally{warrenBusy=false;if(button){button.disabled=false;button.innerHTML='<i class="fa-solid fa-paper-plane"></i>';}document.getElementById('warren-chat-input')?.focus();}
