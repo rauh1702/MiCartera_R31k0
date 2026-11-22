@@ -904,12 +904,22 @@ function runDeepDiveValidation(data){
  return{version:"deep-dive-validation-v1",generatedAt:new Date().toISOString(),warningCount:warnings.filter(x=>x.severity==="warning").length,warnings,checks};
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection = {}) {
   const provider = ["cloudflare","openrouter","auto","gemini","groq"].includes(String(selection.provider||"").toLowerCase()) ? String(selection.provider).toLowerCase() : "auto";
   const model = String(selection.model||"openrouter/free").trim().slice(0,180) || "openrouter/free";
   const cloudflare = async () => {
     if (!env?.AI) throw new Error("Workers AI no está habilitado. Comprueba el binding AI del Worker.");
-    const r = await env.AI.run(cloudflareModel, options);
+    const r = await Promise.race([env.AI.run(cloudflareModel, options), new Promise((_, reject) => setTimeout(() => reject(new Error("Cloudflare Workers AI superó el límite de 12 segundos.")), 12000))]);
     const response = String(r?.response || r?.result?.response || "").trim();
     if (!response) throw new Error("Cloudflare Workers AI no devolvió contenido.");
     return {response,model:cloudflareModel,provider:"cloudflare"};
@@ -921,7 +931,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const contents = (options.messages || []).filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }));
     let diagnostic = "";
     for (const outputBudget of [2600, 4096]) {
-      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: outputBudget } }) });
+      const r = await fetchWithTimeout("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: outputBudget } }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error("Gemini HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
       const candidate = d?.candidates?.[0] || {};
@@ -937,7 +947,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const model = selection.model && selection.model !== "auto" && provider === "groq" ? selection.model : "openai/gpt-oss-120b";
     let diagnostic = "";
     for (const outputBudget of [3000, 5000]) {
-      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) });
+      const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
       const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
@@ -957,7 +967,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
       const outputBudget = attempt === 1
         ? Math.max(Number(options.max_tokens) || 800, 1800)
         : Math.max(Number(options.max_tokens) || 800, 3500);
-      const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const r = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + env.OPENROUTER_API_KEY,
