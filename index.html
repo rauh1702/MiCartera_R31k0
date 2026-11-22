@@ -481,6 +481,7 @@
                     <button type="button" class="r31-nav-button" onclick="toggleMenuGroup('myPortfolioSubmenu', this)"><i class="fa-solid fa-chart-pie text-emerald-300"></i> Mycartera <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
                     <div id="myPortfolioSubmenu" class="menu-submenu r31-dropdown">
                         <button type="button" onclick="showBenchmarkView()"><i class="fa-solid fa-scale-balanced"></i>Comparativa</button>
+                        <button type="button" onclick="showCompanyComparatorView()"><i class="fa-solid fa-building-columns"></i>Comparador de empresas</button>
                         <button type="button" onclick="showRiskAnalysisView()"><i class="fa-solid fa-shield-halved"></i>Riesgo</button>
                         <button type="button" onclick="showPerformanceView()"><i class="fa-solid fa-chart-line"></i>Rentabilidad</button>
                         <button type="button" onclick="showInvestmentJournalView()"><i class="fa-solid fa-book-open"></i>Diario de inversión <span id="journal-review-badge" hidden class="ml-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black text-white">0</span></button>
@@ -1035,6 +1036,21 @@
                 </section>
                 <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100"><strong>Importante:</strong> los indicadores fundamentales son datos descriptivos, no recomendaciones de compra o venta. Comprueba siempre la fecha de los últimos resultados y los informes oficiales de la empresa.</div>
             </section>
+        </section>
+
+        <!-- Comparador fundamental de empresas -->
+        <section id="company-comparator-view" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div><p class="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">Análisis · Comparación</p><h2 class="text-2xl sm:text-3xl font-black text-white mt-1">Comparador de empresas</h2><p class="text-sm text-slate-300 mt-1">Compara de 2 a 3 compañías con los datos fundamentales disponibles.</p></div>
+                <button onclick="showDashboardView()" class="rounded-xl border border-slate-500 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Volver</button>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="company-comparator-selectors"></div>
+                <div class="flex flex-wrap gap-2"><button id="company-comparator-run" onclick="runCompanyComparison()" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-bold"><i class="fa-solid fa-scale-balanced mr-2"></i>Comparar empresas</button><button onclick="refreshCompanyComparatorOptions()" class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">Actualizar lista</button></div>
+                <p id="company-comparator-status" class="text-sm text-slate-300" aria-live="polite">Selecciona al menos dos empresas.</p>
+            </div>
+            <div id="company-comparator-results" class="space-y-4"></div>
+            <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100"><strong>Importante:</strong> la comparación utiliza los últimos datos que Yahoo Finance facilita a través del Worker. Puede haber métricas no disponibles o diferencias contables entre sectores. No es una recomendación automática de inversión.</div>
         </section>
 
         <!-- Resumen diario: rentabilidad latente frente al PMP -->
@@ -3164,6 +3180,98 @@
                     return '<div class="border-t border-slate-700 py-2"><p class="font-semibold text-slate-200">'+esc(x.title)+' · '+esc(x.module)+' · '+state+'</p><p class="mt-1 break-words text-slate-400">Claves del módulo: '+esc(x.topKeys.join(", ")||"ninguna")+'</p><p class="mt-1 break-words text-slate-400">Claves encontradas en todos los periodos: '+esc(x.sampleKeys.join(", ")||"ninguna")+'</p><ul class="mt-1 list-disc pl-4 text-slate-400">'+checks+'</ul></div>';
                 }).join("");
             }
+        }
+
+        let companyComparatorRequestId = 0;
+        function companyComparatorCandidates(){
+            const map=new Map();
+            (Array.isArray(assetsData)?assetsData:[]).forEach(a=>{
+                const symbol=String(a.ticker||a.symbol||"").trim().toUpperCase();
+                if(symbol&&!map.has(symbol))map.set(symbol,{symbol,name:a.name||symbol});
+            });
+            (Array.isArray(watchlistData)?watchlistData:[]).forEach(a=>{
+                const symbol=String(a.symbol||a.ticker||"").trim().toUpperCase();
+                if(symbol&&!map.has(symbol))map.set(symbol,{symbol,name:a.name||symbol});
+            });
+            return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));
+        }
+        function refreshCompanyComparatorOptions(){
+            const host=document.getElementById("company-comparator-selectors");if(!host)return;
+            const candidates=companyComparatorCandidates();
+            if(!candidates.length){host.innerHTML='<p class="text-sm text-slate-400">No hay empresas con ticker en cartera o seguimiento.</p>';return;}
+            host.innerHTML=[0,1,2].map((slot)=>{
+                const options=candidates.map(a=>'<option value="'+escapeStrategyHtml(a.symbol)+'">'+escapeStrategyHtml(a.name)+' · '+escapeStrategyHtml(a.symbol)+'</option>').join("");
+                return '<label class="block text-sm font-semibold text-slate-200">Empresa '+(slot+1)+'<select id="company-comparator-'+slot+'" class="mt-2 w-full rounded-xl border border-slate-600 bg-slate-800 text-white px-3 py-3"><option value="">'+(slot===2?'Opcional':'Selecciona empresa')+'</option>'+options+'</select></label>';
+            }).join("");
+            const selects=[0,1,2].map(i=>document.getElementById("company-comparator-"+i));
+            if(selects[0]&&candidates.length)selects[0].value=candidates[0].symbol;
+            if(selects[1]&&candidates.length>1)selects[1].value=candidates[1].symbol;
+        }
+        function showCompanyComparatorView(){
+            ['dashboard-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('company-comparator-view')?.classList.remove('hidden');
+            document.getElementById('headerToolbar')?.classList.add('hidden');
+            document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
+            refreshCompanyComparatorOptions();window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function comparatorRaw(v){
+            if(v==null)return null;
+            if(typeof v==="number")return Number.isFinite(v)?v:null;
+            if(typeof v==="object"&&v.raw!=null){const n=Number(v.raw);return Number.isFinite(n)?n:null;}
+            return null;
+        }
+        function comparatorMetric(data,key){
+            const paths=key.split(".");
+            let value=data;for(const p of paths)value=value?.[p];
+            return comparatorRaw(value);
+        }
+        function comparatorFormat(value,type="number"){
+            if(value===null||!Number.isFinite(value))return "No disponible";
+            if(type==="pct")return (value>0?"+":"")+(value*100).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+"%";
+            if(type==="ratio")return value.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+"x";
+            return value.toLocaleString("es-ES",{maximumFractionDigits:2});
+        }
+        async function runCompanyComparison(){
+            const symbols=[0,1,2].map(i=>document.getElementById("company-comparator-"+i)?.value||"").filter(Boolean);
+            const unique=[...new Set(symbols)];
+            const status=document.getElementById("company-comparator-status"),host=document.getElementById("company-comparator-results"),button=document.getElementById("company-comparator-run");
+            if(unique.length<2){status.textContent="Selecciona al menos dos empresas diferentes.";return;}
+            if(unique.length!==symbols.length){status.textContent="No repitas la misma empresa.";return;}
+            const requestId=++companyComparatorRequestId;button.disabled=true;host.innerHTML="";status.textContent="Consultando datos fundamentales de "+unique.join(", ")+"…";
+            const workerBase="https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev";
+            try{
+                const results=await Promise.all(unique.map(async symbol=>{
+                    const url=workerBase+"/fundamentals?symbol="+encodeURIComponent(symbol)+"&_="+Date.now();
+                    const json=await fetchJsonWithTimeout(url,20000);
+                    const data=json.quoteSummary?.result?.[0];
+                    if(!data)throw new Error(symbol+": "+(json.quoteSummary?.error?.description||json.error||"sin datos fundamentales"));
+                    return {symbol,data};
+                }));
+                if(requestId!==companyComparatorRequestId)return;
+                const rows=[
+                    ["Sector","assetProfile.sector","text"],["Capitalización bursátil","price.marketCap","money"],
+                    ["PER (últimos 12 meses)","summaryDetail.trailingPE","ratio"],["PER estimado","summaryDetail.forwardPE","ratio"],
+                    ["Precio / ventas","summaryDetail.priceToSalesTrailing12Months","ratio"],["Crecimiento de ingresos","financialData.revenueGrowth","pct"],
+                    ["Crecimiento de beneficios","financialData.earningsGrowth","pct"],["Margen bruto","financialData.grossMargins","pct"],
+                    ["Margen operativo","financialData.operatingMargins","pct"],["Margen neto","financialData.profitMargins","pct"],
+                    ["ROE","financialData.returnOnEquity","pct"],["Efectivo","financialData.totalCash","money"],
+                    ["Deuda total","financialData.totalDebt","money"],["Flujo de caja libre","financialData.freeCashflow","money"],
+                    ["Ratio corriente","financialData.currentRatio","ratio"],["Precio objetivo medio","financialData.targetMeanPrice","money"],
+                    ["Número de analistas","financialData.numberOfAnalystOpinions","number"]
+                ];
+                const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+                const cell=(item,path,type)=>{
+                    if(type==="text"){let v=path.split(".").reduce((o,k)=>o?.[k],item.data);return esc(v||"No disponible");}
+                    const n=comparatorMetric(item.data,path);if(n===null)return "No disponible";
+                    if(type==="pct")return comparatorFormat(n,"pct");
+                    if(type==="ratio")return comparatorFormat(n,"ratio");
+                    if(type==="money")return comparatorFormat(n)+" "+esc(item.data.price?.currency||"");
+                    return comparatorFormat(n);
+                };
+                host.innerHTML='<div class="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900"><table class="min-w-full text-sm"><thead><tr class="bg-slate-800"><th class="sticky left-0 bg-slate-800 px-4 py-3 text-left text-slate-300">Indicador</th>'+results.map(x=>'<th class="px-4 py-3 text-left font-extrabold text-white">'+esc(x.data.price?.shortName||x.data.price?.longName||x.symbol)+'<span class="block text-xs text-cyan-300">'+esc(x.symbol)+'</span></th>').join("")+'</tr></thead><tbody>'+rows.map((r,i)=>'<tr class="'+(i%2?'bg-slate-950/50':'')+' border-t border-slate-800"><th class="sticky left-0 '+(i%2?'bg-slate-900':'bg-slate-950')+' px-4 py-3 text-left font-semibold text-slate-300">'+esc(r[0])+'</th>'+results.map(x=>'<td class="whitespace-nowrap px-4 py-3 text-slate-100">'+cell(x,r[1],r[2])+'</td>').join("")+'</tr>').join("")+'</tbody></table></div><p class="text-xs text-slate-400">Importes en la divisa de cotización de cada empresa; no se convierten ni se comparan directamente entre monedas.</p>';
+                status.textContent="Comparación completada · "+results.length+" empresas · "+new Date().toLocaleString("es-ES")+". Los campos sin dato se muestran como «No disponible».";
+            }catch(error){if(requestId===companyComparatorRequestId)status.textContent="No se pudo completar la comparación: "+(error.message||"error desconocido")+". No se han sustituido datos ausentes por estimaciones.";}
+            finally{if(requestId===companyComparatorRequestId)button.disabled=false;}
         }
 
         async function loadWatchFundamentals(){
