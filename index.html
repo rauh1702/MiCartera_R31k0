@@ -509,7 +509,28 @@
         color: #f1f5f9 !important;
     }
 
-    .warren-messages{min-height:380px;max-height:70vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at 92% 0%,rgba(180,130,35,.10),transparent 42%),radial-gradient(ellipse at 0% 100%,rgba(30,64,110,.12),transparent 45%),#080f1c;scrollbar-width:thin;scrollbar-color:#475569 transparent}
+    .warren-messages{min-height:440px;max-height:72vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at 90% 0%,rgba(245,158,11,.12),transparent 38%),radial-gradient(ellipse at 0% 100%,rgba(56,189,248,.09),transparent 42%),linear-gradient(145deg,#070d18,#0b1424 55%,#101827);scrollbar-width:thin;scrollbar-color:#475569 transparent;padding:22px!important}
+    #warren-conversation-panel{max-width:1500px;margin-inline:auto}
+    #warren-conversation-panel>div:first-child{padding:14px 16px;border:1px solid rgba(148,163,184,.16);border-radius:22px;background:linear-gradient(110deg,rgba(15,23,42,.98),rgba(30,41,59,.8));box-shadow:0 14px 45px rgba(0,0,0,.2)}
+    #warren-conversation-panel .min-w-0.overflow-hidden.rounded-2xl{border-color:rgba(148,163,184,.22);border-radius:24px;background:rgba(8,15,28,.94);box-shadow:0 24px 70px rgba(0,0,0,.3)}
+    .warren-message-row{gap:11px;margin:0 0 18px;align-items:flex-end}
+    .warren-avatar{flex-basis:34px;width:34px;height:34px;border-radius:13px;margin-bottom:5px;box-shadow:0 5px 18px rgba(0,0,0,.25)}
+    .warren-avatar.assistant-avatar{background:linear-gradient(145deg,#f5c451,#8b5b16);color:#1c1917}.warren-avatar.user-avatar{background:linear-gradient(145deg,#334155,#172033)}
+    .warren-bubble{max-width:min(91%,980px);border-radius:22px;padding:17px 19px;line-height:1.8;box-shadow:0 14px 38px rgba(0,0,0,.22);backdrop-filter:blur(12px)}
+    .warren-bubble.user{background:linear-gradient(135deg,#a16207,#713f12 65%,#422006);border:1px solid rgba(251,191,36,.38);border-bottom-right-radius:7px}
+    .warren-bubble.assistant{background:linear-gradient(145deg,rgba(25,39,59,.98),rgba(13,23,39,.98));border:1px solid rgba(125,153,185,.28);border-bottom-left-radius:7px}
+    .warren-message-top{margin-bottom:13px;padding-bottom:10px}
+    .warren-summary-panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 16px}
+    .warren-summary-item{min-width:0;border:1px solid rgba(148,163,184,.2);border-radius:13px;background:rgba(7,14,26,.62);padding:10px 11px}
+    .warren-summary-label{display:block;color:#94a3b8;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+    .warren-summary-value{display:block;color:#e2e8f0;font-size:12px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
+    .warren-summary-value[data-tone="good"]{color:#86efac}.warren-summary-value[data-tone="mixed"]{color:#fcd34d}.warren-summary-value[data-tone="bad"]{color:#fca5a5}.warren-summary-value[data-tone="unknown"]{color:#94a3b8}
+    #warren-chat-form{position:sticky;bottom:0;z-index:3;background:linear-gradient(180deg,rgba(8,15,28,.86),rgba(8,15,28,.99));backdrop-filter:blur(18px);border-top:1px solid rgba(148,163,184,.16);padding:16px}
+    #warren-chat-form>div:first-of-type{border:1px solid rgba(148,163,184,.28);background:linear-gradient(145deg,#111d30,#0b1424);border-radius:20px;padding:9px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+    #warren-chat-input{min-height:54px;padding:11px 12px;font-size:14px;line-height:1.55}
+    #warren-send-button{height:48px;width:50px;border-radius:15px;background:linear-gradient(145deg,#fcd34d,#d97706);box-shadow:0 7px 20px rgba(217,119,6,.22)}
+    @media(max-width:640px){.warren-messages{min-height:340px;max-height:70vh;padding:13px!important}.warren-message-row{gap:7px;margin-bottom:14px}.warren-avatar{flex-basis:27px;width:27px;height:27px}.warren-bubble{max-width:calc(100% - 34px);min-width:0;padding:12px 13px;font-size:12px;border-radius:17px}.warren-summary-panel{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.warren-summary-item{padding:8px}.warren-summary-value{font-size:11px}#warren-chat-form{padding:10px}#warren-chat-input{font-size:13px;min-height:48px}}
+
     .warren-message-row{display:flex;align-items:flex-start;gap:10px;width:100%;animation:warrenMessageIn .2s ease-out}.warren-message-row.is-user{justify-content:flex-end}.warren-message-row.is-assistant{justify-content:flex-start}
     .warren-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;border-radius:10px;font-size:12px;margin-top:5px}
     .warren-avatar.assistant-avatar{background:linear-gradient(145deg,#78350f,#292014);border:1px solid rgba(251,191,36,.35);color:#fcd34d}.warren-avatar.user-avatar{background:#1e293b;border:1px solid #475569;color:#cbd5e1;order:2}
@@ -3032,6 +3053,13 @@
                 const p=document.createElement('p');p.className='warren-report-paragraph';appendWarrenInlineText(p,line);target().appendChild(p);i++;
             }
         }
+        function extractWarrenSummary(content){
+            const specs=[["Situación financiera",/^Situación financiera\s*:\s*(.+)$/i],["Crecimiento",/^Crecimiento\s*:\s*(.+)$/i],["Riesgo",/^Riesgo\s*:\s*(.+)$/i],["Calidad de información",/^Calidad de información\s*:\s*(.+)$/i]];
+            const found={},remaining=[];
+            String(content||"").split("\n").forEach(line=>{let matched=false;for(const [label,re] of specs){const m=line.trim().replace(/^[-*•]\s*/,"").replace(/\*\*/g,"").match(re);if(m){found[label]=m[1].trim().slice(0,180);matched=true;break;}}if(!matched)remaining.push(line);});
+            if(!Object.keys(found).length)return{summary:null,content:String(content||"")};
+            return{summary:specs.map(([label])=>({label,value:found[label]||"No evaluado"})),content:remaining.join("\n").trim()};
+        }
         function renderWarrenMessages(){
             const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
             if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-10 max-w-xl text-center text-sm leading-6 text-slate-400';const icon=document.createElement('div');icon.className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-slate-800 text-2xl text-amber-300 shadow-lg shadow-amber-950/20';icon.innerHTML='<i class="fa-solid fa-comments-dollar"></i>';const title=document.createElement('p');title.className='text-xl font-black text-white';title.textContent='Buenas. Soy WARREN.';const desc=document.createElement('p');desc.className='mt-2';desc.textContent='Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.';welcome.append(icon,title,desc);host.appendChild(welcome);return;}
@@ -3046,7 +3074,7 @@
                 const time=document.createElement('span');time.className='warren-message-time';if(m.at){const d=new Date(m.at);if(!Number.isNaN(d.getTime()))time.textContent=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
                 const copy=document.createElement('button');copy.type='button';copy.className='warren-copy-button';copy.title='Copiar mensaje';copy.setAttribute('aria-label','Copiar mensaje');copy.innerHTML='<i class="fa-regular fa-copy"></i><span>Copiar</span>';copy.addEventListener('click',()=>copyWarrenMessage(index,copy));
                 tools.append(time,copy);top.append(role,tools);
-                const body=document.createElement('div');body.className='warren-message-content';if(m.role==='assistant')renderWarrenRichContent(body,m.content);else body.textContent=m.content;
+                const body=document.createElement('div');body.className='warren-message-content';if(m.role==='assistant'){const parsed=extractWarrenSummary(m.content);if(parsed.summary){const panel=document.createElement('div');panel.className='warren-summary-panel';parsed.summary.forEach(item=>{const card=document.createElement('div');card.className='warren-summary-item';const label=document.createElement('span');label.className='warren-summary-label';label.textContent=item.label;const value=document.createElement('span');value.className='warren-summary-value';value.textContent=item.value;const v=item.value.toLowerCase();value.dataset.tone=/favorable|sólid|bajo riesgo|calidad alta/.test(v)?'good':/desfavorable|alto riesgo|insuficiente/.test(v)?'bad':/mixt|moderad|medio|limitad|parcial/.test(v)?'mixed':'unknown';card.append(label,value);panel.appendChild(card);});body.appendChild(panel);}renderWarrenRichContent(body,parsed.content);}else body.textContent=m.content;
                 bubble.append(top,body);row.append(avatar,bubble);host.appendChild(row);
             });host.scrollTop=host.scrollHeight;
         }
