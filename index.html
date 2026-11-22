@@ -3291,17 +3291,23 @@ function showWatchlistView(){['dashboard-view','daily-summary-view','strategies-
             if (trQuote) {
                 const last = Number(trQuote.last?.price), bid = Number(trQuote.bid?.price), ask = Number(trQuote.ask?.price), pre = Number(trQuote.pre?.price);
                 const midpoint = bid > 0 && ask >= bid ? (bid + ask) / 2 : 0;
-                const selectedPrice = last > 0 ? last : (midpoint > 0 ? midpoint : (bid > 0 ? bid : ask));
+                // Ajuste selectivo según la comparación con Trade Republic:
+                // Indra y Digital Security usan el punto medio; Oro y Plata conservan el último.
+                const useMidpoint = isin === "ES0118594417" || isin === "IE00BG0J4C88";
+                const selectedPrice = useMidpoint && midpoint > 0
+                    ? midpoint
+                    : (last > 0 ? last : (midpoint > 0 ? midpoint : (bid > 0 ? bid : ask)));
                 if (selectedPrice > 0) {
-                    const quoteTime = Number(trQuote.last?.time || trQuote.bid?.time || trQuote.ask?.time || 0);
+                    const quoteTime = Number((useMidpoint ? (trQuote.bid?.time || trQuote.ask?.time) : trQuote.last?.time) || trQuote.last?.time || trQuote.bid?.time || trQuote.ask?.time || 0);
+                    const selectedSide = useMidpoint && midpoint > 0 ? "midpoint" : (last > 0 ? "last" : (midpoint > 0 ? "midpoint" : (bid > 0 ? "bid" : "ask")));
                     return {
                         price: Number(selectedPrice.toFixed(6)), rawPrice: selectedPrice, fxToEUR: 1,
                         fxRateDate: rates.rateDate || null, fxRateSource: "Trade Republic · cotización ya expresada en EUR (LSX)",
                         previousCloseEUR: pre > 0 ? Number(pre.toFixed(6)) : null,
                         symbol: asset.yahooTicker || asset.ticker || isin, currency: "EUR",
-                        quoteSource: "Trade Republic · LSX · " + (last > 0 ? "último precio" : "bid/ask"),
+                        quoteSource: "Trade Republic · LSX · " + (selectedSide === "midpoint" ? "punto medio bid/ask" : selectedSide === "last" ? "último precio" : selectedSide),
                         bidRaw: bid > 0 ? bid : null, askRaw: ask > 0 ? ask : null,
-                        selectedSide: last > 0 ? "last" : (midpoint > 0 ? "midpoint" : (bid > 0 ? "bid" : "ask")),
+                        selectedSide,
                         marketTime: quoteTime || null, marketState: trQuote.qualityId || "LSX",
                         exchangeName: "Lang & Schwarz (LSX)", fullExchangeName: "Lang & Schwarz (LSX)",
                         instrumentType: "", regularMarketPrice: last > 0 ? last : selectedPrice,
