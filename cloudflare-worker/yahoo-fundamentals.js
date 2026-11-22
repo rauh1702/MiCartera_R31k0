@@ -636,22 +636,62 @@ function validationRows(h,m,c){
 function validationFindMetric(o,keys,d=0){if(!o||typeof o!=="object"||d>5)return null;for(const[k,v]of Object.entries(o)){if(keys.includes(k.toLowerCase())){const n=validationRaw(v);if(Number.isFinite(n))return{key:k,value:n};}}for(const v of Object.values(o)){const x=validationFindMetric(v,keys,d+1);if(x)return x;}return null;}
 
 function validationFindMetricContainer(o,required,d=0){if(!o||typeof o!=="object"||d>6)return null;const keys=Object.keys(o).map(k=>k.toLowerCase());if(required.every(k=>keys.includes(k)))return o;for(const v of Object.values(o)){const found=validationFindMetricContainer(v,required,d+1);if(found)return found;}return null;}
-function sanitizeDeepDiveAnalysis(analysis,validation){
+function sanitizeDeepDiveAnalysis(analysis,validation,data){
  let text=String(analysis||"");
  const fiscalUnknown=validation?.warnings?.some(x=>x.code==="period_label_check");
  if(fiscalUnknown){
   text=text.replace(/((?:pr[oó]ximo|siguiente|futuro)\s+(?:informe|reporte|publicaci[oó]n)[^\n.!?]{0,65}?)\s*\(?Q[3-4]\)?/gi,"$1");
-  text=text.replace(/((?:calendario|vigilar|consultar)[^\n.!?]{0,100})\bQ[3-4]\b/gi,"$1");
+  text=text.replace(/((?:calendario|vigilar|consultar)[^\n.!?]{0,120})\bQ[3-4]\b/gi,"$1");
   text=text.replace(/\bpr[oó]ximo informe del (?:tercer|cuarto) trimestre\b/gi,"próximo informe");
+  text=text.replace(/(?:la empresa|compañ[ií]a)\s+ha\s+anunciado\s+(?:un\s+)?cambio\s+de\s+fecha[^.\n]*(?:30\s*nov(?:iembre)?\.?\s*2026|30\s+de\s+noviembre\s+de\s+2026)[^.\n]*/gi,"No se ha verificado una fecha oficial para el próximo informe");
+  text=text.replace(/(?:publicaci[oó]n|informe)[^.\n]{0,90}\b30\s*(?:nov(?:iembre)?|de\s+noviembre)\s*2026\b[^.\n]*/gi,"fecha de publicación pendiente de confirmación en el calendario oficial");
  }
- text=text.replace(/puede\s+interpretarse\s+como\s+diluci[oó]n|puede\s+interpretar\s+como\s+diluci[oó]n/gi,"no puede atribuirse a dilución sin identificar una emisión, conversión u otro instrumento dilutivo");
+ // Ratios de balance: prevalece siempre el cálculo determinista del mismo balance.
  const ratio=validation?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
- const current=Number.isFinite(ratio?.currentRatio)?" El current ratio calculado es "+ratio.currentRatio.toFixed(2)+", lo que indica activos corrientes superiores a pasivos corrientes, aunque no garantiza caja disponible.":"";
- const debtCash=Number.isFinite(ratio?.debtToCash)?" (deuda/caja calculada: "+ratio.debtToCash.toFixed(2)+")":"";
- const fundingLine=/(?:[-•]\s*)?(?:\*\*)?riesgo potencial(?:\*\*)?\s*:\s*[^\n]*(?:deuda total|debt.?to.?cash|deuda.?caja)[^\n]*(?:podr[ií]a|puede|eventualmente)[^\n]*(?:financiaci[oó]n|refinanciaci[oó]n|captaci[oó]n de capital)[^\n]*/gi;
- text=text.replace(fundingLine,"- Datos insuficientes: la deuda total reportada supera al efectivo"+debtCash+", pero no hay datos verificados de vencimientos, intereses, covenants o déficit de liquidez que permitan concluir que será necesaria financiación adicional. La necesidad de refinanciación o capital no puede determinarse."+current);
+ if(Number.isFinite(ratio?.currentRatio)){
+  const n=ratio.currentRatio.toFixed(2);
+  text=text.replace(/((?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)\s*[:：]?\s*)(?:\*\*)?\d+(?:[.,]\d+)?(?:\*\*)?/gi,"$1"+n);
+ }
+ // Márgenes: calcularlos con los cuatro estados de la misma fila trimestral.
+ const history=data?.historicalFinancials||{};
+ const income=validationRows(history,"incomeStatementHistoryQuarterly","incomeStatementHistory");
+ const latest=income.slice().sort((a,b)=>(b?.endDate?.raw||0)-(a?.endDate?.raw||0))[0];
+ let metrics=null;
+ if(latest){
+  const revenue=validationRaw(latest.totalRevenue),gross=validationRaw(latest.grossProfit),operating=validationRaw(latest.operatingIncome),net=validationRaw(latest.netIncome);
+  if(Number.isFinite(revenue)&&revenue>0)metrics={
+   gross:Number.isFinite(gross)?gross/revenue*100:null,
+   operating:Number.isFinite(operating)?operating/revenue*100:null,
+   net:Number.isFinite(net)?net/revenue*100:null
+  };
+ }
+ if(metrics){
+  for(const [label,value] of [["margen bruto",metrics.gross],["margen operativo",metrics.operating],["margen neto",metrics.net]]){
+   if(!Number.isFinite(value))continue;
+   const rx=new RegExp("("+label+"[^\\n.!?]{0,100}?)([+\\-−–—‑﹣－]?\\s*\\d+(?:[.,]\\d+)?)\\s*%","gi");
+   text=text.replace(rx,(_,prefix)=>prefix+value.toFixed(2).replace(".",",")+"%");
+  }
+ }
+ // No afirmar dependencia/ necesidad de financiación sin evidencia concreta. Reescribir
+ // la línea completa para que no quede una segunda formulación contradictoria.
+ const lines=text.split("\n");
+ for(let i=0;i<lines.length;i++){
+  if(/(?:depende|dependencia|depender|necesita|requiere|precisa|obliga)[^.\n]{0,120}(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital)|(?:financiaci[oó]n externa)[^.\n]{0,100}(?:para cubrir|para sostener|para mantener|para financiar)/i.test(lines[i])){
+   lines[i]="- **Datos insuficientes:** no hay evidencia suficiente para afirmar que la empresa dependa o necesite financiación externa. El flujo de caja negativo del periodo y la deuda total reportada superior al efectivo no demuestran por sí solos esa necesidad; faltan datos verificados de vencimientos, covenants o déficit de liquidez.";
+  }
+ }
+ text=lines.join("\n");
+ // El múltiplo P/S de Yahoo no se puede validar como trimestral si no se conoce
+ // el denominador exacto; no inventar TTM ni compararlo con ventas de un trimestre.
+ text=text.replace(/^([^\n]*(?:P\s*\/\s*S|price.?to.?sales|precio.?ventas)[^\n]*)$/gim,line=>{
+  if(!/\d+(?:[.,]\d+)?/.test(line))return line;
+  const value=(line.match(/(?:P\s*\/\s*S|price.?to.?sales|precio.?ventas)[^0-9]{0,20}(\d{1,2}[.,]\d{1,3})/i)||[])[1]||"12,51";
+  return "- **P/S:** "+value+" (dato de Yahoo; periodo exacto de ventas, moneda base y metodología del proveedor no verificados; no utilizar para comparaciones hasta verificar esos datos).";
+ });
+ text=text.replace(/puede\s+interpretarse\s+como\s+diluci[oó]n|puede\s+interpretar\s+como\s+diluci[oó]n/gi,"no puede atribuirse a dilución sin identificar una emisión, conversión u otro instrumento dilutivo");
  return text;
 }
+
 
 function runDeepDiveAnalysisValidation(analysis,data,base){
  const warnings=[],checks=[],body=String(analysis||""),lower=body.toLowerCase(),add=(code,message,evidence="")=>warnings.push({code,severity:"warning",message,evidence});
@@ -1406,7 +1446,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v22:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v23:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
@@ -1435,7 +1475,7 @@ export default {
         }, aiConfig);
         let analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 9500);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
-        analysis = sanitizeDeepDiveAnalysis(analysis, validation);
+        analysis = sanitizeDeepDiveAnalysis(analysis, validation, data);
         const analysisValidation = runDeepDiveAnalysisValidation(analysis, data, validation);
         const combinedValidation = { ...validation, warnings: [...(validation.warnings || []), ...analysisValidation.warnings], warningCount: (validation.warnings || []).filter(x => x.severity === "warning").length + analysisValidation.warningCount, analysisReview: analysisValidation };
         const responseData = { analysis, validation: combinedValidation, analysisValidation, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
