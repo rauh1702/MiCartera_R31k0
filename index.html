@@ -1114,7 +1114,7 @@
                 </div>
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 p-5">
                     <div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-xs font-bold uppercase tracking-widest text-cyan-400">Ficha de seguimiento</p><h2 id="watch-detail-name" class="mt-1 text-2xl sm:text-3xl font-black text-white">—</h2><p id="watch-detail-symbol" class="mt-1 text-sm text-slate-400">—</p></div><div class="text-left sm:text-right"><div id="watch-detail-price" class="text-3xl font-black text-white">—</div><div id="watch-detail-change" class="mt-1 text-sm font-bold text-slate-300">—</div><div id="watch-detail-time" class="mt-1 text-xs text-slate-400"></div></div></div>
-                    <div id="watch-detail-status" class="mt-4 text-sm text-slate-300" aria-live="polite">Preparando datos históricos…</div><div class="mt-4 rounded-xl border border-amber-500/30 bg-amber-950/30 p-4 space-y-3"><h3 class="font-bold text-amber-100"><i class="fa-solid fa-bullseye mr-2"></i>Objetivo de precio y alerta (€)</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><label class="text-xs text-amber-100">Compra · avisar al bajar a<input id="watch-target-buy" type="number" min="0" step="0.0001" placeholder="Sin objetivo" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"></label><label class="text-xs text-amber-100">Venta · avisar al subir a<input id="watch-target-sell" type="number" min="0" step="0.0001" placeholder="Sin objetivo" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"></label></div><button onclick="saveWatchTargets()" class="rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white">Guardar objetivos</button><div id="watch-target-status" class="text-xs text-slate-300"></div></div>
+                    <div id="watch-detail-status" class="mt-4 text-sm text-slate-300" aria-live="polite">Preparando datos históricos…</div><div class="mt-4 rounded-xl border border-amber-500/30 bg-amber-950/30 p-4 space-y-3"><h3 class="font-bold text-amber-100"><i class="fa-solid fa-bullseye mr-2"></i>Objetivo de precio y alerta (€)</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><label class="text-xs text-amber-100">Compra · avisar al bajar a<input id="watch-target-buy" type="number" min="0" step="0.0001" placeholder="Sin objetivo" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"></label><label class="text-xs text-amber-100">Venta · avisar al subir a<input id="watch-target-sell" type="number" min="0" step="0.0001" placeholder="Sin objetivo" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white"></label></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-lg border border-amber-500/20 bg-slate-800/70 p-3"><label class="text-xs text-amber-100">Avisar si sube desde la referencia (%)<input id="watch-target-up-pct" type="number" min="0.1" max="500" step="0.1" placeholder="Desactivado" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 p-2.5 text-sm text-white"></label><label class="text-xs text-amber-100">Avisar si baja desde la referencia (%)<input id="watch-target-down-pct" type="number" min="0.1" max="99" step="0.1" placeholder="Desactivado" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 p-2.5 text-sm text-white"></label><p class="sm:col-span-2 text-[11px] text-slate-400">La referencia será la cotización actual al guardar. La alerta se rearma al volver a la referencia.</p></div><button onclick="saveWatchTargets()" class="rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white">Guardar objetivos</button><div id="watch-target-status" class="text-xs text-slate-300"></div></div>
                 </div>
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5">
                     <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-extrabold text-white text-lg">Evolución del precio</h3><div class="flex flex-wrap gap-2"><button class="watch-range-btn" data-range="day" onclick="setWatchChartRange('day')">Día</button><button class="watch-range-btn" data-range="week" onclick="setWatchChartRange('week')">Semana</button><button class="watch-range-btn" data-range="month" onclick="setWatchChartRange('month')">Mes</button><button class="watch-range-btn active" data-range="year" onclick="setWatchChartRange('year')">Año</button></div></div>
@@ -1404,6 +1404,7 @@
                             </div>
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-lg border border-amber-200 bg-white/70 p-3"><label class="text-xs font-semibold text-slate-700">Avisar si sube desde la referencia (%)<input id="target-up-pct" type="number" min="0.1" max="500" step="0.1" placeholder="Desactivado" class="mt-1 w-full text-sm p-2.5 rounded-lg border border-amber-200 bg-white text-slate-900"></label><label class="text-xs font-semibold text-slate-700">Avisar si baja desde la referencia (%)<input id="target-down-pct" type="number" min="0.1" max="99" step="0.1" placeholder="Desactivado" class="mt-1 w-full text-sm p-2.5 rounded-lg border border-amber-200 bg-white text-slate-900"></label><p class="sm:col-span-2 text-[11px] text-slate-500">La referencia será la cotización actual al guardar. La alerta se rearma cuando el precio vuelve a la referencia.</p></div>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <button onclick="saveAssetTargets()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-3 rounded-lg">
                             <i class="fa-solid fa-floppy-disk mr-1"></i> Guardar objetivos
@@ -2885,11 +2886,11 @@
                 }
                 item.priceEUR=price;
                 item.changePct=changePct;
-                item.lastUpdate=new Date().toISOString();if(previous>0){const buy=Number(item.targetBuyPrice)||0,sell=Number(item.targetSellPrice)||0;if(buy>0){if(price>buy)item.targetBuyAlerted=false;else if(previous>buy&&price<=buy&&!item.targetBuyAlerted){item.targetBuyAlerted=true;sendWatchTargetAlert(item,'buy',buy,price);}}if(sell>0){if(price<sell)item.targetSellAlerted=false;else if(previous<sell&&price>=sell&&!item.targetSellAlerted){item.targetSellAlerted=true;sendWatchTargetAlert(item,'sell',sell,price);}}}}catch(e){item.error=e.message||'Cotización no disponible';}}
+                item.lastUpdate=new Date().toISOString();if(previous>0){checkPercentageMovementAlert(item,previous,price,'seguimiento');const buy=Number(item.targetBuyPrice)||0,sell=Number(item.targetSellPrice)||0;if(buy>0){if(price>buy)item.targetBuyAlerted=false;else if(previous>buy&&price<=buy&&!item.targetBuyAlerted){item.targetBuyAlerted=true;sendWatchTargetAlert(item,'buy',buy,price);}}if(sell>0){if(price<sell)item.targetSellAlerted=false;else if(previous<sell&&price>=sell&&!item.targetSellAlerted){item.targetSellAlerted=true;sendWatchTargetAlert(item,'sell',sell,price);}}}}catch(e){item.error=e.message||'Cotización no disponible';}}
         function sendWatchTargetAlert(item,kind,target,price){const msg=item.name+(kind==='buy'?' ha bajado hasta ':' ha subido hasta ')+price.toLocaleString('es-ES',{maximumFractionDigits:4})+' €. Objetivo: '+target.toLocaleString('es-ES',{maximumFractionDigits:4})+' €.';recordPriceAlert(item,kind,target,price,'seguimiento');showToast(msg);if('Notification'in window&&Notification.permission==='granted'){try{new Notification('MiCartera R31k0 · Objetivo alcanzado',{body:msg,tag:'watch-target-'+kind+'-'+item.symbol});}catch(e){console.warn(e);}}}
         function targetDistanceText(price,target){if(!(Number(price)>0)||!(Number(target)>0))return '—';const d=Number(target)-Number(price),p=d/Number(price)*100;return `${d>=0?'+':''}${d.toLocaleString('es-ES',{maximumFractionDigits:4})} € (${p>=0?'+':''}${p.toFixed(2)}%)`;}
         function renderWatchTargetStatus(item){const box=document.getElementById('watch-target-status');if(!box||!item)return;const p=Number(item.priceEUR)||0;box.innerHTML=[['Compra',item.targetBuyPrice],['Venta',item.targetSellPrice]].map(([n,t])=>`<p>${n}: ${Number(t)>0?Number(t).toLocaleString('es-ES',{maximumFractionDigits:4})+' €':'sin objetivo'} · Actual: ${p>0?p.toLocaleString('es-ES',{maximumFractionDigits:4})+' €':'—'} · Distancia: ${targetDistanceText(p,t)}</p>`).join('');}
-        function saveWatchTargets(){const item=watchlistData[watchDetailIndex];if(!item)return;const read=id=>{const s=document.getElementById(id).value.trim();if(!s)return null;const n=Number(s);return Number.isFinite(n)&&n>0?n:NaN;};const buy=read('watch-target-buy'),sell=read('watch-target-sell');if(Number.isNaN(buy)||Number.isNaN(sell)){showToast('Introduce objetivos mayores que cero o deja el campo vacío.');return;}if(buy!==item.targetBuyPrice)item.targetBuyAlerted=false;if(sell!==item.targetSellPrice)item.targetSellAlerted=false;item.targetBuyPrice=buy;item.targetSellPrice=sell;persistWatchlist();renderWatchTargetStatus(item);renderWatchlist();showToast('Objetivos de '+item.name+' guardados');}
+        function saveWatchTargets(){const item=watchlistData[watchDetailIndex];if(!item)return;const read=id=>{const s=document.getElementById(id).value.trim();if(!s)return null;const n=Number(s);return Number.isFinite(n)&&n>0?n:NaN;};const buy=read('watch-target-buy'),sell=read('watch-target-sell'),up=read('watch-target-up-pct'),down=read('watch-target-down-pct');if(Number.isNaN(buy)||Number.isNaN(sell)||Number.isNaN(up)||Number.isNaN(down)||(down!==null&&down>=100)){showToast('Revisa los objetivos y porcentajes: subida hasta 500 % y bajada inferior al 100 %.');return;}if(buy!==item.targetBuyPrice)item.targetBuyAlerted=false;if(sell!==item.targetSellPrice)item.targetSellAlerted=false;if(up!==item.targetUpPct||down!==item.targetDownPct){item.targetPctReferencePrice=Number(item.priceEUR)||null;item.targetUpPctAlerted=false;item.targetDownPctAlerted=false;}item.targetBuyPrice=buy;item.targetSellPrice=sell;item.targetUpPct=up;item.targetDownPct=down;persistWatchlist();renderWatchTargetStatus(item);renderWatchlist();showToast('Objetivos de '+item.name+' guardados');}
         async function refreshWatchlist(){
             if(!watchlistData.length){renderWatchlist();return;}
             const box=document.getElementById('watchlist-list');
@@ -2989,7 +2990,7 @@
         }
 
         function closeWatchDetail(){if(watchDetailChart){watchDetailChart.destroy();watchDetailChart=null;}watchDetailIndex=null;document.getElementById("watch-detail-view")?.classList.add("hidden");document.getElementById("watchlist-list")?.classList.remove("hidden");document.getElementById("watchlist-empty")?.classList.remove("hidden");}
-        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";document.getElementById('watch-target-buy').value=watchlistData[index].targetBuyPrice??'';document.getElementById('watch-target-sell').value=watchlistData[index].targetSellPrice??'';renderWatchTargetStatus(watchlistData[index]);renderWatchDetailEvents();await setWatchChartRange("year");loadWatchFundamentals();window.scrollTo({top:0,behavior:"smooth"});}
+        async function openWatchDetail(index){if(!watchlistData[index])return;watchDetailIndex=index;watchDetailRange="year";document.getElementById("watchlist-list")?.classList.add("hidden");document.getElementById("watchlist-empty")?.classList.add("hidden");document.getElementById("watch-detail-view")?.classList.remove("hidden");document.getElementById("watch-detail-name").textContent=watchlistData[index].name||watchlistData[index].symbol;document.getElementById("watch-detail-symbol").textContent=(watchlistData[index].symbol||"")+" · "+(watchlistData[index].exchange||"")+" · "+(watchlistData[index].currency||"");document.getElementById("watch-detail-status").textContent="Consultando histórico…";document.getElementById('watch-target-buy').value=watchlistData[index].targetBuyPrice??'';document.getElementById('watch-target-sell').value=watchlistData[index].targetSellPrice??'';document.getElementById('watch-target-up-pct').value=watchlistData[index].targetUpPct??'';document.getElementById('watch-target-down-pct').value=watchlistData[index].targetDownPct??'';renderWatchTargetStatus(watchlistData[index]);renderWatchDetailEvents();await setWatchChartRange("year");loadWatchFundamentals();window.scrollTo({top:0,behavior:"smooth"});}
         function setWatchChartRange(range){watchDetailRange=range;document.querySelectorAll(".watch-range-btn").forEach(b=>b.classList.toggle("active",b.dataset.range===range));return loadWatchDetail();}
         async function fetchWatchHistory(symbol,range){const params={day:"range=1d&interval=5m",week:"range=5d&interval=15m",month:"range=1mo&interval=1d",year:"range=1y&interval=1d"};const target="https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+(params[range]||params.year)+"&_="+Date.now();const errors=[];for(const makeProxyUrl of YAHOO_PROXIES){try{const json=await fetchJsonWithTimeout(makeProxyUrl(target),12000);const result=json.chart?.result?.[0];if(!result)throw new Error(json.chart?.error?.description||"Sin histórico disponible");const quote=result.indicators?.quote?.[0]||{};const timestamps=result.timestamp||[];const closes=quote.close||[];const rows=[];for(let i=0;i<timestamps.length;i++){const close=Number(closes[i]);if(Number.isFinite(close)&&close>0)rows.push({time:timestamps[i],close,volume:Number(quote.volume?.[i])||0});}if(!rows.length)throw new Error("Yahoo no devolvió precios históricos");return {rows,currency:result.meta?.currency||"EUR",meta:result.meta||{}};}catch(e){errors.push(e.message||"Error de conexión");}}throw new Error("No se pudo cargar el histórico: "+errors.join(" · "));}
         let watchFundamentalsRequestId=0;
@@ -4116,6 +4117,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('modal-color-picker').value = asset.color || '#3b82f6';
             document.getElementById('target-buy-price').value = asset.targetBuyPrice ?? '';
             document.getElementById('target-sell-price').value = asset.targetSellPrice ?? '';
+            document.getElementById('target-up-pct').value = asset.targetUpPct ?? '';
+            document.getElementById('target-down-pct').value = asset.targetDownPct ?? '';
             renderAssetTargetStatus(asset);
 
             document.getElementById('modal-shares').innerText = asset.shares.toLocaleString('es-ES', { maximumFractionDigits: 4 });
@@ -4177,14 +4180,18 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             };
             const buy = readTarget('target-buy-price');
             const sell = readTarget('target-sell-price');
-            if (Number.isNaN(buy) || Number.isNaN(sell)) {
-                showToast('Introduce objetivos mayores que cero o deja el campo vacío.');
+            const readPct = id => { const raw=document.getElementById(id).value.trim(); if(raw==='')return null; const n=Number(raw); return Number.isFinite(n)&&n>0&&n<=500?n:NaN; };
+            const upPct=readPct('target-up-pct'), downPct=readPct('target-down-pct');
+            if (Number.isNaN(buy) || Number.isNaN(sell) || Number.isNaN(upPct) || Number.isNaN(downPct) || (downPct!==null&&downPct>=100)) {
+                showToast('Revisa los objetivos y porcentajes: subida hasta 500 % y bajada inferior al 100 %.');
                 return;
             }
             if (buy !== currentActiveAsset.targetBuyPrice) currentActiveAsset.targetBuyAlerted = false;
             if (sell !== currentActiveAsset.targetSellPrice) currentActiveAsset.targetSellAlerted = false;
             currentActiveAsset.targetBuyPrice = buy;
             currentActiveAsset.targetSellPrice = sell;
+            if(upPct!==currentActiveAsset.targetUpPct||downPct!==currentActiveAsset.targetDownPct){currentActiveAsset.targetPctReferencePrice=Number(currentActiveAsset.currentPrice)||null;currentActiveAsset.targetUpPctAlerted=false;currentActiveAsset.targetDownPctAlerted=false;}
+            currentActiveAsset.targetUpPct=upPct; currentActiveAsset.targetDownPct=downPct;
             savePortfolioData();
             renderAssetTargetStatus(currentActiveAsset);
             showToast('Objetivos de ' + currentActiveAsset.name + ' guardados');
@@ -4224,6 +4231,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const price = Number(newPrice) || 0;
             asset.currentPrice = price;
             if (previousPrice <= 0 || price <= 0) return;
+            checkPercentageMovementAlert(asset,previousPrice,price,'cartera');
             const buy = Number(asset.targetBuyPrice) || 0;
             const sell = Number(asset.targetSellPrice) || 0;
 
@@ -4241,6 +4249,19 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                     sendAssetTargetAlert(asset, 'sell', sell, price);
                 }
             }
+        }
+
+        function checkPercentageMovementAlert(item,previous,price,source){
+            const reference=Number(item.targetPctReferencePrice)||previous;if(!(reference>0)||!(price>0))return;
+            const up=Number(item.targetUpPct)||0,down=Number(item.targetDownPct)||0,change=(price/reference-1)*100;
+            if(up>0){if(change<up)item.targetUpPctAlerted=false;else if(!item.targetUpPctAlerted){item.targetUpPctAlerted=true;sendPercentageMovementAlert(item,'up_pct',up,change,price,source);}}
+            if(down>0){if(change>-down)item.targetDownPctAlerted=false;else if(!item.targetDownPctAlerted){item.targetDownPctAlerted=true;sendPercentageMovementAlert(item,'down_pct',down,change,price,source);}}
+        }
+        function sendPercentageMovementAlert(item,kind,threshold,change,price,source){
+            const label=kind==='up_pct'?'subida':'caída',reference=Number(item.targetPctReferencePrice)||0;
+            const msg=(item.name||item.symbol)+' · '+label+' del '+Math.abs(change).toFixed(2)+' % desde '+reference.toLocaleString('es-ES',{maximumFractionDigits:4})+' €. Precio: '+price.toLocaleString('es-ES',{maximumFractionDigits:4})+' €. Umbral: '+threshold+' %.';
+            recordPriceAlert({name:item.name||item.symbol,ticker:item.ticker||item.symbol},kind,threshold,price,source);showToast(msg);
+            if('Notification'in window&&Notification.permission==='granted'){try{new Notification('MiCartera R31k0 · Alerta de variación',{body:msg,tag:'movement-'+kind+'-'+(item.ticker||item.symbol||item.name)});}catch(e){console.warn(e);}}
         }
 
         function updateCurrentPrice(newPrice) {
