@@ -897,13 +897,13 @@ function runDeepDiveValidation(data){
   const ca=validationRaw(latestBalance.totalCurrentAssets),cl=validationRaw(latestBalance.totalCurrentLiabilities);
   const currentRatio=Number.isFinite(ca)&&Number.isFinite(cl)&&cl>0?ca/cl:null;
   const debtCash=Number.isFinite(debtValue)&&Number.isFinite(cashValue)&&cashValue>0?debtValue/cashValue:null;
-  const debtEquity=Number.isFinite(debtValue)&&Number.isFinite(equityValue)&&equityValue>0?debtValue/equityValue*100:null;
-  checks.push({code:"balance_sheet_ratios_recalculated",periodEnd:date(latestBalance),currentRatio,debtToCash:debtCash,debtToEquityPct:debtEquity,currency:currencyKnown?financialCurrency:null});
+  const debtEquity=Number.isFinite(debtValue)&&Number.isFinite(equityValue)&&equityValue>0?debtValue/equityValue*100:null;  checks.push({code:"balance_sheet_ratios_recalculated",periodEnd:date(latestBalance),currentRatio,debtToCash:debtCash,debtToEquityPct:debtEquity,currency:currencyKnown?financialCurrency:null});
  }
  if(!data?.historicalFinancials)add("history_unavailable","warning","No se ha recibido histórico financiero; no afirmar tendencias, evolución de acciones ni patrones de consumo de caja.");
  return{version:"deep-dive-validation-v1",generatedAt:new Date().toISOString(),warningCount:warnings.filter(x=>x.severity==="warning").length,warnings,checks};
 }
 
+/* Evita que una llamada a un proveedor externo deje WARREN esperando indefinidamente. */
 async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -919,7 +919,13 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
   const model = String(selection.model||"openrouter/free").trim().slice(0,180) || "openrouter/free";
   const cloudflare = async () => {
     if (!env?.AI) throw new Error("Workers AI no está habilitado. Comprueba el binding AI del Worker.");
-    const r = await Promise.race([env.AI.run(cloudflareModel, options), new Promise((_, reject) => setTimeout(() => reject(new Error("Cloudflare Workers AI superó el límite de 12 segundos.")), 12000))]);
+    const r = await Promise.race([
+      env.AI.run(cloudflareModel, options),
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error("Cloudflare Workers AI superó el límite de 12 segundos.")),
+        12000
+      ))
+    ]);
     const response = String(r?.response || r?.result?.response || "").trim();
     if (!response) throw new Error("Cloudflare Workers AI no devolvió contenido.");
     return {response,model:cloudflareModel,provider:"cloudflare"};
@@ -931,7 +937,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const contents = (options.messages || []).filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }));
     let diagnostic = "";
     for (const outputBudget of [2600, 4096]) {
-      const r = await fetchWithTimeout("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: outputBudget } }) });
+      const r = await fetchWithTimeout("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: outputBudget } }) }, 10000);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error("Gemini HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
       const candidate = d?.candidates?.[0] || {};
@@ -947,7 +953,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const model = selection.model && selection.model !== "auto" && provider === "groq" ? selection.model : "openai/gpt-oss-120b";
     let diagnostic = "";
     for (const outputBudget of [3000, 5000]) {
-      const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) });
+      const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) }, 10000);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
       const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
@@ -983,7 +989,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
           stream: false,
           reasoning: { effort: "low", exclude: true }
         })
-      });
+      }, 10000);
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         const detail = String(data?.error?.message || data?.message || "Error del proveedor").slice(0, 500);
