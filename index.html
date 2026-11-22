@@ -2961,8 +2961,18 @@
                 // Investiga los activos citados; si la pregunta es general, consulta las dos mayores posiciones.
                 const allAssets=[...(context.positions||[]),...(context.watchlist||[])],q=question.toLowerCase();
                 const matched=allAssets.filter(a=>{const ticker=String(a.ticker||a.symbol||'').toLowerCase(),name=String(a.name||'').toLowerCase();return (ticker&&q.includes(ticker))||(name.length>3&&q.includes(name));});
-                const researchTargets=(matched.length?matched:(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,2)).slice(0,2);
-                context.externalResearch=await Promise.all(researchTargets.map(async asset=>{const symbol=String(asset.ticker||asset.symbol||'').trim();if(!symbol)return null;try{const r=await fetch(ASSET_NEWS_WORKER+'/research/company?symbol='+encodeURIComponent(symbol)+'&name='+encodeURIComponent(String(asset.name||'')));const d=await r.json().catch(()=>({}));return r.ok?d:{symbol,error:d.error||'Investigación no disponible',limitations:d.limitations||[]};}catch(e){return{symbol,error:String(e.message||e)};}}));
+                // No dispares investigación externa en todas las preguntas: solo cuando se mencione una empresa o se soliciten fundamentales/noticias.
+                const asksResearch=matched.length>0||/fundamental|resultados|ingresos|ventas|deuda|liquidez|flujo de caja|diluci|contratos|backlog|noticias|analiza.*empresa|analisis.*empresa/i.test(question);
+                const researchTargets=(matched.length?matched.slice(0,2):asksResearch?(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,1):[]).slice(0,2);
+                context.externalResearch=await Promise.all(researchTargets.map(async asset=>{
+                    const symbol=String(asset.ticker||asset.symbol||'').trim();if(!symbol)return null;
+                    try{
+                        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+                        const r=await fetch(ASSET_NEWS_WORKER+'/research/company?symbol='+encodeURIComponent(symbol)+'&name='+encodeURIComponent(String(asset.name||'')),{signal:controller.signal});
+                        clearTimeout(timer);const d=await r.json().catch(()=>({}));
+                        return r.ok?d:{symbol,error:d.error||'Investigación no disponible',limitations:d.limitations||[]};
+                    }catch(e){return{symbol,error:e.name==='AbortError'?'Tiempo límite de investigación externa (12 s).':String(e.message||e)};}
+                }));
                 context.externalResearch=context.externalResearch.filter(Boolean);
                 // Mantén todas las posiciones, pero limita el detalle accesorio para respetar el límite del Worker.
                 context.positions=(context.positions||[]).map(p=>({...p,transactions:(p.transactions||[]).slice(-5)}));
@@ -2972,15 +2982,23 @@
                 context.strategies=(context.strategies||[]).slice(0,20);
                 context.journal=(context.journal||[]).slice(-15);
                 let contextJson=JSON.stringify(context);
-                while(contextJson.length>19000&&(context.journal.length||context.recentNews.length||context.watchlist.length)){
-                    if(context.journal.length)context.journal=context.journal.slice(-Math.max(0,context.journal.length-3));
-                    else if(context.recentNews.length)context.recentNews=context.recentNews.slice(0,-2);
-                    else context.watchlist=context.watchlist.slice(0,-3);
+                // Compactación con progreso garantizado: evita bucles infinitos si quedan 1-3 entradas.
+                let compactPass=0;
+                while(contextJson.length>19000&&compactPass++<8){
+                    if(context.journal.length)context.journal=context.journal.length>3?context.journal.slice(-3):[];
+                    else if(context.recentNews.length)context.recentNews=context.recentNews.slice(0,Math.max(0,context.recentNews.length-3));
+                    else if(context.watchlist.length)context.watchlist=context.watchlist.slice(0,Math.max(0,context.watchlist.length-5));
+                    else if(context.strategies?.length)context.strategies=context.strategies.slice(0,Math.max(0,context.strategies.length-5));
+                    else if(context.externalResearch?.length)context.externalResearch=context.externalResearch.slice(0,1);
+                    else break;
                     contextJson=JSON.stringify(context);
                 }
                 const conversation=warrenMessages.slice(-8).map(m=>({role:m.role,content:m.content.slice(0,1200)}));
                 if(conversation[0]?.role==='assistant')conversation.shift();
-                const response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')})});
+                const aiController=new AbortController(),aiTimer=setTimeout(()=>aiController.abort(),45000);
+                let response;
+                try{response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')}),signal:aiController.signal});}
+                finally{clearTimeout(aiTimer);}
                 const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
                 if(status)status.textContent='Respondido · '+formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo utilizado':'');if(contextStatus)contextStatus.textContent='Contexto actualizado: '+new Date(data.generatedAt||Date.now()).toLocaleTimeString('es-ES');
