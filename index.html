@@ -2846,7 +2846,7 @@
                 const response=await fetch(ASSET_NEWS_WORKER+'/ai/company-deep-dive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig("deep-dive")})});
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
-                result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
+                const validationWarnings=Array.isArray(data.validation?.warnings)?data.validation.warnings:[];const validationHeader=validationWarnings.length?'CONTROL AUTOMÁTICO DE CONSISTENCIA · '+validationWarnings.filter(x=>x.severity==='warning').length+' ADVERTENCIA(S)\n'+validationWarnings.map(x=>'• '+x.message+(x.evidence?'\n  '+x.evidence:'')).join('\n')+'\n\n':'CONTROL AUTOMÁTICO DE CONSISTENCIA · Sin advertencias detectadas.\n\n';result.textContent=validationHeader+(data.analysis||'El modelo no devolvió un análisis.');result.classList.remove('hidden');
                 status.textContent='Análisis de '+selected.name+' generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+' · '+formatAIModelLabel(data);
             }catch(error){status.textContent='No se pudo completar el análisis: '+error.message;}
             finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Analizar empresa';}
