@@ -953,7 +953,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const model = selection.model && selection.model !== "auto" && provider === "groq" ? selection.model : "openai/gpt-oss-120b";
     let diagnostic = "";
     const warrenRequest = String(selection.section||"") === "warren";
-    const outputBudgets = warrenRequest ? [650] : [3000, 5000];
+    const outputBudgets = warrenRequest ? [1050] : [3000, 5000];
     for (const outputBudget of outputBudgets) {
       const r = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) }, 25000);
       const d = await r.json().catch(() => ({}));
@@ -1027,7 +1027,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
   if(provider==="groq")return await groq();
   if(provider==="openrouter")return await openrouter();
   const section=String(selection.section||"general");
-  const routes={"deep-dive":[gemini,groq,cloudflare],"portfolio":[gemini,groq,cloudflare],"monthly":[gemini,cloudflare,groq],"journal":[groq,cloudflare,gemini],"strategy":[gemini,groq,cloudflare],"warren":[groq,gemini]};
+  const routes={"deep-dive":[gemini,groq,cloudflare],"portfolio":[gemini,groq,cloudflare],"monthly":[gemini,cloudflare,groq],"journal":[groq,cloudflare,gemini],"strategy":[gemini,groq,cloudflare],"warren":[groq,gemini,cloudflare]};
   const route=routes[section]||[gemini,groq,cloudflare],failures=[];
   for(const run of route){try{const result=await run();return {...result,...(failures.length?{fallbackFrom:failures.join(" → ")}:{})};}catch(e){failures.push(String(e?.message||e).slice(0,180));}}
   throw new Error("No hay motores IA gratuitos disponibles: "+failures.join(" | "));
@@ -1665,7 +1665,7 @@ export default {
           "En small caps/biotech incluye FINANCIACIÓN, DILUCIÓN Y CALIDAD DEL CRECIMIENTO: separa riesgo confirmado, potencial y datos insuficientes. Market cap depende del precio y NO demuestra emisión ni dilución. Compara acciones en circulación solo con fechas/bases comparables; distingue emitidas, outstanding y promedio ponderado. No infieras warrants/convertibles por pasivos o aumentos de acciones. Detalla cantidad, strike, vencimiento y condiciones de warrants solo con fuente primaria; escenarios potenciales no son dilución materializada. Revisa caja, deuda, flujo operativo, capex y crecimiento orgánico/adquisiciones si hay datos.\\n"+
           "Si hay externalResearch, cita fuente, URL, fecha y periodo; prioriza SEC EDGAR/filings y reconoce sus límites. Corrige conclusiones previas contradichas por datos actuales. Responde a la pregunta concreta y explica qué evidencia sostiene o cambiaría la conclusión.\\nContexto financiero (JSON):\\n"+contextJson;
         const warrenProvider = ["gemini","groq"].includes(String(aiConfig.provider||"").toLowerCase()) ? aiConfig.provider : "auto";
-        const result = await runConfiguredPortfolioAI(env, "@cf/meta/llama-3.1-8b-instruct-fast", { messages:[{role:"system",content:system},...cleanMessages], max_tokens:650 }, { ...aiConfig, provider:warrenProvider, model:"auto", section:"warren" });
+        const result = await runConfiguredPortfolioAI(env, "@cf/meta/llama-3.1-8b-instruct-fast", { messages:[{role:"system",content:system},...cleanMessages], max_tokens:1050 }, { ...aiConfig, provider:warrenProvider, model:"auto", section:"warren" });
         const answer = String(result?.response || result?.result?.response || "").trim().slice(0,11000);
         if (!answer) throw new Error("El modelo no devolvió una respuesta.");
         return json({ answer, generatedAt:new Date().toISOString(), model:result.model, provider:result.provider, ...(result.fallbackFrom?{fallbackFrom:result.fallbackFrom}:{}) },200,origin);
