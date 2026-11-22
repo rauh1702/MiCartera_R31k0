@@ -770,10 +770,10 @@
 
         <div id="ai-settings-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="ai-settings-title" onclick="if(event.target===this)closeAISettings()">
           <section class="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-slate-700 bg-slate-900 text-slate-100" onclick="event.stopPropagation()">
-            <div class="border-b border-slate-700 px-5 py-4 flex items-center justify-between gap-3"><div><h2 id="ai-settings-title" class="text-lg font-black">Motores de inteligencia artificial</h2><p class="text-xs text-slate-400 mt-1">Elige el proveedor que utilizarán los análisis de MiCartera.</p></div><button type="button" onclick="closeAISettings()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-800" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="border-b border-slate-700 px-5 py-4 flex items-center justify-between gap-3"><div><h2 id="ai-settings-title" class="text-lg font-black">Motores de inteligencia artificial</h2><p class="text-xs text-slate-400 mt-1">Motor gratuito centralizado con selección automática por sección.</p></div><button type="button" onclick="closeAISettings()" class="w-9 h-9 rounded-lg text-slate-400 hover:bg-slate-800" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="p-5 space-y-4">
-              <div><label for="ai-provider-select" class="block text-xs font-bold text-slate-300 mb-1">Proveedor</label><select id="ai-provider-select" class="w-full rounded-lg border border-slate-600 bg-slate-800 text-white p-3 text-sm" onchange="updateAISettingsModelState()"><option value="cloudflare">Cloudflare AI · actual</option><option value="openrouter">OpenRouter · modelos gratuitos</option><option value="auto">Automático · Cloudflare y respaldo OpenRouter</option></select></div>
-              <div><label for="ai-model-select" class="block text-xs font-bold text-slate-300 mb-1">Modelo OpenRouter</label><div class="flex gap-2"><select id="ai-model-select" class="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-800 text-white p-3 text-sm"><option value="openrouter/free">OpenRouter Free · automático</option></select><button type="button" onclick="loadOpenRouterModels(true)" class="shrink-0 rounded-lg border border-slate-600 px-3 text-slate-200 hover:bg-slate-800" title="Actualizar catálogo"><i class="fa-solid fa-rotate"></i></button></div><p class="text-[11px] text-slate-500 mt-1">Los modelos gratuitos pueden tener límites o disponibilidad variable.</p></div>
+              <div><label for="ai-provider-select" class="block text-xs font-bold text-slate-300 mb-1">Proveedor</label><select id="ai-provider-select" class="w-full rounded-lg border border-slate-600 bg-slate-800 text-white p-3 text-sm" onchange="updateAISettingsModelState()"><option value="auto">Automático por sección · recomendado</option><option value="gemini">Google Gemini</option><option value="groq">Groq</option><option value="cloudflare">Cloudflare Workers AI</option><option value="openrouter">OpenRouter · opcional</option></select></div>
+              <div><label for="ai-model-select" class="block text-xs font-bold text-slate-300 mb-1">Modelo</label><div class="flex gap-2"><select id="ai-model-select" class="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-800 text-white p-3 text-sm"><option value="openrouter/free">OpenRouter Free · automático</option></select><button type="button" onclick="loadOpenRouterModels(true)" class="shrink-0 rounded-lg border border-slate-600 px-3 text-slate-200 hover:bg-slate-800" title="Actualizar catálogo"><i class="fa-solid fa-rotate"></i></button></div><p class="text-[11px] text-slate-500 mt-1">Los modelos gratuitos pueden tener límites o disponibilidad variable.</p></div>
               <div id="ai-provider-status" class="rounded-xl border border-slate-700 bg-slate-800/80 p-3 text-xs text-slate-300" aria-live="polite">Consultando configuración…</div>
               <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100 leading-relaxed"><strong>Seguridad:</strong> configura <code>OPENROUTER_API_KEY</code> como Secret en Cloudflare Workers. No pegues tu clave aquí: nunca se guarda ni se expone al navegador.</div>
               <div class="flex justify-end gap-2 pt-1"><button type="button" onclick="closeAISettings()" class="rounded-lg border border-slate-600 px-4 py-2 text-sm">Cancelar</button><button type="button" onclick="saveAISettings()" class="rounded-lg bg-violet-600 hover:bg-violet-500 px-4 py-2 text-sm font-bold text-white">Guardar configuración</button></div>
@@ -2843,7 +2843,7 @@
                     portfolioContext:{source:selected.source==='seguimiento'?'Activo en seguimiento, sin posición abierta en cartera':'Posición de cartera',openPositions:(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).length,totalMarketValueEUR:Number(totalValue.toFixed(2))},
                     limitations:{transactionHistoryIncluded:tx.length,newsItems:relevantNews.length,fundamentalsSource:'Yahoo Finance',historicalFinancialsAvailable:Boolean(historicalFinancials),historicalFinancialsError:financialHistoryError,assetSource:selected.source||'cartera'}
                 };
-                const response=await fetch(ASSET_NEWS_WORKER+'/ai/company-deep-dive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig()})});
+                const response=await fetch(ASSET_NEWS_WORKER+'/ai/company-deep-dive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig("deep-dive")})});
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
@@ -2892,7 +2892,7 @@
             try{
                 const payload=buildPortfolioAnalystPayload();
                 if(!payload.positions.length)throw new Error('No hay posiciones abiertas para analizar.');
-                const response=await fetch(ASSET_NEWS_WORKER+'/ai/portfolio-analyst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig()})});
+                const response=await fetch(ASSET_NEWS_WORKER+'/ai/portfolio-analyst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig("portfolio")})});
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
@@ -2962,7 +2962,7 @@
             result.classList.add('hidden');
             try {
                 const payload=buildMonthlyReportAIPayload();
-                const response=await fetch(MONTHLY_REPORT_AI_WORKER+'/ai/monthly-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig()})});
+                const response=await fetch(MONTHLY_REPORT_AI_WORKER+'/ai/monthly-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig("monthly")})});
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'No se pudo generar el análisis IA.');
                 if(!data.analysis)throw new Error('La IA no devolvió un análisis.');
@@ -6723,7 +6723,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const payload=kind==='journal'?{entry:{date:item.date,asset:item.asset,action:item.action,reviewDate:item.reviewDate,thesis:item.thesis,expectation:item.expectation,risks:item.risks,outcome:item.outcome},asset:buildAIAssetContext(item.asset),news:buildAIContextNews(item.asset),previousAnalyses:(item.aiAnalysisHistory||[]).slice(-3).map(h=>({date:h.date,analysis:h.analysis}))}:{strategy:{name:item.name,asset:item.asset,status:item.status,entry:Number(item.entry)||0,exit:Number(item.exit)||0,capital:Number(item.capital)||0,horizon:item.horizon,reviewDate:item.reviewDate,thesis:item.thesis,risk:item.risk,notes:item.notes},asset:buildAIAssetContext(item.asset),news:buildAIContextNews(item.asset),previousAnalyses:(item.aiAnalysisHistory||[]).slice(-3).map(h=>({date:h.date,analysis:h.analysis}))};
             button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>Analizando…';status.textContent='La IA está revisando los datos y contrastando la tesis. Puede tardar unos segundos.';
             try{
-                const response=await fetch(JOURNAL_STRATEGY_AI_WORKER+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig()})});
+                const response=await fetch(JOURNAL_STRATEGY_AI_WORKER+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig(kind)})});
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 const updated=collection.find(x=>String(x.id)===String(id));if(!updated)throw new Error('El registro ya no existe.');
@@ -6743,19 +6743,41 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
 
 
         function formatAIModelLabel(data){
-            const provider=String(data?.provider||'').toLowerCase();
-            const model=String(data?.model||'').trim();
-            const providerName=provider==='openrouter'?'OpenRouter':provider==='cloudflare'?'Cloudflare Workers AI':provider==='auto'?'Automático':provider||'IA';
-            return 'Motor: '+providerName+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.fallbackFrom?' · respaldo automático: '+String(data.fallbackFrom):'')+(data?.cached?' · caché':'');
+            const provider=String(data?.provider||'').toLowerCase(),model=String(data?.model||'').trim();
+            const names={gemini:'Google Gemini',groq:'Groq',cloudflare:'Cloudflare Workers AI',openrouter:'OpenRouter'};
+            return 'Motor: '+(names[provider]||provider||'IA')+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.fallbackFrom?' · respaldo: '+String(data.fallbackFrom):'')+(data?.cached?' · caché':'');
         }
         const AI_SETTINGS_KEY='micartera_ai_settings_v1';
-        function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');return{provider:['cloudflare','openrouter','auto'].includes(x.provider)?x.provider:'cloudflare',model:String(x.model||'openrouter/free')};}catch(_){return{provider:'cloudflare',model:'openrouter/free'};}}
-        function getAIRequestConfig(){return getAISettings();}
-        function openAISettings(){const m=document.getElementById('ai-settings-modal');if(!m)return;const x=getAISettings();document.getElementById('ai-provider-select').value=x.provider;document.getElementById('ai-model-select').value=x.model;m.classList.remove('hidden');updateAISettingsModelState();loadOpenRouterModels(false,x.model);}
+        function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');return{provider:['auto','gemini','groq','cloudflare','openrouter'].includes(x.provider)?x.provider:'auto',model:String(x.model||'auto')};}catch(_){return{provider:'auto',model:'auto'};}}
+        function getAIRequestConfig(section='general'){return{...getAISettings(),section};}
+        function openAISettings(){const m=document.getElementById('ai-settings-modal');if(!m)return;const x=getAISettings();document.getElementById('ai-provider-select').value=x.provider;document.getElementById('ai-model-select').value=x.model;m.classList.remove('hidden');updateAISettingsModelState();refreshAIProviderStatus();}
         function closeAISettings(){document.getElementById('ai-settings-modal')?.classList.add('hidden');}
-        function updateAISettingsModelState(){const p=document.getElementById('ai-provider-select')?.value||'cloudflare',m=document.getElementById('ai-model-select');if(m)m.disabled=p==='cloudflare';}
-        async function loadOpenRouterModels(force=false,preferred=''){const st=document.getElementById('ai-provider-status'),sel=document.getElementById('ai-model-select');if(!st||!sel)return;if(force)st.textContent='Actualizando catálogo…';try{const r=await fetch(ASSET_NEWS_WORKER+'/ai/models'+(force?'?refresh='+Date.now():''),{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'No se pudo consultar el catálogo.');const list=Array.isArray(d.models)?d.models:[],wanted=preferred||sel.value||'openrouter/free',opts=[{id:'openrouter/free',name:'OpenRouter Free · selección automática'}];list.forEach(m=>{if(m.id&&m.id!=='openrouter/free'&&!opts.some(o=>o.id===m.id))opts.push(m);});sel.innerHTML=opts.map(m=>'<option value="'+String(m.id).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+String(m.name||m.id).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+(m.contextLength?' · '+Number(m.contextLength).toLocaleString('es-ES')+' tokens':'')+'</option>').join('');sel.value=opts.some(o=>o.id===wanted)?wanted:'openrouter/free';st.innerHTML=d.openRouterConfigured?'<span class="text-emerald-300 font-bold">OpenRouter configurado.</span> '+list.length+' modelos detectados.':'<span class="text-amber-300 font-bold">OpenRouter sin clave en Cloudflare.</span> '+list.length+' modelos detectados; falta OPENROUTER_API_KEY.';if(d.warning)st.textContent+=' Catálogo parcial: '+d.warning;}catch(e){st.textContent='No se pudo consultar OpenRouter: '+e.message;}updateAISettingsModelState();}
-        function saveAISettings(){const provider=document.getElementById('ai-provider-select')?.value||'cloudflare',model=document.getElementById('ai-model-select')?.value||'openrouter/free';try{localStorage.setItem(AI_SETTINGS_KEY,JSON.stringify({provider,model}));}catch(e){showToast('No se pudo guardar la configuración IA: '+e.message,'fa-triangle-exclamation');return;}closeAISettings();showToast('Configuración de IA guardada','fa-brain');}
+        function updateAISettingsModelState(){
+            const p=document.getElementById('ai-provider-select')?.value||'auto',sel=document.getElementById('ai-model-select');if(!sel)return;
+            const map={
+              auto:[['auto','Automático por sección']],
+              gemini:[['auto','Gemini recomendado'],['gemini-3.8-flash','Gemini 3.8 Flash'],['gemini-3.1-flash-lite','Gemini 3.1 Flash-Lite']],
+              groq:[['auto','Groq recomendado'],['openai/gpt-oss-120b','GPT-OSS 120B'],['openai/gpt-oss-20b','GPT-OSS 20B']],
+              cloudflare:[['auto','Modelo Cloudflare asignado por sección']],
+              openrouter:[['openrouter/free','OpenRouter Free']]
+            };
+            const items=map[p]||map.auto,wanted=sel.value;
+            sel.innerHTML=items.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
+            sel.value=items.some(x=>x[0]===wanted)?wanted:items[0][0];sel.disabled=p==='auto'||p==='cloudflare';
+        }
+        async function refreshAIProviderStatus(){
+            const st=document.getElementById('ai-provider-status');if(!st)return;st.textContent='Comprobando proveedores…';
+            try{
+              const r=await fetch(ASSET_NEWS_WORKER+'/ai/status',{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'HTTP '+r.status);
+              const names=[['gemini','Gemini'],['groq','Groq'],['cloudflare','Cloudflare AI'],['openrouter','OpenRouter']];
+              st.innerHTML=names.map(([k,n])=>'<div class="flex justify-between gap-3"><span>'+n+'</span><strong class="'+(d.providers?.[k]?'text-emerald-300':'text-amber-300')+'">'+(d.providers?.[k]?'Configurado':'No configurado')+'</strong></div>').join('')+'<p class="mt-2 text-slate-400">Modo gratuito: no se usan APIs de pago.</p>';
+            }catch(e){st.textContent='No se pudo comprobar la configuración: '+e.message;}
+        }
+        function saveAISettings(){
+            const provider=document.getElementById('ai-provider-select')?.value||'auto',model=document.getElementById('ai-model-select')?.value||'auto';
+            try{localStorage.setItem(AI_SETTINGS_KEY,JSON.stringify({provider,model}));}catch(e){showToast('No se pudo guardar la configuración IA: '+e.message,'fa-triangle-exclamation');return;}
+            closeAISettings();showToast('Configuración IA guardada','fa-brain');
+        }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
