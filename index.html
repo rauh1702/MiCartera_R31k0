@@ -2999,16 +2999,16 @@
                 const asksResearch=matched.length>0||/fundamental|resultados|ingresos|ventas|deuda|liquidez|flujo de caja|diluci|contratos|backlog|noticias|analiza.*empresa|analisis.*empresa/i.test(question);
                 const researchTargets=(matched.length?matched.slice(0,1):asksResearch?(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,1):[]).slice(0,1);
                 context.externalResearch=[];
-                if(researchTargets.length&&contextStatus)contextStatus.textContent='Investigando una empresa en fuentes públicas (máximo 8 segundos)…';
+                if(researchTargets.length&&contextStatus)contextStatus.textContent='Investigando una empresa en fuentes públicas (máximo 15 segundos)…';
                 context.externalResearch=await Promise.all(researchTargets.map(async asset=>{
                     const symbol=String(asset.ticker||asset.symbol||'').trim();if(!symbol)return null;
                     const controller=new AbortController();let timer;
                     try{
-                        timer=setTimeout(()=>controller.abort(),8000);
+                        timer=setTimeout(()=>controller.abort(),15000);
                         const r=await fetch(ASSET_NEWS_WORKER+'/research/company?symbol='+encodeURIComponent(symbol)+'&name='+encodeURIComponent(String(asset.name||'')),{signal:controller.signal});
                         const d=await r.json().catch(()=>({}));
                         return r.ok?d:{symbol,error:d.error||'Investigación no disponible',limitations:d.limitations||[]};
-                    }catch(e){return{symbol,error:e.name==='AbortError'?'Investigación externa agotó 8 segundos; se continúa con los datos de cartera.':String(e.message||e)};}
+                    }catch(e){return{symbol,error:e.name==='AbortError'?'Investigación externa agotó 15 segundos; se continúa con los datos de cartera.':String(e.message||e)};}
                     finally{if(timer)clearTimeout(timer);}
                 }));
                 context.externalResearch=context.externalResearch.filter(Boolean);
@@ -3034,7 +3034,7 @@
                 }
                 const conversation=warrenMessages.slice(-8).map(m=>({role:m.role,content:m.content.slice(0,1200)}));
                 if(conversation[0]?.role==='assistant')conversation.shift();
-                const aiController=new AbortController(),aiTimer=setTimeout(()=>aiController.abort(),45000);
+                const aiController=new AbortController(),aiTimer=setTimeout(()=>aiController.abort(),65000);
                 let response;
                 try{response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')}),signal:aiController.signal});}
                 finally{clearTimeout(aiTimer);}
