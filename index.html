@@ -2792,6 +2792,7 @@
                 freeCashflow:'financialData.freeCashflow',operatingCashflow:'financialData.operatingCashflow',
                 targetMeanPrice:'financialData.targetMeanPrice',recommendationKey:'financialData.recommendationKey',
                 numberOfAnalystOpinions:'financialData.numberOfAnalystOpinions',beta:'summaryDetail.beta',
+                sharesOutstanding:'defaultKeyStatistics.sharesOutstanding',floatShares:'defaultKeyStatistics.floatShares',sharesShort:'defaultKeyStatistics.sharesShort',sharesPercentSharesOut:'defaultKeyStatistics.sharesPercentSharesOut',heldPercentInsiders:'defaultKeyStatistics.heldPercentInsiders',heldPercentInstitutions:'defaultKeyStatistics.heldPercentInstitutions',enterpriseValue:'defaultKeyStatistics.enterpriseValue',
                 fiftyTwoWeekLow:'summaryDetail.fiftyTwoWeekLow',fiftyTwoWeekHigh:'summaryDetail.fiftyTwoWeekHigh'
             };
             const out={};
@@ -2825,7 +2826,7 @@
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
-                status.textContent='Análisis de '+selected.name+' generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+(data.cached?' · resultado en caché':'');
+                status.textContent='Análisis de '+selected.name+' generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+' · '+formatAIModelLabel(data);
             }catch(error){status.textContent='No se pudo completar el análisis: '+error.message;}
             finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Analizar empresa';}
         }
@@ -2874,7 +2875,7 @@
                 const data=await response.json().catch(()=>({}));
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 result.textContent=data.analysis||'El modelo no devolvió un análisis.';result.classList.remove('hidden');
-                status.textContent='Análisis generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+(data.cached?' · resultado en caché':'');
+                status.textContent='Análisis generado: '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+' · '+formatAIModelLabel(data);
             }catch(error){status.textContent='No se pudo generar el análisis: '+error.message;}
             finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-brain mr-1"></i>Analizar mi cartera';}
         }
@@ -2946,7 +2947,7 @@
                 if(!data.analysis)throw new Error('La IA no devolvió un análisis.');
                 result.textContent=data.analysis;
                 result.classList.remove('hidden');
-                status.textContent='Análisis generado el '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+(data.cached?' · respuesta reutilizada':'')+'. Revisa siempre los datos y las limitaciones del histórico.';
+                status.textContent='Análisis generado el '+new Date(data.generatedAt||Date.now()).toLocaleString('es-ES')+' · '+formatAIModelLabel(data)+'. Revisa siempre los datos y las limitaciones del histórico.';
             } catch(error) {
                 status.textContent=error.message||'No se pudo completar el análisis.';
             } finally {
@@ -6706,7 +6707,8 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 const updated=collection.find(x=>String(x.id)===String(id));if(!updated)throw new Error('El registro ya no existe.');
                 if(!Array.isArray(updated.aiAnalysisHistory))updated.aiAnalysisHistory=[];
-                updated.aiAnalysisHistory.push({date:data.generatedAt||new Date().toISOString(),analysis:String(data.analysis||'').slice(0,12000),model:data.model||'',cached:!!data.cached});
+                updated.aiAnalysisHistory.push({date:data.generatedAt||new Date().toISOString(),analysis:String(data.analysis||'').slice(0,12000),model:data.model||'',provider:data.provider||'',cached:!!data.cached});
+                status.textContent='Evaluación completada · '+formatAIModelLabel(data);
                 if(updated.aiAnalysisHistory.length>20)updated.aiAnalysisHistory=updated.aiAnalysisHistory.slice(-20);
                 if(kind==='journal')persistInvestmentJournal();else persistStrategies();
                 if(kind==='journal')renderInvestmentJournal();else renderStrategies();
@@ -6719,6 +6721,12 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function escapeStrategyHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 
+        function formatAIModelLabel(data){
+            const provider=String(data?.provider||'').toLowerCase();
+            const model=String(data?.model||'').trim();
+            const providerName=provider==='openrouter'?'OpenRouter':provider==='cloudflare'?'Cloudflare Workers AI':provider==='auto'?'Automático':provider||'IA';
+            return 'Motor: '+providerName+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.cached?' · caché':'');
+        }
         const AI_SETTINGS_KEY='micartera_ai_settings_v1';
         function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');return{provider:['cloudflare','openrouter','auto'].includes(x.provider)?x.provider:'cloudflare',model:String(x.model||'openrouter/free')};}catch(_){return{provider:'cloudflare',model:'openrouter/free'};}}
         function getAIRequestConfig(){return getAISettings();}
