@@ -1,0 +1,1 @@
+Copia completa de MiCartera R31k0. Restaura datos importando datos/backup-datos.json desde Configuraciones. Fecha: 2026-11-22T02:23:31.067Z
