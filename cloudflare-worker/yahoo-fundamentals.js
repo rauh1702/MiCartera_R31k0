@@ -619,7 +619,7 @@ async function fetchTradeRepublicTickers(isins) {
 
 
 async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection = {}) {
-  const provider = ["cloudflare","openrouter","auto"].includes(String(selection.provider||"").toLowerCase()) ? String(selection.provider).toLowerCase() : "cloudflare";
+  const provider = ["cloudflare","openrouter","auto","gemini","groq"].includes(String(selection.provider||"").toLowerCase()) ? String(selection.provider).toLowerCase() : "auto";
   const model = String(selection.model||"openrouter/free").trim().slice(0,180) || "openrouter/free";
   const cloudflare = async () => {
     if (!env?.AI) throw new Error("Workers AI no está habilitado. Comprueba el binding AI del Worker.");
@@ -627,6 +627,29 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const response = String(r?.response || r?.result?.response || "").trim();
     if (!response) throw new Error("Cloudflare Workers AI no devolvió contenido.");
     return {response,model:cloudflareModel,provider:"cloudflare"};
+  };
+  const gemini = async () => {
+    if (!env?.GEMINI_API_KEY) throw new Error("Falta el Secret GEMINI_API_KEY.");
+    const model = selection.model && selection.model !== "auto" && provider === "gemini" ? selection.model : "gemini-3.8-flash";
+    const system = options.messages?.find(m => m.role === "system")?.content || "";
+    const contents = (options.messages || []).filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }));
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: Math.max(1400, Number(options.max_tokens) || 850) } }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error("Gemini HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
+    const candidate = d?.candidates?.[0] || {};
+    const response = (candidate?.content?.parts || []).map(p => String(p?.text || "")).join("\n").trim();
+    if (!response || candidate.finishReason === "MAX_TOKENS") throw new Error("Gemini no completó la respuesta (límite de salida o respuesta vacía).");
+    return { response, model, provider: "gemini" };
+  };
+  const groq = async () => {
+    if (!env?.GROQ_API_KEY) throw new Error("Falta el Secret GROQ_API_KEY.");
+    const model = selection.model && selection.model !== "auto" && provider === "groq" ? selection.model : "openai/gpt-oss-120b";
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: Math.max(1000, Number(options.max_tokens) || 850), temperature: 0.2, stream: false }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
+    const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
+    if (!response || choice.finish_reason === "length") throw new Error("Groq no completó la respuesta (límite de salida o respuesta vacía).");
+    return { response, model: String(d?.model || model), provider: "groq" };
   };
   const openrouter = async () => {
     if (!env?.OPENROUTER_API_KEY) throw new Error("Falta el Secret OPENROUTER_API_KEY en Cloudflare. Añádelo en Workers & Pages → tu Worker → Settings → Variables and Secrets.");
@@ -685,29 +708,15 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     }
     throw new Error("OpenRouter no completó el análisis tras 2 intentos (" + lastDiagnostic + "). El modelo gratuito seleccionado está agotando su límite de salida; cambia a otro modelo gratuito o usa Cloudflare AI.");
   };
-  if(provider==="openrouter"){
-    try{return await openrouter();}
-    catch(openrouterError){
-      const message=String(openrouterError?.message||openrouterError);
-      // Algunos modelos gratuitos anuncian un límite de salida inferior al solicitado.
-      // Si cortan la respuesta, no repetimos indefinidamente el mismo modelo: usamos
-      // Workers AI como respaldo y devolvemos el modelo real que haya generado el texto.
-      if(/finish_reason=length|agotando su límite de salida|se recibió texto parcial/i.test(message)){
-        try{
-          const fallback=await cloudflare();
-          return {...fallback,fallbackFrom:"OpenRouter ("+model+") no completó la respuesta por límite de salida"};
-        }catch(cloudflareError){
-          throw new Error("OpenRouter agotó el límite de salida y Cloudflare tampoco pudo completar el análisis: "+String(cloudflareError?.message||cloudflareError));
-        }
-      }
-      throw openrouterError;
-    }
-  }
   if(provider==="cloudflare")return await cloudflare();
-  try{return await cloudflare();}catch(e){
-    if(!env?.OPENROUTER_API_KEY)throw e;
-    try{return await openrouter();}catch(e2){throw new Error("Fallaron ambos motores. Cloudflare: "+String(e?.message||e)+" | OpenRouter: "+String(e2?.message||e2));}
-  }
+  if(provider==="gemini")return await gemini();
+  if(provider==="groq")return await groq();
+  if(provider==="openrouter")return await openrouter();
+  const section=String(selection.section||"general");
+  const routes={"deep-dive":[gemini,groq,cloudflare],"portfolio":[gemini,groq,cloudflare],"monthly":[gemini,cloudflare,groq],"journal":[groq,cloudflare,gemini],"strategy":[gemini,groq,cloudflare]};
+  const route=routes[section]||[gemini,groq,cloudflare],failures=[];
+  for(const run of route){try{const result=await run();return {...result,...(failures.length?{fallbackFrom:failures.join(" → ")}:{})};}catch(e){failures.push(String(e?.message||e).slice(0,180));}}
+  throw new Error("No hay motores IA gratuitos disponibles: "+failures.join(" | "));
 }
 
 export default {
@@ -1161,6 +1170,8 @@ export default {
 
 
 
+    if (url.pathname === "/ai/status" && request.method === "GET") return json({providers:{gemini:!!env?.GEMINI_API_KEY,groq:!!env?.GROQ_API_KEY,cloudflare:!!env?.AI,openrouter:!!env?.OPENROUTER_API_KEY},zeroCostMode:true},200,origin);
+
     if (url.pathname === "/ai/models" && request.method === "GET") {
       try {
         const r=await fetch("https://openrouter.ai/api/v1/models",{headers:{"Accept":"application/json"},cf:{cacheTtl:900,cacheEverything:true}});
@@ -1187,7 +1198,7 @@ export default {
         if (!subject || typeof subject !== "object" || !(isJournal ? String(subject.thesis || "").trim() : [subject.thesis, subject.risk, subject.notes].some(value => String(value || "").trim()))) return json({ error: "Añade una tesis, riesgos o notas antes de solicitar la revisión." }, 400, origin);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = (isJournal ? "ai:journal-review:v2:" : "ai:strategy-review:v2:") + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "");
+        const cacheKey = (isJournal ? "ai:journal-review:v2:" : "ai:strategy-review:v2:") + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
@@ -1223,7 +1234,7 @@ export default {
         if (!data?.asset?.name || !data?.asset?.ticker || !data?.fundamentals || typeof data.fundamentals !== "object") return json({ error: "Faltan los datos de la posición o sus fundamentales." }, 400, origin);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v2:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "");
+        const cacheKey = "ai:company-deep-dive:v2:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
@@ -1270,7 +1281,7 @@ export default {
         if (!Array.isArray(data?.positions) || !data.positions.length) return json({ error: "No hay posiciones abiertas válidas para analizar." }, 400, origin);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:portfolio-analyst:v1:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "");
+        const cacheKey = "ai:portfolio-analyst:v1:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
@@ -1303,7 +1314,7 @@ export default {
         if (!/^\d{4}-\d{2}$/.test(String(data?.month || ""))) return json({ error: "El mes del informe no es válido." }, 400, origin);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:monthly-report:v1:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "");
+        const cacheKey = "ai:monthly-report:v1:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
