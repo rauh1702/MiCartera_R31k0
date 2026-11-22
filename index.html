@@ -6748,7 +6748,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             return 'Motor: '+(names[provider]||provider||'IA')+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.fallbackFrom?' · respaldo: '+String(data.fallbackFrom):'')+(data?.cached?' · caché':'');
         }
         const AI_SETTINGS_KEY='micartera_ai_settings_v1';
-        function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');return{provider:['auto','gemini','groq','cloudflare','openrouter'].includes(x.provider)?x.provider:'auto',model:String(x.model||'auto')};}catch(_){return{provider:'auto',model:'auto'};}}
+        function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');const legacyDefault=x.provider==='cloudflare'&&(!x.model||x.model==='openrouter/free');return{provider:legacyDefault?'auto':(['auto','gemini','groq','cloudflare','openrouter'].includes(x.provider)?x.provider:'auto'),model:legacyDefault?'auto':String(x.model||'auto')};}catch(_){return{provider:'auto',model:'auto'};}}
         function getAIRequestConfig(section='general'){return{...getAISettings(),section};}
         function openAISettings(){const m=document.getElementById('ai-settings-modal');if(!m)return;const x=getAISettings();document.getElementById('ai-provider-select').value=x.provider;document.getElementById('ai-model-select').value=x.model;m.classList.remove('hidden');updateAISettingsModelState();refreshAIProviderStatus();}
         function closeAISettings(){document.getElementById('ai-settings-modal')?.classList.add('hidden');}
