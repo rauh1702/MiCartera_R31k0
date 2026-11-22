@@ -2714,13 +2714,66 @@
                 return `<div class="asset-search-result"><div class="min-w-0"><div class="font-extrabold truncate">${name}</div><small>${x.quoteType==='CRYPTOCURRENCY'||x.quoteType==='CRYPTO'?'CRIPTOMONEDA · ':''}${symbol} · ${exchange} · ${currency}</small><div class="text-sm font-bold text-cyan-200 mt-1">${eur||'Cotización no disponible'}</div></div><button type="button" onclick="addToWatchlist(${i})" ${already?'disabled':''}>${already?'Siguiendo':'Seguir'}</button></div>`;
             }).join(''); window._lastAssetSearchResults=quotes.slice(0,10).map(x=>({...x}));
         }
-        async function addToWatchlist(index){const x=window._lastAssetSearchResults?.[index];if(!x)return; if(watchlistData.some(a=>a.symbol===x.symbol)){showToast('Este activo ya está en seguimiento');return;} const item={symbol:x.symbol,name:x.shortname||x.longname||x.symbol,quoteType:x.quoteType||'',currency:x.currency||'EUR',exchange:x.exchange||x.exchDisp||'',priceEUR:null,changePct:null,addedAt:new Date().toISOString()};watchlistData.push(item);persistWatchlist();document.getElementById('asset-search-results').classList.add('hidden');showWatchlistView();await refreshOneWatch(item);await refreshAssetNews(true);showToast(`${item.name} añadido al seguimiento y registrado para noticias`);}
-        async function refreshOneWatch(item,rates){try{const q=await yahooChart(item.symbol);rates=rates||await getExchangeRates();const previous=Number(item.priceEUR)||0;const price=Number(convertToEUR(q.price,q.currency,rates).toFixed(4));item.priceEUR=price;item.currency=q.currency;item.changePct=q.previousClose?((q.price-q.previousClose)/q.previousClose)*100:null;item.lastUpdate=new Date().toISOString();if(previous>0){const buy=Number(item.targetBuyPrice)||0,sell=Number(item.targetSellPrice)||0;if(buy>0){if(price>buy)item.targetBuyAlerted=false;else if(previous>buy&&price<=buy&&!item.targetBuyAlerted){item.targetBuyAlerted=true;sendWatchTargetAlert(item,'buy',buy,price);}}if(sell>0){if(price<sell)item.targetSellAlerted=false;else if(previous<sell&&price>=sell&&!item.targetSellAlerted){item.targetSellAlerted=true;sendWatchTargetAlert(item,'sell',sell,price);}}}}catch(e){item.error=e.message||'Cotización no disponible';}}
+        async function addToWatchlist(index){const x=window._lastAssetSearchResults?.[index];if(!x)return; if(watchlistData.some(a=>a.symbol===x.symbol)){showToast('Este activo ya está en seguimiento');return;} const item={symbol:x.symbol,isin:x.isin||x.ISIN||x.instrumentIsin||null,name:x.shortname||x.longname||x.symbol,quoteType:x.quoteType||'',currency:x.currency||'EUR',exchange:x.exchange||x.exchDisp||'',priceEUR:null,changePct:null,addedAt:new Date().toISOString()};watchlistData.push(item);persistWatchlist();document.getElementById('asset-search-results').classList.add('hidden');showWatchlistView();await refreshOneWatch(item);await refreshAssetNews(true);showToast(`${item.name} añadido al seguimiento y registrado para noticias`);}
+        function resolveWatchISIN(item){
+            const direct=String(item?.isin||"").trim().toUpperCase();
+            if(/^[A-Z0-9]{12}$/.test(direct))return direct;
+            const symbol=String(item?.symbol||"").trim().toUpperCase();
+            const match=assetsData.find(a=>{
+                const tickers=[a.ticker,a.yahooTicker,a.symbol].map(v=>String(v||"").trim().toUpperCase());
+                return tickers.includes(symbol);
+            });
+            const isin=String(match?.isin||"").trim().toUpperCase();
+            return /^[A-Z0-9]{12}$/.test(isin)?isin:null;
+        }
+        async function refreshOneWatch(item,rates,tradeRepublicQuotes){
+            try{
+                const isin=resolveWatchISIN(item);
+                let trQuote=isin?(tradeRepublicQuotes?.get(isin)||null):null;
+                if(isin&&!tradeRepublicQuotes){
+                    try{const batch=await fetchTradeRepublicQuotesBatch([isin]);trQuote=batch.get(isin)||null;}catch(e){console.warn("No se pudo consultar LSX para seguimiento",e);}
+                }
+                const previous=Number(item.priceEUR)||0;
+                let price,changePct;
+                if(trQuote){
+                    const canonical=selectCanonicalTradeRepublicPrice(isin,trQuote);
+                    if(canonical){
+                        price=Number(canonical.price.toFixed(4));
+                        const prev=Number(canonical.pre)||0;
+                        changePct=prev>0?((canonical.price-prev)/prev)*100:null;
+                        item.currency="EUR";
+                        item.quoteSource="Trade Republic · LSX · "+(canonical.selectedSide==="midpoint"?"punto medio bid/ask":canonical.selectedSide==="last"?"último precio":canonical.selectedSide);
+                        item.isin=isin;
+                    }
+                }
+                if(!(price>0)){
+                    const q=await yahooChart(item.symbol);
+                    rates=rates||await getExchangeRates();
+                    price=Number(convertToEUR(q.price,q.currency,rates).toFixed(4));
+                    changePct=q.previousClose?((q.price-q.previousClose)/q.previousClose)*100:null;
+                    item.currency=q.currency;
+                    item.quoteSource="Yahoo Finance";
+                }
+                item.priceEUR=price;
+                item.changePct=changePct;
+                item.lastUpdate=new Date().toISOString();if(previous>0){const buy=Number(item.targetBuyPrice)||0,sell=Number(item.targetSellPrice)||0;if(buy>0){if(price>buy)item.targetBuyAlerted=false;else if(previous>buy&&price<=buy&&!item.targetBuyAlerted){item.targetBuyAlerted=true;sendWatchTargetAlert(item,'buy',buy,price);}}if(sell>0){if(price<sell)item.targetSellAlerted=false;else if(previous<sell&&price>=sell&&!item.targetSellAlerted){item.targetSellAlerted=true;sendWatchTargetAlert(item,'sell',sell,price);}}}}catch(e){item.error=e.message||'Cotización no disponible';}}
         function sendWatchTargetAlert(item,kind,target,price){const msg=item.name+(kind==='buy'?' ha bajado hasta ':' ha subido hasta ')+price.toLocaleString('es-ES',{maximumFractionDigits:4})+' €. Objetivo: '+target.toLocaleString('es-ES',{maximumFractionDigits:4})+' €.';recordPriceAlert(item,kind,target,price,'seguimiento');showToast(msg);if('Notification'in window&&Notification.permission==='granted'){try{new Notification('MiCartera R31k0 · Objetivo alcanzado',{body:msg,tag:'watch-target-'+kind+'-'+item.symbol});}catch(e){console.warn(e);}}}
         function targetDistanceText(price,target){if(!(Number(price)>0)||!(Number(target)>0))return '—';const d=Number(target)-Number(price),p=d/Number(price)*100;return `${d>=0?'+':''}${d.toLocaleString('es-ES',{maximumFractionDigits:4})} € (${p>=0?'+':''}${p.toFixed(2)}%)`;}
         function renderWatchTargetStatus(item){const box=document.getElementById('watch-target-status');if(!box||!item)return;const p=Number(item.priceEUR)||0;box.innerHTML=[['Compra',item.targetBuyPrice],['Venta',item.targetSellPrice]].map(([n,t])=>`<p>${n}: ${Number(t)>0?Number(t).toLocaleString('es-ES',{maximumFractionDigits:4})+' €':'sin objetivo'} · Actual: ${p>0?p.toLocaleString('es-ES',{maximumFractionDigits:4})+' €':'—'} · Distancia: ${targetDistanceText(p,t)}</p>`).join('');}
         function saveWatchTargets(){const item=watchlistData[watchDetailIndex];if(!item)return;const read=id=>{const s=document.getElementById(id).value.trim();if(!s)return null;const n=Number(s);return Number.isFinite(n)&&n>0?n:NaN;};const buy=read('watch-target-buy'),sell=read('watch-target-sell');if(Number.isNaN(buy)||Number.isNaN(sell)){showToast('Introduce objetivos mayores que cero o deja el campo vacío.');return;}if(buy!==item.targetBuyPrice)item.targetBuyAlerted=false;if(sell!==item.targetSellPrice)item.targetSellAlerted=false;item.targetBuyPrice=buy;item.targetSellPrice=sell;persistWatchlist();renderWatchTargetStatus(item);renderWatchlist();showToast('Objetivos de '+item.name+' guardados');}
-        async function refreshWatchlist(){if(!watchlistData.length){renderWatchlist();return;}const box=document.getElementById('watchlist-list');if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';const rates=await getExchangeRates();await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates)));persistWatchlist();renderWatchlist();}
+        async function refreshWatchlist(){
+            if(!watchlistData.length){renderWatchlist();return;}
+            const box=document.getElementById('watchlist-list');
+            if(box)box.innerHTML='<p class="text-slate-300">Actualizando cotizaciones…</p>';
+            const isins=watchlistData.map(resolveWatchISIN).filter(Boolean);
+            let trQuotes=new Map();
+            if(isins.length){try{trQuotes=await fetchTradeRepublicQuotesBatch(isins);}catch(e){console.warn("No se pudieron actualizar cotizaciones LSX del seguimiento",e);}}
+            const needsYahoo=watchlistData.some(a=>!trQuotes.has(resolveWatchISIN(a)));
+            const rates=needsYahoo?await getExchangeRates():{EUR:1};
+            await Promise.all(watchlistData.map(a=>refreshOneWatch(a,rates,trQuotes)));
+            persistWatchlist();
+            renderWatchlist();
+        }
         function renderWatchlist(){renderPriceAlertHistory();const box=document.getElementById('watchlist-list'),empty=document.getElementById('watchlist-empty');if(!box)return;empty.classList.toggle('hidden',watchlistData.length>0);box.innerHTML=watchlistData.map((a,i)=>{const ch=Number(a.changePct);const change=a.changePct==null?'—':`${ch>=0?'+':''}${ch.toFixed(2)}%`;return `<article class="watch-card" role="button" tabindex="0" aria-label="Abrir ficha de activo" onclick="openWatchDetail(${i})" onkeydown="if(event.key===&quot;Enter&quot;||event.key===&quot; &quot;){event.preventDefault();openWatchDetail(${i});}"><div class="flex justify-between gap-2"><div class="min-w-0"><h3 class="font-extrabold text-lg truncate">${escapeStrategyHtml(a.name)}</h3><p class="watch-meta">${escapeStrategyHtml(a.symbol)} · ${escapeStrategyHtml(a.exchange||'')} · ${escapeStrategyHtml(a.currency||'')}</p></div><button onclick="event.stopPropagation();removeFromWatchlist(${i})" class="text-rose-300 hover:text-rose-100" title="Dejar de seguir"><i class="fa-solid fa-xmark"></i></button></div><div class="watch-price mt-4">${a.priceEUR==null?'—':a.priceEUR.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'}</div><div class="flex justify-between items-center mt-2"><span class="text-sm font-bold ${a.changePct==null?'text-slate-300':ch>=0?'text-emerald-400':'text-rose-400'}">${change} día</span><span class="watch-meta">${a.lastUpdate?'Actualizado '+new Date(a.lastUpdate).toLocaleTimeString('es-ES'):(a.error||'Pendiente de cotización')}</span></div></article>`;}).join('');}
 
         let watchDetailChart = null, watchDetailIndex = null, watchDetailRange = "year";
