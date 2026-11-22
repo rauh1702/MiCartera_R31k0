@@ -3246,7 +3246,16 @@
         }
         function showCompanyComparatorView(){
             ['dashboard-view','scenario-simulator-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
-            document.getElementById('company-comparator-view')?.classList.remove('hidden');
+            // Refuerzo: el simulador debe desaparecer siempre al cambiar al comparador,
+            // incluso si algún estilo previo de la vista fuerza su visualización.
+            const scenarioView = document.getElementById('scenario-simulator-view');
+            if(scenarioView){
+                scenarioView.classList.add('hidden');
+                scenarioView.style.setProperty('display','none','important');
+            }
+            const comparatorView = document.getElementById('company-comparator-view');
+            comparatorView?.style.removeProperty('display');
+            comparatorView?.classList.remove('hidden');
             document.getElementById('headerToolbar')?.classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
             refreshCompanyComparatorOptions();window.scrollTo({top:0,behavior:'smooth'});
@@ -5357,7 +5366,9 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         }
         function showScenarioSimulatorView() {
             ['dashboard-view','scenario-simulator-view','watchlist-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
-            document.getElementById('scenario-simulator-view')?.classList.remove('hidden');
+            const scenarioView = document.getElementById('scenario-simulator-view');
+            scenarioView?.style.removeProperty('display');
+            scenarioView?.classList.remove('hidden');
             document.getElementById('headerToolbar')?.classList.add('hidden');
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));
             renderScenarioSimulator();
