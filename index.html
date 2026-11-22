@@ -5535,8 +5535,10 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                 const dueLabel=!e.reviewDate?'Sin fecha de revisión':days<0?'Revisión pendiente desde '+new Date(e.reviewDate+'T12:00:00').toLocaleDateString('es-ES'):days===0?'Revisar hoy':'Revisar el '+new Date(e.reviewDate+'T12:00:00').toLocaleDateString('es-ES');
                 const badge=e.status==='reviewed'?'<span class="rounded-full bg-emerald-900/60 px-2 py-1 text-[10px] font-bold text-emerald-300">Revisada</span>':'<span class="rounded-full bg-amber-900/60 px-2 py-1 text-[10px] font-bold text-amber-300">Pendiente</span>';
                 const field=(label,value)=>value?'<div class="mt-3"><p class="text-[10px] font-black uppercase tracking-wide text-slate-400">'+label+'</p><p class="mt-1 whitespace-pre-wrap text-sm text-slate-200">'+escapeHtml(value)+'</p></div>':'';
+                const aiHistory=Array.isArray(e.aiAnalysisHistory)?e.aiAnalysisHistory:[];
+                const aiHtml='<div class="mt-4 rounded-xl border border-violet-800/70 bg-slate-950/70 p-3"><div class="flex flex-wrap items-center justify-between gap-2"><div><p class="text-xs font-black uppercase tracking-wide text-violet-300"><i class="fa-solid fa-brain mr-1"></i>Revisión con IA</p><p class="text-[11px] text-slate-400">'+aiHistory.length+' análisis guardados</p></div><button type="button" id="journal-ai-'+escapeHtml(id)+'" onclick="runInvestmentJournalAI(\''+escapeHtml(id)+'\')" class="rounded-lg bg-violet-700 hover:bg-violet-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Analizar decisión</button></div><p id="journal-ai-status-'+escapeHtml(id)+'" class="mt-2 text-xs text-slate-400" aria-live="polite"></p>'+(aiHistory.length?'<div class="mt-3 space-y-3">'+aiHistory.slice(-3).reverse().map(h=>'<div class="border-t border-slate-800 pt-3"><p class="text-[10px] font-bold text-violet-300">'+(h.date?new Date(h.date).toLocaleString('es-ES'):'Análisis guardado')+'</p><p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-200">'+escapeHtml(h.analysis||'')+'</p></div>').join('')+'</div>':'<p class="mt-3 text-xs text-slate-500">Todavía no hay análisis. La IA revisará la tesis, expectativas, riesgos y aprendizaje sin modificar tu anotación.</p>')+'</div>';
                 const id=String(e.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-                return '<article class="rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2">'+badge+'<span class="rounded-full bg-slate-800 px-2 py-1 text-[10px] font-bold text-cyan-300">'+escapeHtml(actions[e.action]||'Decisión')+'</span></div><h3 class="mt-2 text-lg font-black text-white">'+escapeHtml(e.asset||'General / mercado')+'</h3><p class="text-xs text-slate-400">Decisión del '+(e.date?new Date(e.date+'T12:00:00').toLocaleDateString('es-ES'):'—')+' · '+escapeHtml(dueLabel)+'</p></div><div class="flex gap-2"><button type="button" onclick="openInvestmentJournalModal(\''+escapeHtml(id)+'\')" class="rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200">Editar</button><button type="button" onclick="deleteInvestmentJournalEntry(\''+escapeHtml(id)+'\')" class="rounded-lg border border-rose-900/70 px-3 py-2 text-xs font-bold text-rose-300">Eliminar</button></div></div>'+field('Tu tesis',e.thesis)+field('Qué esperas que ocurra',e.expectation)+field('Riesgos identificados',e.risks)+field('Revisión / aprendizaje',e.outcome)+(e.status!=='reviewed'?'<button type="button" onclick="markInvestmentJournalReviewed(\''+escapeHtml(id)+'\')" class="mt-4 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Revisar esta decisión</button>':'')+'</article>';
+                return '<article class="rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2">'+badge+'<span class="rounded-full bg-slate-800 px-2 py-1 text-[10px] font-bold text-cyan-300">'+escapeHtml(actions[e.action]||'Decisión')+'</span></div><h3 class="mt-2 text-lg font-black text-white">'+escapeHtml(e.asset||'General / mercado')+'</h3><p class="text-xs text-slate-400">Decisión del '+(e.date?new Date(e.date+'T12:00:00').toLocaleDateString('es-ES'):'—')+' · '+escapeHtml(dueLabel)+'</p></div><div class="flex gap-2"><button type="button" onclick="openInvestmentJournalModal(\''+escapeHtml(id)+'\')" class="rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200">Editar</button><button type="button" onclick="deleteInvestmentJournalEntry(\''+escapeHtml(id)+'\')" class="rounded-lg border border-rose-900/70 px-3 py-2 text-xs font-bold text-rose-300">Eliminar</button></div></div>'+field('Tu tesis',e.thesis)+field('Qué esperas que ocurra',e.expectation)+field('Riesgos identificados',e.risks)+field('Revisión / aprendizaje',e.outcome)+(e.status!=='reviewed'?'<button type="button" onclick="markInvestmentJournalReviewed(\''+escapeHtml(id)+'\')" class="mt-4 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Revisar esta decisión</button>':'')+aiHtml+'</article>';
             }).join('');
         }
         function showInvestmentJournalView() { document.getElementById('portfolio-health-view')?.classList.add('hidden');
@@ -6631,11 +6633,57 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
                         ${x.thesis?`<div class="mt-3"><p class="text-[10px] font-bold uppercase text-cyan-700">Tesis de inversión</p><p class="text-sm text-slate-700 whitespace-pre-wrap mt-1">${escapeStrategyHtml(x.thesis)}</p></div>`:''}
                         ${x.risk?`<div class="mt-3"><p class="text-[10px] font-bold uppercase text-rose-700">Riesgos / salida</p><p class="text-sm text-slate-700 whitespace-pre-wrap mt-1">${escapeStrategyHtml(x.risk)}</p></div>`:''}
                         ${x.notes?`<div class="mt-3 rounded-xl bg-amber-50 p-3"><p class="text-[10px] font-bold uppercase text-amber-800">Notas / próximos pasos</p><p class="text-sm text-amber-950 whitespace-pre-wrap mt-1">${escapeStrategyHtml(x.notes)}</p></div>`:''}
+                        ${renderStrategyAISection(x)}
                         <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-100"><button type="button" onclick="editStrategy('${escapeStrategyHtml(x.id)}')" class="rounded-lg px-3 py-2 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="deleteStrategy('${escapeStrategyHtml(x.id)}')" class="rounded-lg px-3 py-2 text-sm font-bold text-rose-700 bg-rose-50 hover:bg-rose-100"><i class="fa-solid fa-trash mr-1"></i>Eliminar</button></div>
                     </div>
                 </article>`;
             }).join('');
         }
+
+        const JOURNAL_STRATEGY_AI_WORKER = "https://white-shape-96b7micartera-yahoo-fundamentals.ramon-jara-dominguez.workers.dev";
+        function findPortfolioAssetByName(name){
+            if(!name)return null;
+            return (Array.isArray(assetsData)?assetsData:[]).find(a=>String(a.name||'').toLowerCase()===String(name).toLowerCase())||null;
+        }
+        function buildAIAssetContext(name){
+            const a=findPortfolioAssetByName(name);if(!a)return null;
+            return {name:String(a.name||name).slice(0,100),ticker:String(a.ticker||a.symbol||'').slice(0,30),isin:String(a.isin||'').slice(0,20),shares:Number(a.shares)||0,currentPrice:Number(a.currentPrice)||0,marketValueEUR:Number(a.marketValue)||0,investedCapitalEUR:Number(a.currentCapitalVivo??a.investedCapital??a.totalInvested)||0,unrealizedProfitEUR:Number(a.latentProfit)||0,realizedProfitEUR:Number(a.realizedProfit)||0,currency:String(a.currency||'').slice(0,8)};
+        }
+        function buildAIContextNews(assetName){
+            const items=Array.isArray(assetNewsItems)?assetNewsItems:[];
+            return items.filter(n=>!assetName||String([n.asset,n.symbol,n.title,n.summary].join(' ')).toLowerCase().includes(String(assetName).toLowerCase())).slice(0,6).map(n=>({title:String(n.title||'').slice(0,180),summary:String(n.summary||n.description||'').slice(0,500),date:n.date||n.publishedAt||'',source:n.source||''}));
+        }
+        function renderAIHistory(history){
+            if(!Array.isArray(history)||!history.length)return '<p class="mt-3 text-xs text-slate-500">Aún no hay revisiones guardadas.</p>';
+            return '<div class="mt-3 space-y-3">'+history.slice(-3).reverse().map(h=>'<div class="border-t border-slate-700 pt-3"><p class="text-[10px] font-bold text-violet-300">'+(h.date?new Date(h.date).toLocaleString('es-ES'):'Análisis guardado')+'</p><p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-200">'+escapeHtml(h.analysis||'')+'</p></div>').join('')+'</div>';
+        }
+        function renderStrategyAISection(x){
+            const history=Array.isArray(x.aiAnalysisHistory)?x.aiAnalysisHistory:[];
+            const id=escapeStrategyHtml(x.id);
+            return '<div class="mt-4 rounded-xl border border-violet-200 bg-slate-900 p-3"><div class="flex flex-wrap items-center justify-between gap-2"><div><p class="text-xs font-black uppercase tracking-wide text-violet-300"><i class="fa-solid fa-brain mr-1"></i>Evaluación inteligente</p><p class="text-[11px] text-slate-400">'+history.length+' revisiones guardadas</p></div><button type="button" id="strategy-ai-'+id+'" onclick="runStrategyAI(\''+id+'\')" class="rounded-lg bg-violet-700 hover:bg-violet-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Evaluar estrategia</button></div><p id="strategy-ai-status-'+id+'" class="mt-2 text-xs text-slate-400" aria-live="polite"></p>'+renderAIHistory(history)+'</div>';
+        }
+        async function requestJournalOrStrategyAI(kind,id,button,status){
+            const collection=kind==='journal'?investmentJournalData:strategiesData;
+            const item=collection.find(x=>String(x.id)===String(id));if(!item)return;
+            const endpoint=kind==='journal'?'/ai/journal-review':'/ai/strategy-review';
+            const payload=kind==='journal'?{entry:{date:item.date,asset:item.asset,action:item.action,reviewDate:item.reviewDate,thesis:item.thesis,expectation:item.expectation,risks:item.risks,outcome:item.outcome},asset:buildAIAssetContext(item.asset),news:buildAIContextNews(item.asset),previousAnalyses:(item.aiAnalysisHistory||[]).slice(-3).map(h=>({date:h.date,analysis:h.analysis}))}:{strategy:{name:item.name,asset:item.asset,status:item.status,entry:Number(item.entry)||0,exit:Number(item.exit)||0,capital:Number(item.capital)||0,horizon:item.horizon,reviewDate:item.reviewDate,thesis:item.thesis,risk:item.risk,notes:item.notes},asset:buildAIAssetContext(item.asset),news:buildAIContextNews(item.asset),previousAnalyses:(item.aiAnalysisHistory||[]).slice(-3).map(h=>({date:h.date,analysis:h.analysis}))};
+            button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>Analizando…';status.textContent='La IA está revisando los datos y contrastando la tesis. Puede tardar unos segundos.';
+            try{
+                const response=await fetch(JOURNAL_STRATEGY_AI_WORKER+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                const data=await response.json().catch(()=>({}));
+                if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
+                const updated=collection.find(x=>String(x.id)===String(id));if(!updated)throw new Error('El registro ya no existe.');
+                if(!Array.isArray(updated.aiAnalysisHistory))updated.aiAnalysisHistory=[];
+                updated.aiAnalysisHistory.push({date:data.generatedAt||new Date().toISOString(),analysis:String(data.analysis||'').slice(0,12000),model:data.model||'',cached:!!data.cached});
+                if(updated.aiAnalysisHistory.length>20)updated.aiAnalysisHistory=updated.aiAnalysisHistory.slice(-20);
+                if(kind==='journal')persistInvestmentJournal();else persistStrategies();
+                if(kind==='journal')renderInvestmentJournal();else renderStrategies();
+                showToast('Análisis IA guardado en el historial','fa-brain');
+            }catch(error){status.textContent='No se pudo completar el análisis: '+error.message;}
+            finally{button.disabled=false;button.innerHTML=kind==='journal'?'<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Analizar decisión':'<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Evaluar estrategia';}
+        }
+        function runInvestmentJournalAI(id){const b=document.getElementById('journal-ai-'+id),st=document.getElementById('journal-ai-status-'+id);if(b&&st)requestJournalOrStrategyAI('journal',id,b,st);}
+        function runStrategyAI(id){const b=document.getElementById('strategy-ai-'+id),st=document.getElementById('strategy-ai-status-'+id);if(b&&st)requestJournalOrStrategyAI('strategy',id,b,st);}
         function escapeStrategyHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
         function showToast(msg) {
