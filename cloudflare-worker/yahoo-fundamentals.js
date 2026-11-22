@@ -685,7 +685,24 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     }
     throw new Error("OpenRouter no completó el análisis tras 2 intentos (" + lastDiagnostic + "). El modelo gratuito seleccionado está agotando su límite de salida; cambia a otro modelo gratuito o usa Cloudflare AI.");
   };
-  if(provider==="openrouter")return await openrouter();
+  if(provider==="openrouter"){
+    try{return await openrouter();}
+    catch(openrouterError){
+      const message=String(openrouterError?.message||openrouterError);
+      // Algunos modelos gratuitos anuncian un límite de salida inferior al solicitado.
+      // Si cortan la respuesta, no repetimos indefinidamente el mismo modelo: usamos
+      // Workers AI como respaldo y devolvemos el modelo real que haya generado el texto.
+      if(/finish_reason=length|agotando su límite de salida|se recibió texto parcial/i.test(message)){
+        try{
+          const fallback=await cloudflare();
+          return {...fallback,fallbackFrom:"OpenRouter ("+model+") no completó la respuesta por límite de salida"};
+        }catch(cloudflareError){
+          throw new Error("OpenRouter agotó el límite de salida y Cloudflare tampoco pudo completar el análisis: "+String(cloudflareError?.message||cloudflareError));
+        }
+      }
+      throw openrouterError;
+    }
+  }
   if(provider==="cloudflare")return await cloudflare();
   try{return await cloudflare();}catch(e){
     if(!env?.OPENROUTER_API_KEY)throw e;
