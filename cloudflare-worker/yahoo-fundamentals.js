@@ -653,7 +653,7 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  const targetCurrency=String(data?.fundamentals?.financialCurrency||data?.historicalFinancials?.financialCurrency||"").toUpperCase();
  const quoteCurrency=String(data?.asset?.currency||"").toUpperCase();
  if(targetCurrency&&quoteCurrency&&targetCurrency!==quoteCurrency&&/precio (?:medio )?objetivo|target mean|target price/i.test(body)){
-  const targetSentences=body.split(/(?<=[.!?])\\s+/).filter(x=>/precio (?:medio )?objetivo|target mean|target price/i.test(x));
+  const targetSentences=body.split(/(?<=[.!?])\s+/).filter(x=>/precio (?:medio )?objetivo|target mean|target price/i.test(x));
   for(const sentence of targetSentences){const hasWrongLabel=new RegExp("(?:precio (?:medio )?objetivo|target mean|target price)[^.!?]{0,80}\\\\b"+quoteCurrency+"\\\\b","i").test(sentence);if(hasWrongLabel)add("target_currency_label_wrong","El precio objetivo aparece etiquetado con la divisa de cotización, aunque la divisa del objetivo no está confirmada. Mantener el valor original y marcar su moneda como no verificada.",sentence.trim());}
  }
  if(/(?:P\s*\/\s*S|precio.?ventas|price.?to.?sales)[^.!?]{0,100}(?:12|m[uú]ltiplo|ratio)/i.test(body)&&targetCurrency&&quoteCurrency&&targetCurrency!==quoteCurrency)add("price_sales_currency_unverified","No recalcular ni interpretar P/S si capitalización y ventas no están en la misma moneda o no se documenta la conversión. El múltiplo publicado puede mantenerse solo como dato de proveedor, indicando su fuente y periodo.");
