@@ -630,10 +630,13 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
   const openrouter = async () => {
     if (!env?.OPENROUTER_API_KEY) throw new Error("Falta el Secret OPENROUTER_API_KEY en Cloudflare. Añádelo en Workers & Pages → tu Worker → Settings → Variables and Secrets.");
     let lastDiagnostic = "";
-    // El router gratuito puede seleccionar modelos de razonamiento que consuman
-    // el presupuesto de salida pensando y dejen content vacío. Excluimos ese
-    // contenido interno y reintentamos una vez si el proveedor no genera respuesta.
+    // Algunos modelos gratuitos consumen gran parte del límite en razonamiento
+    // o cortan el análisis. El segundo intento amplía el presupuesto y solo
+    // aceptamos una respuesta si el proveedor indica que terminó correctamente.
     for (let attempt = 1; attempt <= 2; attempt++) {
+      const outputBudget = attempt === 1
+        ? Math.max(Number(options.max_tokens) || 800, 1800)
+        : Math.max(Number(options.max_tokens) || 800, 3500);
       const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -645,7 +648,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
         body: JSON.stringify({
           model,
           messages: options.messages,
-          max_tokens: Math.max(Number(options.max_tokens) || 800, 1200),
+          max_tokens: outputBudget,
           temperature: 0.2,
           stream: false,
           reasoning: { effort: "low", exclude: true }
@@ -666,15 +669,20 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
       const response = Array.isArray(c)
         ? c.map(x => typeof x === "string" ? x : String(x?.text || x?.content || "")).join("\\n").trim()
         : String(c || "").trim();
-      if (response) return { response, model: String(data?.model || model), provider: "openrouter" };
+      const finishReason = String(choice.finish_reason || "");
+      if (response && finishReason !== "length") {
+        return { response, model: String(data?.model || model), provider: "openrouter" };
+      }
 
       lastDiagnostic = "modelo real=" + String(data?.model || model)
         + ", finish_reason=" + String(choice.finish_reason || "no indicado")
+        + ", límite de salida=" + outputBudget
         + ", campos de mensaje=" + Object.keys(message).join(",")
         + (message.refusal ? ", rechazo=" + String(message.refusal).slice(0, 180) : "")
-        + (message.reasoning ? ", el proveedor devolvió razonamiento pero no respuesta final" : "");
+        + (message.reasoning ? ", el proveedor devolvió razonamiento pero no respuesta final" : "")
+        + (response ? ", se recibió texto parcial pero el modelo lo cortó" : "");
     }
-    throw new Error("OpenRouter recibió la petición, pero no generó texto final tras 2 intentos (" + lastDiagnostic + "). Prueba a seleccionar un modelo gratuito concreto en lugar de OpenRouter Free automático.");
+    throw new Error("OpenRouter no completó el análisis tras 2 intentos (" + lastDiagnostic + "). El modelo gratuito seleccionado está agotando su límite de salida; cambia a otro modelo gratuito o usa Cloudflare AI.");
   };
   if(provider==="openrouter")return await openrouter();
   if(provider==="cloudflare")return await cloudflare();
