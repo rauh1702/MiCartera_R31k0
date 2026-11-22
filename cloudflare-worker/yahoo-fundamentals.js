@@ -648,6 +648,17 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  }
  // Ratios de balance: prevalece siempre el cálculo determinista del mismo balance.
  const ratio=validation?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
+ // Una comparación del tipo "deuda/caja > 1" es una desigualdad, no un ratio exacto.
+ // Sustituirla por el cálculo determinista cuando esté disponible.
+ if(Number.isFinite(ratio?.debtToCash)){
+  const debtCash=ratio.debtToCash.toFixed(2).replace(".",",");
+  text=text.replace(/((?:ratio\s+)?deuda\s*[/／-]\s*caja)\s*>\s*1(?:[,.]0+)?/gi,"$1 = "+debtCash);
+ }
+ // Evitar conclusiones globales contundentes no respaldadas por un análisis completo de liquidez.
+ text=text.replace(/Sivers Semiconductors presenta una situación financiera (?:delicada|precaria|crítica):[^.]*\./gi,
+  "En el trimestre analizado, Sivers registró ingresos inferiores al trimestre anterior, márgenes negativos y flujos de caja operativo y libre negativos. La deuda total reportada por Yahoo supera la caja, mientras que el ratio corriente calculado es superior a 1; estos datos describen presiones y recursos corrientes, pero no bastan por sí solos para concluir insolvencia ni una necesidad inmediata de financiación.");
+ text=text.replace(/la caja disponible es insuficiente para cubrir la deuda total/gi,
+  "la deuda total reportada por Yahoo supera el saldo de caja; esta comparación no equivale a una medida de liquidez ni informa por sí sola sobre vencimientos o capacidad de pago");
  if(Number.isFinite(ratio?.currentRatio)){
   const n=ratio.currentRatio.toFixed(2);
   text=text.replace(/((?:\*{1,2})?(?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\*{1,2})?\s*[:：=](?:\*{1,2})?\s*)(?:\*{1,2})?\d+(?:[.,]\d+)?(?:\*{1,2})?/gi,"$1"+n);
@@ -777,7 +788,7 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  const calculatedRatios=base?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
  if(calculatedRatios){
   const ratioSpecs=[
-   ["debt_to_cash","(?:deuda\\s*[/\\-]\\s*caja|deuda\\s*[/\\-]\\s*cash|debt\\s*[/\\-]\\s*cash|relaci[oó]n deuda.?caja)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*(?:veces|x)?",calculatedRatios.debtToCash,0.12,false],
+   ["debt_to_cash","(?:deuda\\s*[/\\-]\\s*caja|deuda\\s*[/\\-]\\s*cash|debt\\s*[/\\-]\\s*cash|relaci[oó]n deuda.?caja)\\s*[:：=]\\s*(\\d+(?:[.,]\\d+)?)\\s*(?:veces|x)?",calculatedRatios.debtToCash,0.12,false],
    ["debt_to_equity","(?:deuda.?capital|deuda.?equity|debt.?to.?equity)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*%",calculatedRatios.debtToEquityPct,1.5,true],
    ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)\\s*[:：=](?:\\*{1,2})?\\s*(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
   ];
@@ -1498,7 +1509,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v30:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v31:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
