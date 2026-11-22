@@ -6746,7 +6746,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             const provider=String(data?.provider||'').toLowerCase();
             const model=String(data?.model||'').trim();
             const providerName=provider==='openrouter'?'OpenRouter':provider==='cloudflare'?'Cloudflare Workers AI':provider==='auto'?'Automático':provider||'IA';
-            return 'Motor: '+providerName+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.cached?' · caché':'');
+            return 'Motor: '+providerName+(model?' · Modelo: '+model:' · modelo no identificado')+(data?.fallbackFrom?' · respaldo automático: '+String(data.fallbackFrom):'')+(data?.cached?' · caché':'');
         }
         const AI_SETTINGS_KEY='micartera_ai_settings_v1';
         function getAISettings(){try{const x=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');return{provider:['cloudflare','openrouter','auto'].includes(x.provider)?x.provider:'cloudflare',model:String(x.model||'openrouter/free')};}catch(_){return{provider:'cloudflare',model:'openrouter/free'};}}
