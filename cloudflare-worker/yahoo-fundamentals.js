@@ -1672,7 +1672,10 @@ export default {
         let contextJson=JSON.stringify(context);
         const trimLists=["journal","recentNews","watchlist","strategies","recentPerformanceSnapshots"];
         for(const key of trimLists){while(contextJson.length>12500&&Array.isArray(context[key])&&context[key].length){context[key].shift();contextJson=JSON.stringify(context);}}
-        while(contextJson.length>12500&&Array.isArray(context.positions)&&context.positions.length>5){context.positions.pop();contextJson=JSON.stringify(context);}
+        if(contextJson.length>12500&&Array.isArray(context.positions)){
+          context.positions=context.positions.map(p=>({name:p.name,ticker:p.ticker,isin:p.isin,shares:p.shares,marketValueEUR:p.marketValueEUR,investedEUR:p.investedEUR,unrealizedProfitEUR:p.unrealizedProfitEUR,realizedProfitEUR:p.realizedProfitEUR,category:p.category,type:p.type,currency:p.currency,currentPrice:p.currentPrice,pmp:p.pmp,priceSource:p.priceSource,lastPriceUpdate:p.lastPriceUpdate,transactions:(p.transactions||[]).slice(-1)}));
+          contextJson=JSON.stringify(context);
+        }
         if(contextJson.length>12500){
           context.externalResearch=(context.externalResearch||[]).map(x=>({...x,sec:x.sec?{cik:x.sec.cik,companyName:x.sec.companyName,shareCountComparison:x.sec.shareCountComparison,capitalStructure:x.sec.capitalStructure,filings:(x.sec.filings||[]).slice(0,5),filingReview:{documents:(x.sec.filingReview?.documents||[]).slice(0,3).map(d=>({...d,excerpts:(d.excerpts||[]).slice(0,1).map(t=>String(t).slice(0,220))}))}}:null,fundamentals:x.fundamentals?{price:x.fundamentals.price,financialData:x.fundamentals.financialData,quarterlyIncome:x.fundamentals.quarterlyIncome}:null,news:(x.news||[]).slice(0,2)}));
           contextJson=JSON.stringify(context);
