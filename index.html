@@ -501,6 +501,14 @@
         color: #f1f5f9 !important;
     }
 
+    .warren-messages{min-height:340px;max-height:62vh;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at top right,rgba(180,130,35,.08),transparent 55%),#0b1220}
+    .warren-bubble{max-width:min(92%,850px);white-space:pre-wrap;overflow-wrap:anywhere;border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.65}
+    .warren-bubble.user{margin-left:auto;background:#78350f;color:#fff7ed;border:1px solid rgba(251,191,36,.25);border-bottom-right-radius:5px}
+    .warren-bubble.assistant{margin-right:auto;background:#172235;color:#e2e8f0;border:1px solid #334155;border-bottom-left-radius:5px}
+    .warren-bubble .warren-role{display:block;margin-bottom:5px;font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24}
+    .warren-suggestion{display:block;width:100%;border:1px solid #334155;border-radius:10px;background:#172235;padding:9px 10px;text-align:left;color:#cbd5e1;font-size:11px;line-height:1.45;transition:.15s}
+    .warren-suggestion:hover{border-color:#d6a63b;background:#1e293b;color:#fff}
+    #warren-chat-input{color-scheme:dark}
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -524,6 +532,7 @@
                         <p class="text-xs text-slate-400">Dashboard de inversiones · Mercado en tiempo real · Fiscalidad FIFO</p>
                     </div>
                 </div>
+                <button type="button" id="warren-open-button" onclick="openWarrenChat()" class="ml-auto sm:ml-2 shrink-0 inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-amber-500/20 hover:to-amber-400/10 px-3 py-2 text-sm font-black text-amber-200 shadow-lg shadow-amber-950/20 transition" title="Hablar con WARREN, tu analista de inversiones"><span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300"><i class="fa-solid fa-comments-dollar"></i></span><span>WARREN</span></button>
                 <div class="flex items-center gap-2 shrink-0">
                     <span id="cloud-sync-badge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-slate-800 text-slate-400 border-slate-700"><i class="fa-solid fa-cloud mr-1"></i>Nube</span>
                     <button type="button" onclick="logoutFirebase()" class="text-xs bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -942,6 +951,28 @@
                 <div id="portfolio-analyst-result" class="hidden whitespace-pre-wrap rounded-xl border border-slate-700 bg-slate-900/80 p-4 text-sm leading-6 text-slate-200"></div>
             </div>
             <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-xs text-slate-400">Este análisis es informativo, no es asesoramiento financiero personalizado ni una orden de compra o venta. No modifica posiciones, operaciones, PMP ni históricos. Los datos enviados al servicio son cifras de cartera, tickers, categorías y noticias; no se envían credenciales bancarias.</div>
+        </section>
+
+        <section id="warren-chat-view" class="hidden space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3"><div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-400/40 bg-gradient-to-br from-slate-800 to-amber-950 text-amber-300 shadow-lg"><i class="fa-solid fa-comments-dollar text-2xl"></i></div><div><p class="text-[11px] font-black uppercase tracking-[.22em] text-amber-300">Analista independiente · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white">WARREN</h2><p class="text-xs text-slate-400">Contexto financiero actualizado en cada consulta</p></div></div>
+                <div class="flex flex-wrap gap-2"><button type="button" onclick="startNewWarrenChat()" class="rounded-xl border border-amber-400/30 bg-slate-800 px-3 py-2 text-xs font-bold text-amber-200"><i class="fa-solid fa-plus mr-1"></i>Nuevo chat</button><button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-arrow-left mr-1"></i>Volver</button></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4">
+                <div class="min-w-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-950/70 px-4 py-3"><div class="flex items-center gap-2 text-sm font-bold text-white"><span class="h-2 w-2 rounded-full bg-emerald-400"></span>Conversación con WARREN</div><p id="warren-model-status" class="text-[10px] text-slate-400">Preparado para analizar tu cartera</p></div>
+                    <div id="warren-messages" class="warren-messages space-y-3 p-3 sm:p-5" aria-live="polite" aria-label="Mensajes de WARREN"></div>
+                    <form id="warren-chat-form" onsubmit="sendWarrenMessage(event)" class="border-t border-slate-700 bg-slate-950/60 p-3 sm:p-4">
+                        <label for="warren-chat-input" class="sr-only">Escribe tu consulta a WARREN</label><div class="flex items-end gap-2 rounded-2xl border border-slate-600 bg-slate-800 p-2 focus-within:border-amber-400/70"><textarea id="warren-chat-input" rows="2" maxlength="2500" placeholder="Pregúntame lo que quieras sobre tu cartera, una empresa o una estrategia…" class="max-h-36 min-h-[48px] flex-1 resize-y bg-transparent px-2 py-2 text-sm text-white placeholder-slate-400 outline-none" onkeydown="handleWarrenInputKeydown(event)"></textarea><button id="warren-send-button" type="submit" class="mb-0.5 inline-flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-50" title="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button></div>
+                        <div class="mt-2 flex flex-wrap items-center justify-between gap-2"><p class="text-[10px] text-slate-500">Intro para enviar · Mayús + Intro para nueva línea</p><p id="warren-context-status" class="text-[10px] text-slate-500">Contexto financiero se actualiza al enviar</p></div>
+                    </form>
+                </div>
+                <aside class="space-y-3">
+                    <div class="rounded-2xl border border-amber-400/20 bg-slate-900 p-4"><p class="text-[10px] font-black uppercase tracking-[.18em] text-amber-300">Criterio Warren</p><p class="mt-2 text-sm font-bold text-white">No estoy aquí para darte la razón.</p><p class="mt-1 text-xs leading-5 text-slate-400">Contrastaré tus ideas con los datos, separaré hechos de hipótesis y reconoceré cuando falte evidencia.</p></div>
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs font-bold text-slate-200"><i class="fa-solid fa-lightbulb mr-1 text-amber-300"></i>Preguntas para empezar</p><div class="mt-3 space-y-2"><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Critica mi cartera sin suavizar los problemas.</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Dónde tengo mayor concentración y riesgo?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Qué debería mejorar en mi diversificación?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Revisa mis estrategias y dime cuáles no se sostienen.</button></div></div>
+                    <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3 text-[10px] leading-5 text-slate-500">Análisis informativo, no garantía de resultados ni sustituto de tu criterio. WARREN no ejecuta operaciones ni modifica tus datos. Comprueba las cifras y fuentes importantes.</div>
+                </aside>
+            </div>
         </section>
 
         <style>
@@ -2862,29 +2893,27 @@
         }
         function buildPortfolioAnalystPayload(){
             const positions=(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).map(a=>({
-                name:String(a.name||a.companyName||a.ticker||a.symbol||'Activo').slice(0,100),
-                ticker:String(a.ticker||a.symbol||'').slice(0,24),
-                isin:String(a.isin||'').slice(0,20),
-                shares:Number(a.shares)||0,
-                marketValueEUR:Number(a.marketValue)||0,
-                investedEUR:Number(a.currentCapitalVivo??a.investedCapital??a.totalInvested)||0,
-                unrealizedProfitEUR:Number(a.latentProfit)||0,
-                realizedProfitEUR:Number(a.realizedProfit)||0,
-                category:String(a.category||'Sin clasificar').slice(0,60),
-                type:String(a.type||a.assetType||'').slice(0,50),
-                currency:String(a.currency||'EUR').slice(0,8),
-                currentPrice:Number(a.currentPrice)||null
+                name:String(a.name||a.companyName||a.ticker||a.symbol||'Activo').slice(0,100),ticker:String(a.ticker||a.symbol||'').slice(0,24),isin:String(a.isin||'').slice(0,20),
+                shares:Number(a.shares)||0,marketValueEUR:Number(a.marketValue)||0,investedEUR:Number(a.currentCapitalVivo??a.investedCapital??a.totalInvested)||0,
+                unrealizedProfitEUR:Number(a.latentProfit)||0,realizedProfitEUR:Number(a.realizedProfit)||0,category:String(a.category||'Sin clasificar').slice(0,60),
+                type:String(a.type||a.assetType||'').slice(0,50),currency:String(a.currency||'EUR').slice(0,8),currentPrice:Number(a.currentPrice)||null,
+                pmp:Number(a.pmp)||0,priceSource:String(a.priceSource||'').slice(0,60),lastPriceUpdate:a.lastPriceUpdate||null,
+                transactions:(Array.isArray(a.history)?a.history.slice(-18):[]).map(t=>({date:t.date,type:t.type,qty:Number(t.qty)||0,price:Number(t.price)||0,comm:Number(t.comm)||0}))
             })).slice(0,40);
-            const totalValue=positions.reduce((n,a)=>n+a.marketValueEUR,0);
-            const totalInvested=positions.reduce((n,a)=>n+a.investedEUR,0);
-            const totalLatent=positions.reduce((n,a)=>n+a.unrealizedProfitEUR,0);
-            const categories={};
-            positions.forEach(a=>{const k=a.category||'Sin clasificar';categories[k]=(categories[k]||0)+a.marketValueEUR;});
+            const totalValue=positions.reduce((n,a)=>n+a.marketValueEUR,0),totalInvested=positions.reduce((n,a)=>n+a.investedEUR,0),totalLatent=positions.reduce((n,a)=>n+a.unrealizedProfitEUR,0);
+            const totalRealized=(assetsData||[]).reduce((n,a)=>n+(Number(a.realizedProfit)||0),0),categoryValues={};
+            positions.forEach(a=>{const k=a.category||'Sin clasificar';categoryValues[k]=(categoryValues[k]||0)+a.marketValueEUR;});
+            const categoryWeights=Object.fromEntries(Object.entries(categoryValues).map(([k,v])=>[k,{marketValueEUR:Number(v.toFixed(2)),weightPct:totalValue>0?Number((v/totalValue*100).toFixed(2)):null}]));
+            const concentration=[...positions].sort((a,b)=>b.marketValueEUR-a.marketValueEUR).map(a=>({name:a.name,ticker:a.ticker,marketValueEUR:a.marketValueEUR,weightPct:totalValue>0?Number((a.marketValueEUR/totalValue*100).toFixed(2)):null})).slice(0,15);
             const history=readPerformanceHistory().filter(p=>p&&p.date).sort((a,b)=>a.date.localeCompare(b.date));
-            const recentHistory=history.slice(-12).map(p=>({date:p.date,marketValueEUR:Number(p.marketValue)||0,totalProfitEUR:Number(p.totalProfit)||0}));
-            const news=(Array.isArray(assetNewsItems)?assetNewsItems:[]).filter(n=>n&&n.title).slice(0,15).map(n=>({title:String(n.title).slice(0,180),summary:String(n.summary||'').slice(0,300),impact:String(n.impact||'neutral'),symbols:Array.isArray(n.symbols)?n.symbols.slice(0,5):[],date:String(n.publishedAt||n.date||'').slice(0,30)}));
-            const watch=(Array.isArray(watchlistData)?watchlistData:[]).slice(0,20).map(a=>({name:String(a.name||a.companyName||a.symbol||'').slice(0,80),symbol:String(a.symbol||'').slice(0,24),price:Number(a.currentPrice)||null}));
-            return {generatedAt:new Date().toISOString(),portfolioSummary:{openPositions:positions.length,totalMarketValueEUR:Number(totalValue.toFixed(2)),totalInvestedEUR:Number(totalInvested.toFixed(2)),unrealizedProfitEUR:Number(totalLatent.toFixed(2)),realizedProfitEUR:Number(positions.reduce((n,a)=>n+a.realizedProfitEUR,0).toFixed(2)),categoryWeightsEUR:categories},positions,recentPerformanceSnapshots:recentHistory,watchlist:watch,recentNews:news,dataLimitations:{historyPoints:history.length,newsCount:news.length,watchlistCount:watch.length}};
+            const recentHistory=history.slice(-20).map(p=>({date:p.date,marketValueEUR:Number(p.marketValue)||0,totalProfitEUR:Number(p.totalProfit)||0,investedEUR:Number(p.invested)||0}));
+            const news=(Array.isArray(assetNewsItems)?assetNewsItems:[]).filter(n=>n&&n.title).slice(0,20).map(n=>({title:String(n.title).slice(0,180),summary:String(n.summary||'').slice(0,350),impact:String(n.impact||'neutral'),symbols:Array.isArray(n.symbols)?n.symbols.slice(0,5):[],date:String(n.publishedAt||n.date||'').slice(0,30)}));
+            const watch=(Array.isArray(watchlistData)?watchlistData:[]).slice(0,35).map(a=>({name:String(a.name||a.companyName||a.symbol||'').slice(0,80),symbol:String(a.symbol||'').slice(0,24),isin:String(a.isin||'').slice(0,20),price:Number(a.currentPrice)||null,category:String(a.category||'').slice(0,50)}));
+            try{renderPortfolioHealth(false);}catch(_){}
+            const health={critical:Number(document.getElementById('health-critical-count')?.textContent)||0,warnings:Number(document.getElementById('health-warning-count')?.textContent)||0,openPositions:Number(document.getElementById('health-open-count')?.textContent)||0,okPositions:Number(document.getElementById('health-ok-count')?.textContent)||0,overall:String(document.getElementById('health-overall-badge')?.textContent||'No calculado')};
+            const strategies=(Array.isArray(strategiesData)?strategiesData:[]).slice(0,35).map(x=>({id:x.id,name:x.name||x.title||'',asset:x.asset||x.ticker||'',status:x.status||'',entry:x.entry??x.entryPrice??null,exit:x.exit??x.exitPrice??null,capital:x.capital??null,thesis:x.thesis||x.notes||x.description||'',reviewDate:x.reviewDate||null}));
+            const journal=(Array.isArray(investmentJournalData)?investmentJournalData:[]).slice(-30).map(x=>({date:x.date||'',asset:x.asset||'',action:x.action||'',thesis:x.thesis||x.reason||x.notes||'',expectation:x.expectation||'',risks:x.risks||'',reviewDate:x.reviewDate||'',reviewed:!!x.reviewed}));
+            return {generatedAt:new Date().toISOString(),portfolioSummary:{openPositions:positions.length,totalMarketValueEUR:Number(totalValue.toFixed(2)),totalInvestedEUR:Number(totalInvested.toFixed(2)),unrealizedProfitEUR:Number(totalLatent.toFixed(2)),realizedProfitEUR:Number(totalRealized.toFixed(2)),totalResultEUR:Number((totalLatent+totalRealized).toFixed(2)),categoryWeights},positions,concentration,recentPerformanceSnapshots:recentHistory,watchlist:watch,recentNews:news,portfolioHealth:health,strategies,journal,dataLimitations:{historyPoints:history.length,newsCount:news.length,watchlistCount:watch.length,strategyCount:(strategiesData||[]).length,journalCount:(investmentJournalData||[]).length}};
         }
         async function generatePortfolioAnalystAI(){
             const button=document.getElementById('portfolio-analyst-button'),status=document.getElementById('portfolio-analyst-status'),result=document.getElementById('portfolio-analyst-result');
@@ -2901,6 +2930,42 @@
             }catch(error){status.textContent='No se pudo generar el análisis: '+error.message;}
             finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-brain mr-1"></i>Analizar mi cartera';}
         }
+
+        // WARREN: conversación local persistente; el contexto de cartera se reconstruye en cada turno.
+        const WARREN_CHAT_KEY='micartera_warren_chat_v1';
+        let warrenMessages=[],warrenBusy=false;
+        function loadWarrenChat(){try{const saved=JSON.parse(localStorage.getItem(WARREN_CHAT_KEY)||'[]');warrenMessages=Array.isArray(saved)?saved.filter(x=>x&&['user','assistant'].includes(x.role)&&typeof x.content==='string').slice(-40):[];}catch(_){warrenMessages=[];}renderWarrenMessages();}
+        function saveWarrenChat(){try{localStorage.setItem(WARREN_CHAT_KEY,JSON.stringify(warrenMessages.slice(-40)));}catch(e){console.warn('No se pudo guardar el chat WARREN',e);}}
+        function renderWarrenMessages(){
+            const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
+            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='mx-auto my-8 max-w-xl text-center text-sm leading-6 text-slate-400';welcome.innerHTML='<div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-2xl text-amber-300"><i class="fa-solid fa-comments-dollar"></i></div><p class="text-lg font-black text-white">Buenas. Soy WARREN.</p><p class="mt-2">Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.</p>';host.appendChild(welcome);return;}
+            warrenMessages.forEach(m=>{const bubble=document.createElement('div');bubble.className='warren-bubble '+(m.role==='user'?'user':'assistant');const role=document.createElement('span');role.className='warren-role';role.textContent=m.role==='user'?'TÚ':'WARREN';const body=document.createElement('div');body.textContent=m.content;bubble.append(role,body);host.appendChild(bubble);});host.scrollTop=host.scrollHeight;
+        }
+        function showWarrenChatView(){
+            ['dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view','company-deep-dive-view','warren-chat-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('warren-chat-view')?.classList.remove('hidden');document.getElementById('headerToolbar')?.classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));window.scrollTo({top:0,behavior:'smooth'});renderWarrenMessages();setTimeout(()=>document.getElementById('warren-chat-input')?.focus(),120);
+        }
+        function openWarrenChat(){loadWarrenChat();showWarrenChatView();}
+        function startNewWarrenChat(){if(warrenBusy)return;if(warrenMessages.length&&!confirm('¿Empezar una conversación nueva? El chat actual se sustituirá en este dispositivo.'))return;warrenMessages=[];saveWarrenChat();renderWarrenMessages();document.getElementById('warren-model-status').textContent='Nueva conversación';document.getElementById('warren-chat-input')?.focus();}
+        function handleWarrenInputKeydown(event){if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('warren-chat-form')?.requestSubmit();}}
+        function askWarrenSuggestion(button){const input=document.getElementById('warren-chat-input');if(!input)return;input.value=button.textContent.trim();sendWarrenMessage();}
+        async function sendWarrenMessage(event){
+            if(event)event.preventDefault();if(warrenBusy)return;
+            const input=document.getElementById('warren-chat-input'),button=document.getElementById('warren-send-button'),status=document.getElementById('warren-model-status');
+            const question=String(input?.value||'').trim();if(!question)return;if(question.length>2500){showToast('La consulta es demasiado larga.','fa-triangle-exclamation');return;}
+            warrenMessages.push({role:'user',content:question,at:new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();if(input)input.value='';
+            warrenBusy=true;if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}if(status)status.textContent='WARREN está contrastando tu consulta con los datos…';
+            const contextStatus=document.getElementById('warren-context-status');if(contextStatus)contextStatus.textContent='Preparando cartera, salud, seguimiento e histórico…';
+            try{
+                const context=buildPortfolioAnalystPayload(),conversation=warrenMessages.slice(-14).map(m=>({role:m.role,content:m.content.slice(0,2500)}));
+                const response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context,messages:conversation,_ai:getAIRequestConfig('warren')})});
+                const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
+                warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
+                if(status)status.textContent='Respondido · '+formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo utilizado':'');if(contextStatus)contextStatus.textContent='Contexto actualizado: '+new Date(data.generatedAt||Date.now()).toLocaleTimeString('es-ES');
+            }catch(error){warrenMessages.push({role:'assistant',content:'No he podido completar la respuesta: '+error.message+'\n\nTu pregunta sigue guardada. Puedes volver a enviarla cuando el servicio esté disponible.',at:new Date().toISOString()});saveWarrenChat();renderWarrenMessages();if(status)status.textContent='No se pudo completar la consulta.';if(contextStatus)contextStatus.textContent='No se pudo actualizar el contexto.';}
+            finally{warrenBusy=false;if(button){button.disabled=false;button.innerHTML='<i class="fa-solid fa-paper-plane"></i>';}document.getElementById('warren-chat-input')?.focus();}
+        }
+
 
         function buildMonthlyReportAIPayload() {
             const select=document.getElementById('monthly-report-month');
@@ -6553,6 +6618,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.getElementById('risk-analysis-view').classList.add('hidden');
             document.getElementById('financial-calendar-view').classList.add('hidden');
             document.getElementById('benchmark-view')?.classList.add('hidden');
+            document.getElementById('warren-chat-view')?.classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('investment-journal-view')?.classList.add('hidden');
             document.getElementById('headerToolbar').classList.remove('hidden');
