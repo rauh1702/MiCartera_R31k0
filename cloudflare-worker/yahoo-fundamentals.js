@@ -686,7 +686,7 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  text=text.replace(/^([^\n]*(?:P\s*\/\s*S|price.?to.?sales|precio.?ventas)[^\n]*)$/gim,line=>{
   if(!/\d+(?:[.,]\d+)?/.test(line))return line;
   const value=(line.match(/(?:P\s*\/\s*S|price.?to.?sales|precio.?ventas)[^0-9]{0,20}(\d{1,2}[.,]\d{1,3})/i)||[])[1]||"12,51";
-  return "- **P/S:** "+value+" (dato de Yahoo; periodo exacto de ventas, moneda base y metodología del proveedor no verificados; no utilizar para comparaciones hasta verificar esos datos).";
+  return "- **P/S:** "+value+" (dato de Yahoo; periodo de ventas no verificado, moneda base y metodología del proveedor no verificadas; no utilizar para comparaciones hasta verificar esos datos).";
  });
  text=text.replace(/puede\s+interpretarse\s+como\s+diluci[oó]n|puede\s+interpretar\s+como\s+diluci[oó]n/gi,"no puede atribuirse a dilución sin identificar una emisión, conversión u otro instrumento dilutivo");
  return text;
@@ -1446,7 +1446,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v23:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v24:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
