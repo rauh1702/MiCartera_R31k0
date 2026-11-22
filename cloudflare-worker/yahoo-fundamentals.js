@@ -636,6 +636,23 @@ function validationRows(h,m,c){
 function validationFindMetric(o,keys,d=0){if(!o||typeof o!=="object"||d>5)return null;for(const[k,v]of Object.entries(o)){if(keys.includes(k.toLowerCase())){const n=validationRaw(v);if(Number.isFinite(n))return{key:k,value:n};}}for(const v of Object.values(o)){const x=validationFindMetric(v,keys,d+1);if(x)return x;}return null;}
 
 function validationFindMetricContainer(o,required,d=0){if(!o||typeof o!=="object"||d>6)return null;const keys=Object.keys(o).map(k=>k.toLowerCase());if(required.every(k=>keys.includes(k)))return o;for(const v of Object.values(o)){const found=validationFindMetricContainer(v,required,d+1);if(found)return found;}return null;}
+function sanitizeDeepDiveAnalysis(analysis,validation){
+ let text=String(analysis||"");
+ const fiscalUnknown=validation?.warnings?.some(x=>x.code==="period_label_check");
+ if(fiscalUnknown){
+  text=text.replace(/((?:pr[oó]ximo|siguiente|futuro)\s+(?:informe|reporte|publicaci[oó]n)[^\n.!?]{0,65}?)\s*\(?Q[3-4]\)?/gi,"$1");
+  text=text.replace(/((?:calendario|vigilar|consultar)[^\n.!?]{0,100})\bQ[3-4]\b/gi,"$1");
+  text=text.replace(/\bpr[oó]ximo informe del (?:tercer|cuarto) trimestre\b/gi,"próximo informe");
+ }
+ text=text.replace(/puede\s+interpretarse\s+como\s+diluci[oó]n|puede\s+interpretar\s+como\s+diluci[oó]n/gi,"no puede atribuirse a dilución sin identificar una emisión, conversión u otro instrumento dilutivo");
+ const ratio=validation?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
+ const current=Number.isFinite(ratio?.currentRatio)?" El current ratio calculado es "+ratio.currentRatio.toFixed(2)+", lo que indica activos corrientes superiores a pasivos corrientes, aunque no garantiza caja disponible.":"";
+ const debtCash=Number.isFinite(ratio?.debtToCash)?" (deuda/caja calculada: "+ratio.debtToCash.toFixed(2)+")":"";
+ const fundingLine=/(?:[-•]\s*)?(?:\*\*)?riesgo potencial(?:\*\*)?\s*:\s*[^\n]*(?:deuda total|debt.?to.?cash|deuda.?caja)[^\n]*(?:podr[ií]a|puede|eventualmente)[^\n]*(?:financiaci[oó]n|refinanciaci[oó]n|captaci[oó]n de capital)[^\n]*/gi;
+ text=text.replace(fundingLine,"- Datos insuficientes: la deuda total reportada supera al efectivo"+debtCash+", pero no hay datos verificados de vencimientos, intereses, covenants o déficit de liquidez que permitan concluir que será necesaria financiación adicional. La necesidad de refinanciación o capital no puede determinarse."+current);
+ return text;
+}
+
 function runDeepDiveAnalysisValidation(analysis,data,base){
  const warnings=[],checks=[],body=String(analysis||""),lower=body.toLowerCase(),add=(code,message,evidence="")=>warnings.push({code,severity:"warning",message,evidence});
  const history=data?.historicalFinancials||{},income=validationRows(history,"incomeStatementHistoryQuarterly","incomeStatementHistory"),cash=validationRows(history,"cashflowStatementHistoryQuarterly","cashflowStatements");
@@ -1389,7 +1406,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v21:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v22:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
@@ -1416,8 +1433,9 @@ export default {
           ],
           max_tokens: 850
         }, aiConfig);
-        const analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 9500);
+        let analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 9500);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
+        analysis = sanitizeDeepDiveAnalysis(analysis, validation);
         const analysisValidation = runDeepDiveAnalysisValidation(analysis, data, validation);
         const combinedValidation = { ...validation, warnings: [...(validation.warnings || []), ...analysisValidation.warnings], warningCount: (validation.warnings || []).filter(x => x.severity === "warning").length + analysisValidation.warningCount, analysisReview: analysisValidation };
         const responseData = { analysis, validation: combinedValidation, analysisValidation, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
