@@ -1027,7 +1027,7 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
   if(provider==="groq")return await groq();
   if(provider==="openrouter")return await openrouter();
   const section=String(selection.section||"general");
-  const routes={"deep-dive":[gemini,groq,cloudflare],"portfolio":[gemini,groq,cloudflare],"monthly":[gemini,cloudflare,groq],"journal":[groq,cloudflare,gemini],"strategy":[gemini,groq,cloudflare],"warren":[gemini,groq]};
+  const routes={"deep-dive":[gemini,groq,cloudflare],"portfolio":[gemini,groq,cloudflare],"monthly":[gemini,cloudflare,groq],"journal":[groq,cloudflare,gemini],"strategy":[gemini,groq,cloudflare],"warren":[groq,gemini]};
   const route=routes[section]||[gemini,groq,cloudflare],failures=[];
   for(const run of route){try{const result=await run();return {...result,...(failures.length?{fallbackFrom:failures.join(" → ")}:{})};}catch(e){failures.push(String(e?.message||e).slice(0,180));}}
   throw new Error("No hay motores IA gratuitos disponibles: "+failures.join(" | "));
