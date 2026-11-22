@@ -2811,16 +2811,37 @@
                 if(!fundamentalsResponse.ok)throw new Error(fundamentalsJson.error||'No se pudieron consultar los fundamentales (HTTP '+fundamentalsResponse.status+').');
                 const raw=fundamentalsJson?.quoteSummary?.result?.[0];
                 if(!raw)throw new Error(fundamentalsJson?.quoteSummary?.error?.description||'Yahoo Finance no devolvió fundamentales para '+selected.yahooSymbol+'.');
+                const fundamentals=buildCompanyDeepDiveFundamentals(raw);
+                let historicalFinancials=null, financialHistoryError="";
+                try{
+                    const historyResponse=await fetch(ASSET_NEWS_WORKER+'/financial-history?symbol='+encodeURIComponent(selected.yahooSymbol)+'&_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
+                    const historyJson=await historyResponse.json().catch(()=>({}));
+                    if(!historyResponse.ok)throw new Error(historyJson.error||'Histórico financiero HTTP '+historyResponse.status);
+                    const statements=historyJson?.financialHistory?.statements||{};
+                    const rows=(module,key)=>Array.isArray(statements?.[module]?.[key])?statements[module][key]:[];
+                    const pick=(row,keys)=>{for(const key of keys){const value=row?.[key]?.raw??row?.[key];if(value!==null&&value!==undefined&&Number.isFinite(Number(value)))return Number(value);}return null;};
+                    const dateOf=row=>{const rawDate=Number(row?.endDate?.raw);return rawDate?new Date(rawDate*1000).toISOString().slice(0,10):String(row?.endDate?.fmt||'');};
+                    historicalFinancials={
+                        source:historyJson?.financialHistory?.source||'Yahoo Finance fundamentals-timeseries',
+                        updatedAt:historyJson?.financialHistory?.updatedAt||null,
+                        quarterlyBalanceSheet:rows('balanceSheetHistoryQuarterly','balanceSheetStatements').slice(0,8).map(row=>({date:dateOf(row),cash:pick(row,['cash','cashAndCashEquivalents','cashCashEquivalentsAndShortTermInvestments']),totalDebt:pick(row,['totalDebt']),equity:pick(row,['totalStockholderEquity']),currentAssets:pick(row,['totalCurrentAssets']),currentLiabilities:pick(row,['totalCurrentLiabilities']),sharesOutstanding:pick(row,['ordinarySharesNumber'])})),
+                        quarterlyCashFlow:rows('cashflowStatementHistoryQuarterly','cashflowStatements').slice(0,6).map(row=>({date:dateOf(row),operatingCashFlow:pick(row,['totalCashFromOperatingActivities']),freeCashFlow:pick(row,['freeCashFlow']),capitalExpenditure:pick(row,['capitalExpenditures'])})),
+                        quarterlyIncome:rows('incomeStatementHistoryQuarterly','incomeStatementHistory').slice(0,6).map(row=>({date:dateOf(row),revenue:pick(row,['totalRevenue']),grossProfit:pick(row,['grossProfit']),operatingIncome:pick(row,['operatingIncome']),netIncome:pick(row,['netIncome'])}))
+                    };
+                    const hasAny=['quarterlyBalanceSheet','quarterlyCashFlow','quarterlyIncome'].some(key=>historicalFinancials[key].some(row=>Object.entries(row).some(([field,value])=>field!=='date'&&value!==null)));
+                    if(!hasAny)historicalFinancials=null;
+                }catch(historyError){financialHistoryError=historyError.message||'No se pudo consultar el histórico financiero.';}
                 const asset=selected.asset;
                 const totalValue=(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).reduce((sum,a)=>sum+(Number(a.marketValue)||0),0);
                 const tx=(Array.isArray(asset.history)?asset.history:[]).slice(-20).map(t=>({date:String(t.date||'').slice(0,10),type:String(t.type||''),quantity:Number(t.qty)||0,price:Number(t.price)||0,commission:Number(t.comm)||0}));
                 const relevantNews=(Array.isArray(assetNewsItems)?assetNewsItems:[]).filter(n=>(n.symbols||[]).some(sym=>String(sym).toUpperCase()===selected.ticker.toUpperCase()||String(sym).toUpperCase()===selected.yahooSymbol.toUpperCase())).slice(0,10).map(n=>({title:String(n.title||'').slice(0,180),summary:String(n.summary||'').slice(0,300),impact:String(n.impact||'neutral'),date:String(n.publishedAt||n.date||'').slice(0,30)}));
                 const payload={
                     asset:{name:selected.name,ticker:selected.ticker,yahooSymbol:selected.yahooSymbol,isin:String(asset.isin||''),source:selected.source||'cartera',category:String(asset.category||'Sin clasificar'),type:String(asset.assetType||asset.type||asset.quoteType||'Sin clasificar'),currency:String(asset.currency||'EUR'),shares:Number(asset.shares)||0,currentPrice:Number(asset.currentPrice)||null,marketValueEUR:Number(asset.marketValue)||0,investedEUR:Number(asset.currentCapitalVivo??asset.investedCapital??asset.totalInvested)||0,unrealizedProfitEUR:Number(asset.latentProfit)||0,realizedProfitEUR:Number(asset.realizedProfit)||0,portfolioWeightPct:totalValue>0&&selected.source!=='seguimiento'?Number(((Number(asset.marketValue)||0)/totalValue*100).toFixed(2)):null,transactions:tx},
-                    fundamentals:buildCompanyDeepDiveFundamentals(raw),
+                    fundamentals,
+                    historicalFinancials,
                     news:relevantNews,
                     portfolioContext:{source:selected.source==='seguimiento'?'Activo en seguimiento, sin posición abierta en cartera':'Posición de cartera',openPositions:(assetsData||[]).filter(a=>(Number(a.shares)||0)>0).length,totalMarketValueEUR:Number(totalValue.toFixed(2))},
-                    limitations:{transactionHistoryIncluded:tx.length,newsItems:relevantNews.length,fundamentalsSource:'Yahoo Finance',assetSource:selected.source||'cartera'}
+                    limitations:{transactionHistoryIncluded:tx.length,newsItems:relevantNews.length,fundamentalsSource:'Yahoo Finance',historicalFinancialsAvailable:Boolean(historicalFinancials),historicalFinancialsError:financialHistoryError,assetSource:selected.source||'cartera'}
                 };
                 const response=await fetch(ASSET_NEWS_WORKER+'/ai/company-deep-dive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,_ai:getAIRequestConfig()})});
                 const data=await response.json().catch(()=>({}));
