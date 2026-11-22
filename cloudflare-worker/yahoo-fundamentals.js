@@ -678,9 +678,10 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  for(let i=0;i<lines.length;i++){
   const line=lines[i];
   const fundingMention=/(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital|refinanciaci[oó]n)/i.test(line);
-  const uncertaintyAboutFunding=/(?:imposibilidad|no es posible|no se puede|no puede|no hay (?:datos|informaci[oó]n)|sin (?:datos|informaci[oó]n)|no est[aá] claro|no se dispone|incertidumbre|no permite determinar|no permite saber)/i.test(line);
+  const uncertaintyAboutFunding=/(?:imposibilidad|no es posible|no se puede|no puede|no hay (?:datos|informaci[oó]n)|sin (?:datos|informaci[oó]n)|no est[aá] claro|no se dispone|incertidumbre|no permite determinar|no permite saber|posible necesidad|podr[ií]a necesitar|podr[ií]a requerir|eventual necesidad)/i.test(line);
   const potentialLabel=/\bRIESGO\s+POTENCIAL\b/i.test(line);
-  if(fundingMention&&uncertaintyAboutFunding&&potentialLabel){
+  const financingEvidenceGap=/(?:no hay evidencia|sin evidencia|no se documentan|no consta)[^.\n]{0,110}(?:vencimientos|financiaci[oó]n|liquidez|acuerdos? de financiaci[oó]n)/i.test(line);
+  if(fundingMention&&potentialLabel&&(uncertaintyAboutFunding||financingEvidenceGap)){
    lines[i]="- **DATOS INSUFICIENTES:** No hay información suficiente para concluir que la compañía vaya a recurrir a financiación externa. Para evaluarlo se necesitan datos verificables sobre vencimientos, intereses, liquidez disponible y previsiones de tesorería.";
    continue;
   }
@@ -737,7 +738,7 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
   const ratioSpecs=[
    ["debt_to_cash","(?:deuda\\s*[/\\-]\\s*caja|deuda\\s*[/\\-]\\s*cash|debt\\s*[/\\-]\\s*cash|relaci[oó]n deuda.?caja)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*(?:veces|x)?",calculatedRatios.debtToCash,0.12,false],
    ["debt_to_equity","(?:deuda.?capital|deuda.?equity|debt.?to.?equity)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*%",calculatedRatios.debtToEquityPct,1.5,true],
-   ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
+   ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\\*{1,2})?\\s*[:：=]\\s*(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
   ];
   for(const [code,pattern,expected,tolerance,isPercent] of ratioSpecs){if(!Number.isFinite(expected))continue;const rx=new RegExp(pattern,"gi");for(const rm of body.matchAll(rx)){const stated=Number(rm[1].replace(",","."));if(Number.isFinite(stated)&&Math.abs(stated-expected)>tolerance)add("ratio_"+code+"_inconsistent","El ratio indicado por la IA no coincide con el cálculo del balance del mismo periodo. Corregirlo o explicar por qué se usa otra definición/fuente.","Calculado ("+calculatedRatios.periodEnd+"): "+expected.toFixed(isPercent?2:2)+(isPercent?"%":" veces")+"; texto IA: "+stated.toFixed(2)+(isPercent?"%":" veces")+".");}}
  }
@@ -1456,7 +1457,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v25:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v26:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
