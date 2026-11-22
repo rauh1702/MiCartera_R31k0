@@ -663,6 +663,15 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
    else if(!labelled&&!explicitUnknown&&targetCurrencyUnknown)add("target_currency_omitted","Se presenta el precio objetivo sin aclarar que su divisa no está verificada.",sentence.trim());
   }
  }
+ const calculatedRatios=base?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
+ if(calculatedRatios){
+  const ratioSpecs=[
+   ["debt_to_cash","(?:deuda\\s*[/\\-]\\s*caja|deuda\\s*[/\\-]\\s*cash|debt\\s*[/\\-]\\s*cash|relaci[oó]n deuda.?caja)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*(?:veces|x)?",calculatedRatios.debtToCash,0.12,false],
+   ["debt_to_equity","(?:deuda.?capital|deuda.?equity|debt.?to.?equity)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)\\s*%",calculatedRatios.debtToEquityPct,1.5,true],
+   ["current_ratio","(?:current\\s*ratio|ratio de liquidez corriente|liquidez corriente)[^.!?]{0,55}?(\\d+(?:[.,]\\d+)?)",calculatedRatios.currentRatio,0.08,false]
+  ];
+  for(const [code,pattern,expected,tolerance,isPercent] of ratioSpecs){if(!Number.isFinite(expected))continue;const rx=new RegExp(pattern,"gi");for(const rm of body.matchAll(rx)){const stated=Number(rm[1].replace(",","."));if(Number.isFinite(stated)&&Math.abs(stated-expected)>tolerance)add("ratio_"+code+"_inconsistent","El ratio indicado por la IA no coincide con el cálculo del balance del mismo periodo. Corregirlo o explicar por qué se usa otra definición/fuente.","Calculado ("+calculatedRatios.periodEnd+"): "+expected.toFixed(isPercent?2:2)+(isPercent?"%":" veces")+"; texto IA: "+stated.toFixed(2)+(isPercent?"%":" veces")+".");}}
+ }
  if(/(?:P\s*\/\s*S|precio.?ventas|price.?to.?sales)[^.!?]{0,100}(?:12|m[uú]ltiplo|ratio)/i.test(body)&&targetCurrency&&quoteCurrency&&targetCurrency!==quoteCurrency)add("price_sales_currency_unverified","No recalcular ni interpretar P/S si capitalización y ventas no están en la misma moneda o no se documenta la conversión. El múltiplo publicado puede mantenerse solo como dato de proveedor, indicando su fuente y periodo.");
  const betaClaim=/(?:beta[^.!?]{0,90}(?:comportamiento inverso|inversamente correlacionad|correlaci[oó]n inversa|se mueve en sentido contrario)|(?:comportamiento inverso|correlaci[oó]n inversa)[^.!?]{0,70}beta)/gi;
  while((m=betaClaim.exec(body))!==null)add("beta_interpretation_overstated","Un beta negativo no demuestra por sí solo una correlación inversa estable. Indicar periodo, índice de referencia y que es una estimación histórica.",m[0].trim());
@@ -1365,7 +1374,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v10:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v11:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
