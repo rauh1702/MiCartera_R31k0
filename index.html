@@ -2782,7 +2782,7 @@
         }
         function buildCompanyDeepDiveFundamentals(data){
             const paths={
-                companyName:'price.longName',shortName:'price.shortName',sector:'assetProfile.sector',industry:'assetProfile.industry',
+                companyName:'price.longName',shortName:'price.shortName',sector:'assetProfile.sector',industry:'assetProfile.industry',financialCurrency:'financialData.financialCurrency',
                 marketCap:'price.marketCap',currency:'price.currency',exchange:'price.exchangeName',
                 trailingPE:'summaryDetail.trailingPE',forwardPE:'summaryDetail.forwardPE',priceToSales:'summaryDetail.priceToSalesTrailing12Months',
                 revenueGrowth:'financialData.revenueGrowth',earningsGrowth:'financialData.earningsGrowth',
@@ -2824,6 +2824,7 @@
                     historicalFinancials={
                         source:historyJson?.financialHistory?.source||'Yahoo Finance fundamentals-timeseries',
                         updatedAt:historyJson?.financialHistory?.updatedAt||null,
+                        financialCurrency:String(fundamentals.financialCurrency||"").toUpperCase()||null,
                         quarterlyBalanceSheet:rows('balanceSheetHistoryQuarterly','balanceSheetStatements').slice(0,8).map(row=>({date:dateOf(row),cash:pick(row,['cash','cashAndCashEquivalents','cashCashEquivalentsAndShortTermInvestments']),totalDebt:pick(row,['totalDebt']),equity:pick(row,['totalStockholderEquity']),currentAssets:pick(row,['totalCurrentAssets']),currentLiabilities:pick(row,['totalCurrentLiabilities']),sharesOutstanding:pick(row,['ordinarySharesNumber'])})),
                         quarterlyCashFlow:rows('cashflowStatementHistoryQuarterly','cashflowStatements').slice(0,6).map(row=>({date:dateOf(row),operatingCashFlow:pick(row,['totalCashFromOperatingActivities']),freeCashFlow:pick(row,['freeCashFlow']),capitalExpenditure:pick(row,['capitalExpenditures'])})),
                         quarterlyIncome:rows('incomeStatementHistoryQuarterly','incomeStatementHistory').slice(0,6).map(row=>({date:dateOf(row),revenue:pick(row,['totalRevenue']),grossProfit:pick(row,['grossProfit']),operatingIncome:pick(row,['operatingIncome']),netIncome:pick(row,['netIncome'])}))
