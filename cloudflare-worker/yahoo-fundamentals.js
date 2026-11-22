@@ -1344,28 +1344,100 @@ export default {
           out.fundamentals={price:clean(raw.price),summaryDetail:clean(raw.summaryDetail),keyStatistics:clean(raw.defaultKeyStatistics),financialData:clean(raw.financialData),profile:clean(raw.assetProfile),annualIncome,quarterlyIncome,annualBalance,quarterlyBalance,annualCashFlow,quarterlyCashFlow,dataCoverage:{annualIncome:coverage(annualIncome,["totalRevenue","grossProfit","operatingIncome","netIncome","ebit","dilutedEPS"]),quarterlyIncome:coverage(quarterlyIncome,["totalRevenue","grossProfit","operatingIncome","netIncome","ebit","dilutedEPS"]),annualBalance:coverage(annualBalance,["cash","totalCash","totalDebt","totalAssets","totalStockholderEquity","ordinarySharesNumber"]),quarterlyBalance:coverage(quarterlyBalance,["cash","totalCash","totalDebt","totalAssets","totalStockholderEquity","ordinarySharesNumber"]),annualCashFlow:coverage(annualCashFlow,["totalCashFromOperatingActivities","capitalExpenditures","freeCashFlow"]),quarterlyCashFlow:coverage(quarterlyCashFlow,["totalCashFromOperatingActivities","capitalExpenditures","freeCashFlow"])},marketCapitalization:{value:raw.price?.marketCap?.raw??null,currency:raw.price?.currency??null,definition:"Capitalización bursátil reportada por Yahoo; no es evidencia de emisión ni dilución."}};
           out.sources.push({name:"Yahoo Finance",url:"https://finance.yahoo.com/quote/"+symbol+"/"});
         }catch(e){out.limitations.push("Yahoo: "+String(e.message||e).slice(0,180))}
-        if(!/[.=^]/.test(symbol))try{
-          const h={"User-Agent":"MiCartera R31k0 research github.com/rauh1702/MiCartera_R31k0","Accept":"application/json"};
-          const mr=await fetch("https://www.sec.gov/files/company_tickers.json",{headers:h});if(!mr.ok)throw new Error("SEC ticker map HTTP "+mr.status);
-          const entry=Object.values(await mr.json()).find(x=>String(x.ticker||"").toUpperCase()===symbol);
-          if(entry){const cik=String(entry.cik_str).padStart(10,"0"),[fr,sr]=await Promise.all([fetch("https://data.sec.gov/api/xbrl/companyfacts/CIK"+cik+".json",{headers:h}),fetch("https://data.sec.gov/submissions/CIK"+cik+".json",{headers:h})]);
-            if(fr.ok){const facts=await fr.json(),gaap=facts.facts?.["us-gaap"]||{},tags=["RevenueFromContractWithCustomerExcludingAssessedTax","Revenues","SalesRevenueNet","OperatingIncomeLoss","NetIncomeLoss","CashAndCashEquivalentsAtCarryingValue","ShortTermInvestments","LongTermDebt","LongTermDebtCurrent","LongTermDebtNoncurrent","NetCashProvidedByUsedInOperatingActivities","PaymentsToAcquirePropertyPlantAndEquipment","EntityCommonStockSharesOutstanding","WeightedAverageNumberOfSharesOutstandingBasic","WeightedAverageNumberOfDilutedSharesOutstanding","CommonStockSharesIssued","CommonStockSharesOutstanding","StockIssuedDuringPeriodValue","ShareBasedCompensation","ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber","ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber","WarrantsOutstanding","WarrantsOutstandingNumber","ConvertibleNotesPayable","ConvertibleLongTermNotesPayable","ConvertibleDebtCurrent","ConvertibleDebtNoncurrent","ProceedsFromStockOptionsExercised","ProceedsFromStockIssuedDuringPeriod","PaymentsForRepurchaseOfCommonStock","CommonStockSharesIssued","CommonStockSharesOutstanding"];
-              out.sec={cik,companyName:facts.entityName,facts:{}};
-              for(const tag of tags){const fact=gaap[tag],units=fact?.units||{},unit=units.USD||units.shares||Object.values(units)[0];if(Array.isArray(unit))out.sec.facts[tag]={label:fact.label,unit:Object.keys(units).find(k=>units[k]===unit)||"",values:unit.filter(x=>["10-Q","10-K"].includes(x.form)).sort((a,b)=>(b.end||"").localeCompare(a.end||"")).slice(0,8).map(x=>({end:x.end,filed:x.filed,form:x.form,value:x.val,fp:x.fp,frame:x.frame||null}))};}
-              const shareFact=out.sec.facts.EntityCommonStockSharesOutstanding?.values||[];
-              const sharePoints=[...new Map(shareFact.filter(x=>Number.isFinite(Number(x.value))&&x.end).map(x=>[x.end,{date:x.end,filed:x.filed,form:x.form,shares:Number(x.value)}])).values()].sort((a,b)=>a.date.localeCompare(b.date));
-              const comparableShares=sharePoints.slice(-2);
-              if(comparableShares.length===2){const [first,last]=comparableShares;out.sec.shareCountComparison={basis:"SEC Company Facts · EntityCommonStockSharesOutstanding",comparison:"dos fechas reportadas más recientes; comprobar si las fechas/formularios son comparables",first,last,changeShares:last.shares-first.shares,changePct:first.shares?((last.shares-first.shares)/first.shares)*100:null,note:"Cambio calculado entre las dos fechas más recientes reportadas. No identifica por sí solo emisión, recompra, conversión, split ni la causa del cambio."};}
-              out.sec.capitalStructure={status:comparableShares.length===2?"partial_evidence":"insufficient_data",shareCountComparison:out.sec.shareCountComparison||null,reportedInstrumentFacts:Object.entries(out.sec.facts).filter(([tag,v])=>/Warrant|Convertible|OptionsOutstanding|NonvestedNumber|ShareBasedCompensation|StockIssued|SharesIssued|SharesOutstanding/.test(tag)&&Array.isArray(v.values)&&v.values.length).map(([tag,v])=>({tag,label:v.label,unit:v.unit,values:v.values.slice(0,5)})),limitations:["Company Facts no recoge de forma exhaustiva los términos de warrants, convertibles, ATM, shelf registrations, equity lines o acuerdos de financiación.","La ausencia de tags XBRL no demuestra que no existan instrumentos dilutivos.","Para confirmar condiciones y operaciones hay que leer los anexos de los filings originales."]};
-              out.sec.dilutionEvidence={potentialInstrumentFacts:Object.keys(out.sec.facts).filter(k=>/OptionsOutstanding|NonvestedNumber|WarrantsOutstanding|WeightedAverageNumberOfDilutedSharesOutstanding/.test(k)),note:"Los tags XBRL pueden no existir o no estar estandarizados. Su ausencia no demuestra que no haya warrants, opciones, convertibles u otros instrumentos; deben revisarse los anexos de los 10-Q/10-K."};
-              if(sr.ok){const recent=(await sr.json()).filings?.recent||{};out.sec.filings=(recent.form||[]).map((form,i)=>{const accession=String(recent.accessionNumber?.[i]||"").replace(/-/g,"");const doc=String(recent.primaryDocument?.[i]||"");return{form,date:recent.filingDate?.[i],reportDate:recent.reportDate?.[i],accession:recent.accessionNumber?.[i],document:doc,url:accession&&doc?"https://www.sec.gov/Archives/edgar/data/"+Number(cik)+"/"+accession+"/"+doc:null,indexUrl:accession?"https://www.sec.gov/Archives/edgar/data/"+Number(cik)+"/"+accession+"/index.json":null};}).filter(x=>["10-K","10-Q","8-K","S-3","424B5","S-1"].includes(x.form)).slice(0,15);
-              const reviewTargets=out.sec.filings.filter(x=>x.url).slice(0,6);
-              const reviewed=await Promise.all(reviewTargets.map(async filing=>{try{const response=await fetchWithTimeout(filing.url,{headers:h},5000);if(!response.ok)return{...filing,reviewStatus:"HTTP "+response.status,excerpts:[]};let body=(await response.text()).slice(0,1800000).replace(/<[^>]*>/g," ").replace(/\s+/g," ");const lower=body.toLowerCase();const terms=["warrant","pre-funded warrant","at-the-market","atm offering","registered direct offering","public offering","private placement","equity line","sales agreement","convertible note","convertible debt","securities purchase agreement","shelf registration","shares issued","issuance of common stock","exercise price","expiration date","dilution","underwritten offering"];const excerpts=[];for(const term of terms){let from=0,index;while((index=lower.indexOf(term,from))>=0&&excerpts.length<5){const start=Math.max(0,index-260),end=Math.min(body.length,index+520),snippet=body.slice(start,end).trim();if(!excerpts.some(x=>x.toLowerCase()===snippet.toLowerCase()))excerpts.push(snippet);from=index+term.length;}if(excerpts.length>=5)break;}return{...filing,reviewStatus:"reviewed",excerpts};}catch(error){return{...filing,reviewStatus:String(error.message||error).slice(0,100),excerpts:[]};}}));
-              out.sec.filingReview={reviewedAt:new Date().toISOString(),documentsReviewed:reviewed.length,documentsWithRelevantLanguage:reviewed.filter(x=>x.excerpts.length).length,documents:reviewed,note:"Extractos automáticos de filings SEC. Son pistas de revisión, no una conclusión jurídica ni una confirmación de dilución; comprobar siempre el contexto del documento original."};}
-              out.sources.push({name:"SEC EDGAR",url:"https://www.sec.gov/edgar/browse/?CIK="+Number(cik)});
-            }else out.limitations.push("SEC Company Facts HTTP "+fr.status);
-          }else out.limitations.push("Ticker no localizado en SEC EDGAR");
-        }catch(e){out.limitations.push("SEC: "+String(e.message||e).slice(0,180))}
+        // SEC: submissions y Company Facts se consultan/procesan de forma INDEPENDIENTE.
+        // ONDS usa CIK 0001646188; el mapa de tickers puede fallar temporalmente.
+        if(!/[.=^]/.test(symbol)) {
+          const knownCiks={ONDS:"0001646188"};
+          const h={"User-Agent":"MiCartera R31k0 contact github.com/rauh1702/MiCartera_R31k0","Accept":"application/json"};
+          let cik=knownCiks[symbol]||null, companyFacts=null, submissions=null;
+          try {
+            if(!cik) {
+              const mr=await fetchWithTimeout("https://www.sec.gov/files/company_tickers.json",{headers:h},7000);
+              if(!mr.ok) throw new Error("SEC ticker map HTTP "+mr.status);
+              const map=await mr.json();
+              const entry=Object.values(map).find(x=>String(x.ticker||"").toUpperCase()===symbol);
+              if(entry)cik=String(entry.cik_str).padStart(10,"0");
+            }
+          } catch(e) { out.limitations.push("SEC ticker map: "+String(e.message||e).slice(0,160)); }
+          if(cik) {
+            out.sec={cik,companyName:null,facts:{},filings:[],capitalStructure:{status:"insufficient_data",limitations:["Company Facts y submissions se evalúan por separado."]}};
+            const requests=await Promise.allSettled([
+              fetchWithTimeout("https://data.sec.gov/api/xbrl/companyfacts/CIK"+cik+".json",{headers:h},9000),
+              fetchWithTimeout("https://data.sec.gov/submissions/CIK"+cik+".json",{headers:h},9000)
+            ]);
+            if(requests[0].status==="fulfilled"&&requests[0].value.ok) {
+              try {
+                companyFacts=await requests[0].value.json();
+                out.sec.companyName=companyFacts.entityName||null;
+                const gaap=companyFacts.facts?.["us-gaap"]||{};
+                const tags=["RevenueFromContractWithCustomerExcludingAssessedTax","Revenues","SalesRevenueNet","OperatingIncomeLoss","NetIncomeLoss","CashAndCashEquivalentsAtCarryingValue","ShortTermInvestments","LongTermDebt","LongTermDebtCurrent","LongTermDebtNoncurrent","NetCashProvidedByUsedInOperatingActivities","PaymentsToAcquirePropertyPlantAndEquipment","EntityCommonStockSharesOutstanding","WeightedAverageNumberOfSharesOutstandingBasic","WeightedAverageNumberOfDilutedSharesOutstanding","CommonStockSharesIssued","CommonStockSharesOutstanding","StockIssuedDuringPeriodValue","ShareBasedCompensation","ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber","ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber","WarrantsOutstanding","WarrantsOutstandingNumber","ConvertibleNotesPayable","ConvertibleLongTermNotesPayable","ConvertibleDebtCurrent","ConvertibleDebtNoncurrent","ProceedsFromStockOptionsExercised","ProceedsFromStockIssuedDuringPeriod","PaymentsForRepurchaseOfCommonStock"];
+                for(const tag of tags) {
+                  const fact=gaap[tag], units=fact?.units||{};
+                  if(!fact) continue;
+                  const unitKey=units.USD?"USD":units.shares?"shares":Object.keys(units)[0];
+                  const values=unitKey&&Array.isArray(units[unitKey])?units[unitKey]:[];
+                  out.sec.facts[tag]={label:fact.label,unit:unitKey||"",values:values.filter(x=>["10-Q","10-K","8-K"].includes(x.form)).sort((a,b)=>(b.filed||b.end||"").localeCompare(a.filed||a.end||"")).slice(0,12).map(x=>({start:x.start||null,end:x.end||null,filed:x.filed||null,form:x.form||null,value:x.val,fp:x.fp||null,frame:x.frame||null}))};
+                }
+                const shareFact=out.sec.facts.EntityCommonStockSharesOutstanding?.values||[];
+                const sharePoints=[...new Map(shareFact.filter(x=>Number.isFinite(Number(x.value))&&x.end).map(x=>[x.end,{date:x.end,filed:x.filed,form:x.form,shares:Number(x.value)}])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+                const comparableShares=sharePoints.slice(-2);
+                if(comparableShares.length===2) {
+                  const [first,last]=comparableShares;
+                  out.sec.shareCountComparison={basis:"SEC Company Facts · EntityCommonStockSharesOutstanding",comparison:"dos fechas reportadas más recientes; comprobar comparabilidad",first,last,changeShares:last.shares-first.shares,changePct:first.shares?((last.shares-first.shares)/first.shares)*100:null,note:"El cambio no identifica por sí solo la causa; no demuestra emisión, conversión ni split."};
+                }
+                out.sec.capitalStructure={status:comparableShares.length===2?"partial_evidence":"insufficient_data",shareCountComparison:out.sec.shareCountComparison||null,reportedInstrumentFacts:Object.entries(out.sec.facts).filter(([tag,v])=>/Warrant|Convertible|OptionsOutstanding|NonvestedNumber|ShareBasedCompensation|StockIssued|SharesIssued|SharesOutstanding/.test(tag)&&Array.isArray(v.values)&&v.values.length).map(([tag,v])=>({tag,label:v.label,unit:v.unit,values:v.values.slice(0,6)})),limitations:["Company Facts no recoge exhaustivamente warrants, ATM, shelf registrations, equity lines ni términos contractuales.","La ausencia de tags XBRL no demuestra ausencia de instrumentos dilutivos; revisar anexos de los filings."]};
+                out.sec.dilutionEvidence={potentialInstrumentFacts:Object.keys(out.sec.facts).filter(k=>/OptionsOutstanding|NonvestedNumber|WarrantsOutstanding|WeightedAverageNumberOfDilutedSharesOutstanding|Convertible/.test(k)),note:"Los tags no estandarizados pueden no aparecer. La confirmación requiere revisar los documentos originales."};
+              } catch(e) { out.limitations.push("SEC Company Facts parse: "+String(e.message||e).slice(0,160)); }
+            } else {
+              const status=requests[0].status==="fulfilled"?requests[0].value.status:String(requests[0].reason||"error");
+              out.limitations.push("SEC Company Facts no disponible: "+status);
+            }
+            // Submissions se procesa incluso si Company Facts falla.
+            if(requests[1].status==="fulfilled"&&requests[1].value.ok) {
+              try {
+                submissions=await requests[1].value.json();
+                const recent=submissions.filings?.recent||{};
+                const forms=(recent.form||[]).map((form,i)=>{
+                  const accession=String(recent.accessionNumber?.[i]||"").replace(/-/g,"");
+                  const doc=String(recent.primaryDocument?.[i]||"");
+                  return {form,date:recent.filingDate?.[i]||null,reportDate:recent.reportDate?.[i]||null,accession:recent.accessionNumber?.[i]||null,document:doc,url:accession&&doc?"https://www.sec.gov/Archives/edgar/data/"+Number(cik)+"/"+accession+"/"+doc:null,indexUrl:accession?"https://www.sec.gov/Archives/edgar/data/"+Number(cik)+"/"+accession+"/index.json":null};
+                }).filter(x=>["10-K","10-Q","8-K","S-3","424B5","S-1","EFFECT"].includes(x.form));
+                const priority={"424B5":0,"S-3":1,"S-1":2,"8-K":3,"10-Q":4,"10-K":5,"EFFECT":6};
+                forms.sort((a,b)=>(priority[a.form]??9)-(priority[b.form]??9)||String(b.date||"").localeCompare(String(a.date||"")));
+                out.sec.filings=forms.slice(0,20);
+                const reviewTargets=[...forms].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).slice(0,10);
+                const reviewed=await Promise.all(reviewTargets.map(async filing=>{
+                  try {
+                    const response=await fetchWithTimeout(filing.url,{headers:{"User-Agent":h["User-Agent"],"Accept":"text/html,text/plain,*/*"}},7000);
+                    if(!response.ok)return {...filing,reviewStatus:"HTTP "+response.status,excerpts:[]};
+                    const html=(await response.text()).slice(0,3500000);
+                    const body=html.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/&nbsp;|&#160;/gi," ").replace(/&amp;/gi,"&").replace(/\s+/g," ");
+                    const lower=body.toLowerCase();
+                    const terms=["pre-funded warrant","warrant","at-the-market","atm offering","sales agreement","registered direct offering","public offering","private placement","equity line","convertible note","convertible debt","securities purchase agreement","shelf registration","shares issued","issuance of common stock","exercise price","expiration date","dilution","underwritten offering","common stock outstanding"];
+                    const excerpts=[];
+                    for(const term of terms) {
+                      let from=0,index;
+                      while((index=lower.indexOf(term,from))>=0&&excerpts.length<8) {
+                        const snippet=body.slice(Math.max(0,index-420),Math.min(body.length,index+900)).trim();
+                        if(!excerpts.some(x=>x.toLowerCase()===snippet.toLowerCase()))excerpts.push(snippet);
+                        from=index+term.length;
+                      }
+                      if(excerpts.length>=8)break;
+                    }
+                    return {...filing,reviewStatus:"reviewed",excerpts};
+                  } catch(error) { return {...filing,reviewStatus:String(error.message||error).slice(0,120),excerpts:[]}; }
+                }));
+                out.sec.filingReview={reviewedAt:new Date().toISOString(),documentsReviewed:reviewed.length,documentsWithRelevantLanguage:reviewed.filter(x=>x.excerpts.length).length,documents:reviewed,note:"Búsqueda automática de términos y extractos; no equivale a revisar íntegramente el filing ni confirma por sí sola una dilución."};
+              } catch(e) { out.limitations.push("SEC submissions parse: "+String(e.message||e).slice(0,160)); }
+            } else {
+              const status=requests[1].status==="fulfilled"?requests[1].value.status:String(requests[1].reason||"error");
+              out.limitations.push("SEC submissions no disponible: "+status);
+            }
+            out.sources.push({name:"SEC EDGAR",url:"https://www.sec.gov/edgar/browse/?CIK="+Number(cik)});
+          } else {
+            out.limitations.push("Ticker no localizado en SEC EDGAR y sin CIK conocido.");
+          }
+        }
         try{out.news=(await fetchYahooNews(symbol,name)).sort((a,b)=>(b.publishedAt||"").localeCompare(a.publishedAt||"")).slice(0,6).map(x=>({title:x.title,summary:x.summary,publisher:x.publisher,publishedAt:x.publishedAt,url:x.url,impact:x.impact}));if(out.news.length)out.sources.push({name:"Yahoo Finance News",url:"https://finance.yahoo.com/quote/"+symbol+"/news/"})}catch(e){out.limitations.push("Noticias: "+String(e.message||e).slice(0,140))}
         if(!out.fundamentals&&!out.sec&&!out.news.length)return json({error:"No se pudo obtener investigación externa.",limitations:out.limitations},502,origin);
         if(env?.NEWS_KV)await env.NEWS_KV.put(key,JSON.stringify(out),{expirationTtl:900});
