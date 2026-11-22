@@ -640,9 +640,11 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  let text=String(analysis||"");
  const fiscalUnknown=validation?.warnings?.some(x=>x.code==="period_label_check");
  if(fiscalUnknown){
-  text=text.replace(/((?:pr[oó]ximo|siguiente|futuro)\s+(?:informe|reporte|publicaci[oó]n)[^\n.!?]{0,65}?)\s*\(?Q[3-4]\)?/gi,"$1");
-  text=text.replace(/((?:calendario|vigilar|consultar)[^\n.!?]{0,120})\bQ[3-4]\b/gi,"$1");
-  text=text.replace(/\bpr[oó]ximo informe del (?:tercer|cuarto) trimestre\b/gi,"próximo informe");
+  // Sin calendario fiscal verificado, eliminar cualquier asignación de trimestre fiscal futuro.
+  text=text.replace(/\b(?:Q[1-4]|tercer|cuarto|primer|segundo)\s+trimestre\b/gi,"trimestre");
+  text=text.replace(/\binforme interino del\s+trimestre\b/gi,"próximo informe interino");
+  text=text.replace(/\binforme del\s+trimestre\b/gi,"próximo informe");
+  text=text.replace(/\b(?:Q[1-4])\b/gi,"periodo trimestral");
   text=text.replace(/(?:la empresa|compañ[ií]a)\s+ha\s+anunciado\s+(?:un\s+)?cambio\s+de\s+fecha[^.\n]*(?:30\s*nov(?:iembre)?\.?\s*2026|30\s+de\s+noviembre\s+de\s+2026)[^.\n]*/gi,"No se ha verificado una fecha oficial para el próximo informe");
   text=text.replace(/(?:publicaci[oó]n|informe)[^.\n]{0,90}\b30\s*(?:nov(?:iembre)?|de\s+noviembre)\s*2026\b[^.\n]*/gi,"fecha de publicación pendiente de confirmación en el calendario oficial");
  }
@@ -744,6 +746,26 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
   }
  }
  text=lines.join("\n");
+ // Normalización final: neutralizar formulaciones que el modelo puede introducir
+ // fuera de las líneas cubiertas por las reglas anteriores.
+ text=text.replace(/\*\*Riesgo potencial:\*\*\s*Necesidad futura de financiaci[oó]n no puede determinarse[^\n]*/gi,
+  "**Datos insuficientes:** No hay evidencia suficiente para afirmar una necesidad futura de financiación. Faltan vencimientos, covenants, liquidez disponible y previsiones de tesorería.");
+ text=text.replace(/No se dispone de informaci[oó]n sobre vencimientos de deuda ni de l[ií]neas de cr[eé]dito, impidiendo evaluar la presi[oó]n de liquidez\./gi,
+  "No se dispone de información suficiente sobre vencimientos, covenants ni líneas de crédito para evaluar la presión de liquidez.");
+ text=text.replace(/aunque el current ratio\s*>\s*1 sugiere cobertura de corto plazo/gi,
+  "mientras que el current ratio calculado de "+(Number.isFinite(ratio?.currentRatio)?ratio.currentRatio.toFixed(2):"dato no disponible")+" refleja activos corrientes superiores a pasivos corrientes, sin demostrar por sí solo cobertura de la deuda total");
+ text=text.replace(/lo que indica que la empresa a[uú]n no ha alcanzado rentabilidad operativa/gi,
+  "lo que refleja resultados operativos negativos en el trimestre analizado; no basta un único periodo para concluir que la empresa no haya alcanzado rentabilidad de forma sostenida");
+ text=text.replace(/Publicaci[oó]n oficial del informe interino del (?:tercer|cuarto|primer|segundo) trimestre[^\n]*/gi,
+  "Confirmación del calendario oficial y de la fecha del próximo informe, sin asignarle trimestre fiscal hasta verificar el ejercicio fiscal");
+ // El texto libre no debe convertir el current ratio en cobertura de deuda financiera total.
+ text=text.replace(/el current ratio\s*>\s*1 sugiere cobertura de corto plazo/gi,
+  "el current ratio superior a 1 indica que los activos corrientes superan los pasivos corrientes, pero no mide la cobertura de la deuda total");
+ // Eliminar asignaciones residuales a Q3/Q4 o a un trimestre ordinal si el fiscal calendar no está verificado.
+ if(fiscalUnknown){
+  text=text.replace(/\b(?:Q[1-4]|tercer|cuarto|primer|segundo)\s+trimestre\b/gi,"trimestre");
+  text=text.replace(/informe interino del trimestre/gi,"próximo informe interino");
+ }
  // El múltiplo P/S de Yahoo no se puede validar como trimestral si no se conoce
  // el denominador exacto; no inventar TTM ni compararlo con ventas de un trimestre.
  text=text.replace(/^([^\n]*(?:P\s*\/\s*S|price.?to.?sales|precio.?ventas)[^\n]*)$/gim,line=>{
@@ -1509,7 +1531,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v31:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v32:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
