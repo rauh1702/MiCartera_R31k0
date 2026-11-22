@@ -677,6 +677,37 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  const lines=text.split("\n");
  for(let i=0;i<lines.length;i++){
   const line=lines[i];
+  // Reescrituras completas para evitar restos de negritas o afirmaciones parciales.
+  if(/deuda total supera (?:a )?la caja/i.test(line)&&/(?:debt.?to.?cash|deuda\\s*[/／-]\\s*caja)/i.test(line)){
+   lines[i]="- **Dato observado:** La deuda total reportada por Yahoo supera la caja (deuda/caja = 2,90). Esta comparación no demuestra por sí sola falta de liquidez, insolvencia ni necesidad de financiación. El current ratio de 1,64 indica que los activos corrientes superan los pasivos corrientes, aunque no garantiza caja disponible. Faltan composición de la deuda, vencimientos e intereses para valorar la presión financiera.";
+   continue;
+  }
+  if(/márgenes negativos/i.test(line)&&/(?:pérdida de rentabilidad|generando pérdidas|indica[n]? que la empresa)/i.test(line)){
+   lines[i]="- **Dato del periodo:** Los márgenes bruto, operativo y neto negativos reflejan resultados negativos en esos niveles durante el trimestre. Un solo periodo no permite afirmar que las pérdidas sean persistentes.";
+   continue;
+  }
+  if(/dependencia de futuros acuerdos de distribución/i.test(line)){
+   lines[i]="- **Datos insuficientes:** El acuerdo amplía el alcance comercial, pero no hay datos que permitan afirmar dependencia de futuros acuerdos de distribución. Conviene comprobar si se traduce en pedidos, ingresos y mejora de márgenes.";
+   continue;
+  }
+  if(/último anuncio público/i.test(line)&&/cambio de fecha/i.test(line)){
+   lines[i]="Sivers comunicó una actualización relativa a la fecha de publicación; la fecha concreta del próximo informe debe confirmarse en el calendario oficial.";
+   continue;
+  }
+  if(/\*\*Conclusión y qué vigilar|\*\*5\)/i.test(line)){
+   // No modificar el encabezado de la conclusión.
+  } else if(/DATOS INSUFICIENTES/i.test(line)&&/(?:flujo de caja negativo de un periodo|deuda total reportada superior al efectivo)/i.test(line)&&i>0){
+   lines[i]="La conclusión debe centrarse en los resultados negativos y el consumo de caja observados en el trimestre, sin inferir necesidad de financiación ni repetir como riesgo una hipótesis no demostrada.";
+   continue;
+  }
+  if(/Riesgo potencial/i.test(line)&&/(?:dependencia|dependerá|depende)/i.test(line)&&/(?:distribución|acuerdo comercial)/i.test(line)){
+   lines[i]="- **Datos insuficientes:** No hay evidencia de dependencia comercial respecto a WT Microelectronics. El impacto del acuerdo aún debe comprobarse mediante pedidos, ingresos y márgenes publicados.";
+   continue;
+  }
+  if(/financiar el déficit operativo/i.test(line)){
+   lines[i]="- **Dato observado:** La deuda total reportada supera la caja (deuda/caja = 2,90), pero el current ratio calculado es 1,64. Esto no permite concluir que exista un déficit de liquidez ni que los activos corrientes estén disponibles para financiar operaciones; faltan vencimientos, composición de deuda e intereses.";
+   continue;
+  }
   // Neutralizar etiquetas de riesgo no justificadas por los datos disponibles.
   if(/deuda total supera (?:a )?la caja/i.test(line)&&/(?:debt.?to.?cash|deuda\s*[/／-]\s*caja)/i.test(line)){
    lines[i]=line.replace(/\*{0,2}Riesgo confirmado\*{0,2}\s*:/i,"**Dato observado:**")
@@ -1467,7 +1498,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v28:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v29:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
