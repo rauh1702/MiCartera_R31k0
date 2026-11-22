@@ -671,7 +671,7 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  if(/runway[^.!?]{0,70}\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)|\b\d+(?:[,.]\d+)?\s*(meses?|a[nñ]os?)[^.!?]{0,50}runway|efectivo[^.!?]{0,65}(?:se est[aá] agotando|se agota|agot[aá]ndose|agotamiento)[^.!?]{0,35}(?:r[aá]pidamente|acelerado)|(?:se est[aá] agotando|agot[aá]ndose|se agota)[^.!?]{0,40}efectivo/i.test(body))add("runway_claim_unverified","Se sugiere un agotamiento rápido de caja o un runway sin una serie comparable de caja y consumo operativo que permita calcularlo.");
  const financeClaim=/(?:depend(?:e|er|er[aá])|necesita|requiere|precisa|obliga(?:da)? a|debe recurrir a|tendr[ií]a que recurrir a)[^.!?]{0,100}(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|nuevas emisiones|ampliaci[oó]n de capital|financiaci[oó]n ajena)|(?:dependencia|necesidad|requerimiento) de financiaci[oó]n externa|(?:financiaci[oó]n externa)[^.!?]{0,70}(?:para cubrir|para sostener|para mantener|para financiar)/gi;
  const financingEvidence=/(financiaci[oó]n obtenida|ampliaci[oó]n de capital anunciada|emisi[oó]n de acciones anunciada|l[ií]nea de cr[eé]dito|credit facility|deuda con vencimiento|debt maturity|incumplimiento de covenant|going concern|duda material sobre empresa en funcionamiento|liquidity shortfall)/i.test(evidence);
- while((m=financeClaim.exec(body))!==null){if(!financingEvidence)add("external_financing_claim_unverified","La dependencia de financiación externa no queda demostrada por comparar capitalización y efectivo ni por un único trimestre de flujo de caja negativo. Harían falta vencimientos, financiación disponible/obtenida o una advertencia explícita de liquidez.",m[0].trim());}
+ while((m=financeClaim.exec(body))!==null){const sentence=body.slice(Math.max(0,m.index-65),Math.min(body.length,m.index+m[0].length+80));const negated=/(?:no\s+(?:se puede afirmar|se demuestra|est[aá] demostrado|depende|necesita|requiere)|no demuestra|no permite concluir|sin evidencia de que)[^.!?]{0,100}$/i.test(sentence);if(!financingEvidence&&!negated)add("external_financing_claim_unverified","La dependencia de financiación externa no queda demostrada por comparar capitalización y efectivo ni por un único trimestre de flujo de caja negativo. Harían falta vencimientos, financiación disponible/obtenida o una advertencia explícita de liquidez.",m[0].trim());}
  if(/diluci[oó]n confirmada|ha diluido|diluci[oó]n hist[oó]rica confirmada/i.test(body)&&base?.warnings?.some(x=>x.code==="shares_history_missing"))add("dilution_claim_unverified","Se afirma dilución confirmada pese a no disponer de dos cifras comparables de acciones en circulación.");
  const persistBroad=/(p[eé]rdidas?|m[aá]rgenes?|ingresos|crecimiento|consumo de caja|flujo de caja)[^.!?]{0,90}(?:continuas?|continuados?|sostenid[oa]s?|persistentes?|recurrentes?|de forma continuada|durante varios trimestres)/gi;
  while((m=persistBroad.exec(body))!==null){const sufficient=/ingresos|crecimiento/i.test(m[0])?revCount>=3:/consumo de caja|flujo de caja/i.test(m[0])?cashNegative>=2:marginRows.length>=3;if(!sufficient)add("financial_persistence_unverified","Se afirma continuidad o persistencia sin suficientes periodos comparables.",m[0].trim());}
@@ -691,11 +691,12 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  if(latest){const r=validationRaw(latest.totalRevenue),g=validationRaw(latest.grossProfit),o=validationRaw(latest.operatingIncome),n=validationRaw(latest.netIncome);if(Number.isFinite(r)&&r>0){latestMarginMetrics={periodEnd:new Date(latest.endDate.raw*1000).toISOString().slice(0,10),revenue:r,grossProfit:Number.isFinite(g)?g:null,operatingIncome:Number.isFinite(o)?o:null,netIncome:Number.isFinite(n)?n:null,grossMarginPct:Number.isFinite(g)?g/r*100:null,operatingMarginPct:Number.isFinite(o)?o/r*100:null,netMarginPct:Number.isFinite(n)?n/r*100:null};checks.push({code:"quarterly_margins_recalculated",...latestMarginMetrics});}
  }
  if(latestMarginMetrics){
-  const grossMentions=[...body.matchAll(/margen bruto[^\n.!?]{0,100}?(-?\d+(?:[.,]\d+)?)\s*%/gi)];
-  const grossPct=latestMarginMetrics.grossMarginPct;
-  if(Number.isFinite(grossPct)&&grossMentions.length){for(const gm of grossMentions){const stated=Number(gm[1].replace(",","."));if(Number.isFinite(stated)&&Math.abs(stated-grossPct)>1.5)add("gross_margin_reported_wrong","El porcentaje de margen bruto del análisis no coincide con el cálculo determinista del último trimestre. Debe corregirse o explicarse la diferencia de periodo/fuente.","Calculado con la misma fila trimestral ("+latestMarginMetrics.periodEnd+"): "+grossPct.toFixed(2)+"%; texto IA: "+stated.toFixed(2)+"%.");}}
-  const wrongMagnitude=/margen bruto[^\n.!?]{0,100}(-?\d+(?:[.,]\d+)?)\s*%/i.exec(body);
-  if(wrongMagnitude&&Number.isFinite(grossPct)&&Math.abs(Number(wrongMagnitude[1].replace(",","."))-grossPct)>1.5){}
+  const marginChecks=[["gross","margen bruto",latestMarginMetrics.grossMarginPct],["operating","margen operativo",latestMarginMetrics.operatingMarginPct],["net","margen neto",latestMarginMetrics.netMarginPct]];
+  for(const [key,label,calculated] of marginChecks){
+   if(!Number.isFinite(calculated))continue;
+   const rx=new RegExp(label+"[^\\n.!?]{0,110}?(-?\\d+(?:[.,]\\d+)?)\\s*%","gi");
+   for(const mm of body.matchAll(rx)){const stated=Number(mm[1].replace(",","."));if(Number.isFinite(stated)&&Math.abs(stated-calculated)>1.5)add(key+"_margin_reported_wrong","El porcentaje de "+label+" del análisis no coincide con el cálculo determinista del último trimestre. Debe corregirse o explicarse la diferencia de periodo/fuente.","Calculado con la misma fila trimestral ("+latestMarginMetrics.periodEnd+"): "+calculated.toFixed(2)+"%; texto IA: "+stated.toFixed(2)+"%.");}
+  }
  }
  if(warnings.length)checks.push({code:"generated_claim_review",warningCount:warnings.length});
  return{version:"deep-dive-claim-review-v1",generatedAt:new Date().toISOString(),warningCount:warnings.length,warnings,checks};
@@ -1364,7 +1365,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v9:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v10:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
