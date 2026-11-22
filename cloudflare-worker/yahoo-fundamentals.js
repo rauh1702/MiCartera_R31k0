@@ -654,9 +654,9 @@ function runDeepDiveAnalysisValidation(analysis,data,base){
  const quoteCurrency=String(data?.asset?.currency||"").toUpperCase();
  const targetCurrencyUnknown=base?.warnings?.some(x=>x.code==="target_currency_unverified")||!targetCurrency;
  if(/precio (?:medio )?objetivo|target mean|target price/i.test(body)){
-  const targetSentences=body.split(/(?<=[.!?])\\s+/).filter(x=>/precio (?:medio )?objetivo|target mean|target price/i.test(x));
+  const targetSentences=body.split(/(?<=[.!?])\s+/).filter(x=>/precio (?:medio )?objetivo|target mean|target price/i.test(x));
   for(const sentence of targetSentences){
-   const labelled=(sentence.match(/\\b(EUR|SEK|USD|GBP|CHF|NOK|DKK|CAD|AUD)\\b/i)||[])[1]?.toUpperCase()||"";
+   const labelled=(sentence.match(/\b(EUR|SEK|USD|GBP|CHF|NOK|DKK|CAD|AUD)\b/i)||[])[1]?.toUpperCase()||"";
    const explicitUnknown=/divisa (?:no verificada|no confirmada|no identificada)|moneda (?:no verificada|no confirmada|no identificada)|no se puede confirmar la divisa/i.test(sentence);
    if(targetCurrency&&labelled&&labelled!==targetCurrency)add("target_currency_label_wrong","El precio objetivo aparece etiquetado con una moneda distinta de la moneda específica del objetivo. Mantener la divisa original documentada.",sentence.trim());
    else if(targetCurrencyUnknown&&labelled&&!explicitUnknown)add("target_currency_label_unverified","Se asigna una moneda al precio objetivo sin que exista un campo específico y verificable para la divisa del objetivo. No asumir que coincide con la moneda de cotización ni con la divisa financiera.",sentence.trim());
