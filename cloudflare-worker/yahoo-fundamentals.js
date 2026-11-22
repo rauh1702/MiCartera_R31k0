@@ -1215,7 +1215,7 @@ export default {
         }, aiConfig);
         const analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 10000);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
-        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider };
+        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
         if (env.NEWS_KV) await env.NEWS_KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 60 * 60 * 4 });
         return json(responseData, 200, origin);
       } catch (error) {
@@ -1262,7 +1262,7 @@ export default {
         }, aiConfig);
         const analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 9500);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
-        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider };
+        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
         if (env.NEWS_KV) await env.NEWS_KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 60 * 60 * 4 });
         return json(responseData, 200, origin);
       } catch (error) {
@@ -1295,7 +1295,7 @@ export default {
         }, aiConfig);
         const analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 8500);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
-        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider };
+        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
         if (env.NEWS_KV) await env.NEWS_KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 60 * 60 * 6 });
         return json(responseData, 200, origin);
       } catch (error) {
@@ -1328,7 +1328,7 @@ export default {
         }, aiConfig);
         const analysis = String(result?.response || result?.result?.response || "").trim().slice(0, 7000);
         if (!analysis) throw new Error("El modelo no devolvió contenido.");
-        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider };
+        const responseData = { analysis, generatedAt: new Date().toISOString(), model: result.model, provider: result.provider, ...(result.fallbackFrom ? { fallbackFrom: result.fallbackFrom } : {}) };
         if (env.NEWS_KV) await env.NEWS_KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 60 * 60 * 12 });
         return json(responseData, 200, origin);
       } catch (error) {
