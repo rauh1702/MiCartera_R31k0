@@ -650,7 +650,7 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  const ratio=validation?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
  if(Number.isFinite(ratio?.currentRatio)){
   const n=ratio.currentRatio.toFixed(2);
-  text=text.replace(/((?:\*{1,2})?(?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\*{1,2})?\s*[:：]?(?:\*{1,2})?\s*)(?:\*{1,2})?\d+(?:[.,]\d+)?(?:\*{1,2})?/gi,"$1"+n);
+  text=text.replace(/((?:\*{1,2})?(?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\*{1,2})?\s*[:：=](?:\*{1,2})?\s*)(?:\*{1,2})?\d+(?:[.,]\d+)?(?:\*{1,2})?/gi,"$1"+n);
  }
  // Márgenes: calcularlos con los cuatro estados de la misma fila trimestral.
  const history=data?.historicalFinancials||{};
@@ -677,6 +677,16 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  const lines=text.split("\n");
  for(let i=0;i<lines.length;i++){
   const line=lines[i];
+  // Neutralizar etiquetas de riesgo no justificadas por los datos disponibles.
+  if(/deuda total supera (?:a )?la caja/i.test(line)&&/(?:debt.?to.?cash|deuda\s*[/／-]\s*caja)/i.test(line)){
+   lines[i]=line.replace(/\*{0,2}Riesgo confirmado\*{0,2}\s*:/i,"**Dato observado:**")
+    .replace(/,?\s*lo que implica una mayor exposición a la deuda\.?/i,". Esto no demuestra por sí solo falta de liquidez, insolvencia ni necesidad de financiación.")
+    .replace(/El currentRatio\s*>\s*1 indica que los activos corrientes cubren los pasivos corrientes, pero no garantiza liquidez disponible\.?/i,"El currentRatio > 1 indica que los activos corrientes superan los pasivos corrientes, aunque no garantiza caja disponible; faltan composición de deuda, vencimientos e intereses para valorar la presión financiera.");
+  }
+  if(/márgenes negativos/i.test(line)&&/(?:generando pérdidas operativas|indican que la empresa está generando pérdidas)/i.test(line)){
+   lines[i]=line.replace(/\*{0,2}Riesgo confirmado\*{0,2}\s*:/i,"**Dato del periodo:**")
+    .replace(/indican que la empresa está generando pérdidas operativas\.?/i,"reflejan resultados negativos en esos niveles durante el último trimestre. Un solo periodo no permite afirmar que las pérdidas sean persistentes.");
+  }
   const fundingMention=/(?:financiaci[oó]n externa|financiaci[oó]n adicional|capital externo|ampliaci[oó]n de capital|refinanciaci[oó]n)/i.test(line);
   const uncertaintyAboutFunding=/(?:imposibilidad|no es posible|no se puede|no puede|no hay (?:datos|informaci[oó]n)|sin (?:datos|informaci[oó]n)|no est[aá] claro|no se dispone|incertidumbre|no permite determinar|no permite saber|posible necesidad|podr[ií]a necesitar|podr[ií]a requerir|eventual necesidad)/i.test(line);
   const potentialLabel=/\bRIESGO\s+POTENCIAL\b/i.test(line);
@@ -1457,7 +1467,7 @@ export default {
         const validation = runDeepDiveValidation(data);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
-        const cacheKey = "ai:company-deep-dive:v27:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
+        const cacheKey = "ai:company-deep-dive:v28:" + digest + ":" + String(aiConfig.provider || "cloudflare") + ":" + String(aiConfig.model || "auto") + ":" + String(aiConfig.section || "general");
         if (env.NEWS_KV) {
           const cached = await env.NEWS_KV.get(cacheKey);
           if (cached) { try { return json({ ...JSON.parse(cached), cached: true }, 200, origin); } catch (_) {} }
