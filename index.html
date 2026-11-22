@@ -532,7 +532,7 @@
                         <p class="text-xs text-slate-400">Dashboard de inversiones · Mercado en tiempo real · Fiscalidad FIFO</p>
                     </div>
                 </div>
-                <button type="button" id="warren-open-button" onclick="openWarrenChat()" class="ml-auto sm:ml-2 shrink-0 inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-amber-500/20 hover:to-amber-400/10 px-3 py-2 text-sm font-black text-amber-200 shadow-lg shadow-amber-950/20 transition" title="Hablar con WARREN, tu analista de inversiones"><span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300"><i class="fa-solid fa-comments-dollar"></i></span><span>WARREN</span></button>
+                <button type="button" id="warren-open-button" onclick="openWarrenChat()" class="shrink-0 inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-amber-500/20 hover:to-amber-400/10 px-3 py-2 text-sm font-black text-amber-200 shadow-lg shadow-amber-950/20 transition" title="Hablar con WARREN, tu analista de inversiones"><span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300"><i class="fa-solid fa-comments-dollar"></i></span><span>WARREN</span></button>
                 <div class="flex items-center gap-2 shrink-0">
                     <span id="cloud-sync-badge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-slate-800 text-slate-400 border-slate-700"><i class="fa-solid fa-cloud mr-1"></i>Nube</span>
                     <button type="button" onclick="logoutFirebase()" class="text-xs bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -2957,8 +2957,24 @@
             warrenBusy=true;if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}if(status)status.textContent='WARREN está contrastando tu consulta con los datos…';
             const contextStatus=document.getElementById('warren-context-status');if(contextStatus)contextStatus.textContent='Preparando cartera, salud, seguimiento e histórico…';
             try{
-                const context=buildPortfolioAnalystPayload(),conversation=warrenMessages.slice(-14).map(m=>({role:m.role,content:m.content.slice(0,2500)}));
-                const response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context,messages:conversation,_ai:getAIRequestConfig('warren')})});
+                const context=buildPortfolioAnalystPayload();
+                // Mantén todas las posiciones, pero limita el detalle accesorio para respetar el límite del Worker.
+                context.positions=(context.positions||[]).map(p=>({...p,transactions:(p.transactions||[]).slice(-5)}));
+                context.recentPerformanceSnapshots=(context.recentPerformanceSnapshots||[]).slice(-12);
+                context.recentNews=(context.recentNews||[]).slice(0,10);
+                context.watchlist=(context.watchlist||[]).slice(0,25);
+                context.strategies=(context.strategies||[]).slice(0,20);
+                context.journal=(context.journal||[]).slice(-15);
+                let contextJson=JSON.stringify(context);
+                while(contextJson.length>19000&&(context.journal.length||context.recentNews.length||context.watchlist.length)){
+                    if(context.journal.length)context.journal=context.journal.slice(-Math.max(0,context.journal.length-3));
+                    else if(context.recentNews.length)context.recentNews=context.recentNews.slice(0,-2);
+                    else context.watchlist=context.watchlist.slice(0,-3);
+                    contextJson=JSON.stringify(context);
+                }
+                const conversation=warrenMessages.slice(-8).map(m=>({role:m.role,content:m.content.slice(0,1200)}));
+                if(conversation[0]?.role==='assistant')conversation.shift();
+                const response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')})});
                 const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
                 warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
                 if(status)status.textContent='Respondido · '+formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo utilizado':'');if(contextStatus)contextStatus.textContent='Contexto actualizado: '+new Date(data.generatedAt||Date.now()).toLocaleTimeString('es-ES');
