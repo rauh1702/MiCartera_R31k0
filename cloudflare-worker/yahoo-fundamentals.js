@@ -1075,7 +1075,7 @@ export default {
         const data = JSON.parse(raw);
         const isJournal = url.pathname === "/ai/journal-review";
         const subject = isJournal ? data?.entry : data?.strategy;
-        if (!subject || typeof subject !== "object" || !String(subject.thesis || "").trim()) return json({ error: "Falta la tesis o el contenido principal que se quiere revisar." }, 400, origin);
+        if (!subject || typeof subject !== "object" || !(isJournal ? String(subject.thesis || "").trim() : [subject.thesis, subject.risk, subject.notes].some(value => String(value || "").trim()))) return json({ error: "Añade una tesis, riesgos o notas antes de solicitar la revisión." }, 400, origin);
         const compact = JSON.stringify(data);
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(compact)))].map(b => b.toString(16).padStart(2,"0")).join("");
         const cacheKey = (isJournal ? "ai:journal-review:v1:" : "ai:strategy-review:v1:") + digest;
