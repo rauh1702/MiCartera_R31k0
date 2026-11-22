@@ -633,23 +633,33 @@ async function runConfiguredPortfolioAI(env, cloudflareModel, options, selection
     const model = selection.model && selection.model !== "auto" && provider === "gemini" ? selection.model : "gemini-3.8-flash";
     const system = options.messages?.find(m => m.role === "system")?.content || "";
     const contents = (options.messages || []).filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }));
-    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: Math.max(1400, Number(options.max_tokens) || 850) } }) });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error("Gemini HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
-    const candidate = d?.candidates?.[0] || {};
-    const response = (candidate?.content?.parts || []).map(p => String(p?.text || "")).join("\n").trim();
-    if (!response || candidate.finishReason === "MAX_TOKENS") throw new Error("Gemini no completó la respuesta (límite de salida o respuesta vacía).");
-    return { response, model, provider: "gemini" };
+    let diagnostic = "";
+    for (const outputBudget of [2600, 4096]) {
+      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: system ? { parts: [{ text: system }] } : undefined, contents, generationConfig: { temperature: 0.2, maxOutputTokens: outputBudget } }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error("Gemini HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
+      const candidate = d?.candidates?.[0] || {};
+      const response = (candidate?.content?.parts || []).map(p => String(p?.text || "")).join("\n").trim();
+      const finish = String(candidate.finishReason || "no indicado");
+      if (response && finish !== "MAX_TOKENS") return { response, model, provider: "gemini" };
+      diagnostic = "Gemini finishReason=" + finish + ", texto parcial=" + response.length + " caracteres, presupuesto=" + outputBudget;
+    }
+    throw new Error("Gemini no completó el análisis tras ampliar la salida. " + diagnostic);
   };
   const groq = async () => {
     if (!env?.GROQ_API_KEY) throw new Error("Falta el Secret GROQ_API_KEY.");
     const model = selection.model && selection.model !== "auto" && provider === "groq" ? selection.model : "openai/gpt-oss-120b";
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: Math.max(1000, Number(options.max_tokens) || 850), temperature: 0.2, stream: false }) });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
-    const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
-    if (!response || choice.finish_reason === "length") throw new Error("Groq no completó la respuesta (límite de salida o respuesta vacía).");
-    return { response, model: String(d?.model || model), provider: "groq" };
+    let diagnostic = "";
+    for (const outputBudget of [3000, 5000]) {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + env.GROQ_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model, messages: options.messages, max_tokens: outputBudget, temperature: 0.2, reasoning_effort: "low", reasoning_format: "hidden", stream: false }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error("Groq HTTP " + r.status + ": " + String(d?.error?.message || "error").slice(0, 300));
+      const choice = d?.choices?.[0] || {}, response = String(choice?.message?.content || "").trim();
+      const finish = String(choice.finish_reason || "no indicado");
+      if (response && finish !== "length") return { response, model: String(d?.model || model), provider: "groq" };
+      diagnostic = "Groq finish_reason=" + finish + ", texto parcial=" + response.length + " caracteres, presupuesto=" + outputBudget;
+    }
+    throw new Error("Groq no completó el análisis tras ampliar la salida. " + diagnostic);
   };
   const openrouter = async () => {
     if (!env?.OPENROUTER_API_KEY) throw new Error("Falta el Secret OPENROUTER_API_KEY en Cloudflare. Añádelo en Workers & Pages → tu Worker → Settings → Variables and Secrets.");
