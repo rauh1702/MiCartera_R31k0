@@ -970,6 +970,43 @@
         </section>
 
         <section id="warren-chat-view" class="hidden space-y-4">
+
+            <div id="warren-home-panel" class="space-y-5">
+                <div class="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-[#172235] via-[#101b2d] to-[#241b12] p-5 sm:p-7 shadow-2xl">
+                    <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl"></div>
+                    <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                        <div class="max-w-2xl">
+                            <div class="inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[.2em] text-amber-200"><span class="h-2 w-2 rounded-full bg-emerald-400"></span> Analista independiente · MiCartera</div>
+                            <h2 class="mt-4 text-3xl sm:text-4xl font-black tracking-tight text-white">WARREN<span class="text-amber-300">.</span></h2>
+                            <p class="mt-2 max-w-xl text-sm sm:text-base leading-7 text-slate-300">Analiza tus inversiones, cuestiona tus decisiones y busca los riesgos que podrían estar pasando desapercibidos.</p>
+                            <div class="mt-5 flex flex-wrap gap-2">
+                                <button type="button" onclick="showWarrenConversationView()" class="rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-slate-950 hover:bg-amber-300 transition"><i class="fa-solid fa-comments mr-2"></i>Abrir conversación</button>
+                                <button type="button" onclick="startWarrenPrompt('Haz una revisión crítica de mi cartera. Identifica concentración, riesgos y puntos débiles.',true)" class="rounded-xl border border-slate-500 bg-slate-900/50 px-4 py-3 text-sm font-bold text-slate-200 hover:border-amber-300/60 transition"><i class="fa-solid fa-shield-halved mr-2 text-amber-300"></i>Revisar mi cartera</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 lg:w-64 shrink-0">
+                            <div class="rounded-2xl border border-white/10 bg-slate-950/35 p-3"><i class="fa-solid fa-scale-balanced text-amber-300"></i><p class="mt-2 text-xs font-bold text-white">Criterio independiente</p><p class="mt-1 text-[10px] leading-4 text-slate-400">No busca darte la razón.</p></div>
+                            <div class="rounded-2xl border border-white/10 bg-slate-950/35 p-3"><i class="fa-solid fa-magnifying-glass-chart text-amber-300"></i><p class="mt-2 text-xs font-bold text-white">Análisis contextual</p><p class="mt-1 text-[10px] leading-4 text-slate-400">Tiene en cuenta tu cartera.</p></div>
+                            <div class="rounded-2xl border border-white/10 bg-slate-950/35 p-3"><i class="fa-solid fa-triangle-exclamation text-amber-300"></i><p class="mt-2 text-xs font-bold text-white">Riesgos primero</p><p class="mt-1 text-[10px] leading-4 text-slate-400">Señala dudas y contradicciones.</p></div>
+                            <div class="rounded-2xl border border-white/10 bg-slate-950/35 p-3"><i class="fa-solid fa-database text-amber-300"></i><p class="mt-2 text-xs font-bold text-white">Datos con cautela</p><p class="mt-1 text-[10px] leading-4 text-slate-400">Debe reconocer lo que no sabe.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-end justify-between gap-2"><div><p class="text-[10px] font-black uppercase tracking-[.2em] text-amber-300">Centro de análisis</p><h3 class="mt-1 text-xl font-black text-white">¿En qué trabajamos hoy?</h3></div><p class="text-[11px] text-slate-500">Elige un análisis para iniciar la conversación</p></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    <button type="button" onclick="startWarrenPrompt('Analiza mi cartera completa: distribución, concentración, exposición por activo y principales riesgos.',true)" class="group rounded-2xl border border-slate-700 bg-slate-900/80 p-4 text-left hover:border-amber-400/60 hover:bg-slate-800 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300"><i class="fa-solid fa-chart-pie"></i></span><span class="mt-3 block text-sm font-black text-white">Mi cartera</span><span class="mt-1 block text-xs leading-5 text-slate-400">Distribución, rentabilidad, concentración y exposición.</span><span class="mt-3 block text-[10px] font-bold text-cyan-300">ANALIZAR CARTERA <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                    <button type="button" onclick="startWarrenPrompt('Quiero analizar una empresa en profundidad. Revisaremos resultados, liquidez, deuda, financiación, dilución, valoración y riesgos.',false,'Analiza la empresa [TICKER] en profundidad…')" class="group rounded-2xl border border-slate-700 bg-slate-900/80 p-4 text-left hover:border-amber-400/60 hover:bg-slate-800 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300"><i class="fa-solid fa-magnifying-glass-chart"></i></span><span class="mt-3 block text-sm font-black text-white">Analizar empresa</span><span class="mt-1 block text-xs leading-5 text-slate-400">Fundamentales, resultados, financiación y perspectivas.</span><span class="mt-3 block text-[10px] font-bold text-violet-300">ELEGIR EMPRESA <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                    <button type="button" onclick="startWarrenPrompt('Busca los principales riesgos de mi cartera y ordénalos por importancia. Distingue riesgos confirmados de hipótesis.',true)" class="group rounded-2xl border border-slate-700 bg-slate-900/80 p-4 text-left hover:border-amber-400/60 hover:bg-slate-800 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-400/10 text-rose-300"><i class="fa-solid fa-triangle-exclamation"></i></span><span class="mt-3 block text-sm font-black text-white">Mapa de riesgos</span><span class="mt-1 block text-xs leading-5 text-slate-400">Qué puede salir mal y qué señales conviene vigilar.</span><span class="mt-3 block text-[10px] font-bold text-rose-300">DETECTAR RIESGOS <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                    <button type="button" onclick="startWarrenPrompt('Revisa mis estrategias de inversión. Comprueba si las entradas, objetivos, salidas y riesgos tienen coherencia.',true)" class="group rounded-2xl border border-slate-700 bg-slate-900/80 p-4 text-left hover:border-amber-400/60 hover:bg-slate-800 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fa-solid fa-bullseye"></i></span><span class="mt-3 block text-sm font-black text-white">Mis estrategias</span><span class="mt-1 block text-xs leading-5 text-slate-400">Contrasta objetivos, escenarios y disciplina de inversión.</span><span class="mt-3 block text-[10px] font-bold text-emerald-300">REVISAR ESTRATEGIAS <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                    <button type="button" onclick="startWarrenPrompt('Compara las empresas de mi cartera que tengan información suficiente. Evalúa crecimiento, calidad financiera, valoración y riesgos.',true)" class="group rounded-2xl border border-slate-700 bg-slate-900/80 p-4 text-left hover:border-amber-400/60 hover:bg-slate-800 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-300"><i class="fa-solid fa-scale-balanced"></i></span><span class="mt-3 block text-sm font-black text-white">Comparar empresas</span><span class="mt-1 block text-xs leading-5 text-slate-400">Fortalezas y debilidades con criterios homogéneos.</span><span class="mt-3 block text-[10px] font-bold text-sky-300">COMPARAR <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                    <button type="button" onclick="startWarrenPrompt('Warren, ¿qué se me escapa? Busca puntos ciegos, riesgos infravalorados y contradicciones en mis decisiones de inversión.',true)" class="group rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-950/30 to-slate-900 p-4 text-left hover:border-amber-300/70 transition"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300"><i class="fa-solid fa-brain"></i></span><span class="mt-3 block text-sm font-black text-white">¿Qué se me escapa?</span><span class="mt-1 block text-xs leading-5 text-slate-400">Una segunda opinión que intente desmontar tu tesis.</span><span class="mt-3 block text-[10px] font-bold text-amber-300">BUSCAR PUNTOS CIEGOS <i class="fa-solid fa-arrow-right ml-1"></i></span></button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-3">
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4"><div class="flex items-center justify-between gap-3"><div><p class="text-[10px] font-black uppercase tracking-[.18em] text-slate-500">Tu espacio de trabajo</p><h3 class="mt-1 text-sm font-black text-white">Conversación reciente</h3></div><button type="button" onclick="showWarrenConversationView()" class="text-[11px] font-bold text-amber-300">Abrir chat <i class="fa-solid fa-arrow-right ml-1"></i></button></div><p id="warren-home-recent" class="mt-3 text-xs leading-5 text-slate-400">Todavía no hay conversaciones. Inicia un análisis para empezar.</p></div>
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-[10px] font-black uppercase tracking-[.18em] text-amber-300">Cómo trabaja Warren</p><p class="mt-2 text-xs leading-5 text-slate-300">Separa hechos, cálculos e interpretaciones. Si faltan datos o fuentes, debe indicarlo. Sus respuestas son informativas y no ejecuta operaciones.</p><p class="mt-2 text-[10px] text-slate-500">El motor y el modelo utilizados se mostrarán al terminar cada respuesta.</p></div>
+                </div>
+            </div>
+            <div id="warren-conversation-panel" class="hidden space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3"><div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-400/40 bg-gradient-to-br from-slate-800 to-amber-950 text-amber-300 shadow-lg"><i class="fa-solid fa-comments-dollar text-2xl"></i></div><div><p class="text-[11px] font-black uppercase tracking-[.22em] text-amber-300">Analista independiente · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white">WARREN</h2><p class="text-xs text-slate-400">Contexto financiero actualizado en cada consulta</p></div></div>
                 <div class="flex flex-wrap gap-2"><button type="button" onclick="startNewWarrenChat()" class="rounded-xl border border-amber-400/30 bg-slate-800 px-3 py-2 text-xs font-bold text-amber-200"><i class="fa-solid fa-plus mr-1"></i>Nuevo chat</button><button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-arrow-left mr-1"></i>Volver</button></div>
@@ -991,6 +1028,7 @@
             </div>
         </section>
 
+            </div>
         <style>
             #company-deep-dive-select{color:#f8fafc;background-color:#0f172a;color-scheme:dark}
             #company-deep-dive-select option{color:#f8fafc;background-color:#0f172a}
@@ -2975,11 +3013,24 @@
                 bubble.append(top,body);host.appendChild(bubble);
             });host.scrollTop=host.scrollHeight;
         }
-        function showWarrenChatView(){
-            ['warren-chat-view','dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view','company-deep-dive-view','warren-chat-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
-            document.getElementById('warren-chat-view')?.classList.remove('hidden');document.getElementById('headerToolbar')?.classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));window.scrollTo({top:0,behavior:'smooth'});renderWarrenMessages();setTimeout(()=>document.getElementById('warren-chat-input')?.focus(),120);
+        function showWarrenBaseView(){
+            ['warren-chat-view','dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view','company-deep-dive-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('warren-chat-view')?.classList.remove('hidden');document.getElementById('headerToolbar')?.classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));window.scrollTo({top:0,behavior:'smooth'});
         }
-        function openWarrenChat(){loadWarrenChat();showWarrenChatView();}
+        function showWarrenHomeView(){
+            showWarrenBaseView();document.getElementById('warren-home-panel')?.classList.remove('hidden');document.getElementById('warren-conversation-panel')?.classList.add('hidden');
+            const recent=document.getElementById('warren-home-recent');
+            if(recent){const last=[...(warrenMessages||[])].reverse().find(m=>m.role==='assistant')||[...(warrenMessages||[])].reverse().find(m=>m.role==='user');recent.textContent=last?(String(last.content||'').slice(0,260)+(String(last.content||'').length>260?'…':'')):'Todavía no hay conversaciones. Inicia un análisis para empezar.';}
+        }
+        function showWarrenConversationView(){
+            showWarrenBaseView();document.getElementById('warren-home-panel')?.classList.add('hidden');document.getElementById('warren-conversation-panel')?.classList.remove('hidden');renderWarrenMessages();setTimeout(()=>document.getElementById('warren-chat-input')?.focus(),120);
+        }
+        function showWarrenChatView(){showWarrenConversationView();}
+        function openWarrenChat(){loadWarrenChat();showWarrenHomeView();}
+        function startWarrenPrompt(prompt,send=true,prefill=''){
+            loadWarrenChat();showWarrenConversationView();const input=document.getElementById('warren-chat-input');if(!input)return;
+            input.value=prefill||prompt;if(send)sendWarrenMessage();else input.focus();
+        }
         function startNewWarrenChat(){if(warrenBusy)return;if(warrenMessages.length&&!confirm('¿Empezar una conversación nueva? El chat actual se sustituirá en este dispositivo.'))return;warrenMessages=[];saveWarrenChat();renderWarrenMessages();document.getElementById('warren-model-status').textContent='Nueva conversación';document.getElementById('warren-chat-input')?.focus();}
         function handleWarrenInputKeydown(event){if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('warren-chat-form')?.requestSubmit();}}
         function askWarrenSuggestion(button){const input=document.getElementById('warren-chat-input');if(!input)return;input.value=button.textContent.trim();sendWarrenMessage();}
