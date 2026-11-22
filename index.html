@@ -1421,7 +1421,7 @@
                     <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
                         <i class="fa-solid fa-calculator"></i> Simulador Rápido PMP
                     </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
                             <label class="text-xs text-slate-600 block mb-1">Tipo</label>
                             <select id="sim-type" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
@@ -1431,11 +1431,16 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-600 block mb-1">Cantidad</label>
-                            <input type="number" id="sim-qty" placeholder="Ej: 10" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
+                            <input type="number" id="sim-qty" min="0" step="any" placeholder="Ej: 10" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
                         </div>
                         <div>
-                            <label class="text-xs text-slate-600 block mb-1">Precio Unit. (€)</label>
-                            <input type="number" step="0.01" id="sim-price" placeholder="Ej: 4.50" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
+                            <label class="text-xs text-slate-600 block mb-1">Precio unitario (€)</label>
+                            <input type="number" step="any" min="0" id="sim-price" placeholder="Ej: 4,50" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-600 block mb-1">Comisión (€)</label>
+                            <input type="number" step="any" min="0" id="sim-comm" value="0" placeholder="0 si no lleva" class="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white">
+                            <span class="text-[10px] text-slate-500">Introduce 0 si no hay comisión.</span>
                         </div>
                     </div>
                     <button onclick="calculateSimulation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition shadow-sm">
@@ -4391,42 +4396,63 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
         function calculateSimulation() {
             if (!currentActiveAsset) return;
             const type = document.getElementById('sim-type').value;
-            const qty = parseFloat(document.getElementById('sim-qty').value);
-            const price = parseFloat(document.getElementById('sim-price').value);
+            const qty = Number(document.getElementById('sim-qty').value);
+            const price = Number(document.getElementById('sim-price').value);
+            const commissionInput = document.getElementById('sim-comm');
+            const commission = commissionInput.value.trim() === '' ? 0 : Number(commissionInput.value);
 
-            if (isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
-                alert('Por favor introduce una cantidad y precio válidos.');
+            if (!Number.isFinite(qty) || !Number.isFinite(price) || !Number.isFinite(commission) || qty <= 0 || price <= 0 || commission < 0) {
+                alert('Introduce una cantidad, un precio y una comisión válidos. La comisión puede ser 0 si no se aplica.');
                 return;
             }
 
-            let newShares = currentActiveAsset.shares;
-            let newCapital = currentActiveAsset.capital;
-            let newPMP = currentActiveAsset.pmp;
-            const simComm = 1.00;
+            let newShares = Number(currentActiveAsset.shares) || 0;
+            let newCapital = Number(currentActiveAsset.capital) || 0;
+            let newPMP = Number(currentActiveAsset.pmp) || 0;
+            const grossAmount = qty * price;
+            let operationCash = 0;
+            let cashLabel = '';
 
             if (type === 'Compra') {
-                const addedCost = (qty * price) + simComm;
+                operationCash = grossAmount + commission;
                 newShares += qty;
-                newCapital += addedCost;
-                newPMP = newCapital / newShares;
+                newCapital += operationCash;
+                newPMP = newShares > 0 ? newCapital / newShares : 0;
+                cashLabel = 'Desembolso total de la compra';
             } else {
-                if (qty > newShares) {
+                if (qty > newShares + 0.00000001) {
                     alert('No puedes vender más acciones de las que posees.');
                     return;
                 }
-                newShares -= qty;
+                operationCash = grossAmount - commission;
+                newShares = Math.max(0, newShares - qty);
+                // Una venta no cambia el PMP de las unidades que permanecen.
                 newCapital = newShares * newPMP;
+                if (newShares <= 0.00000001) {
+                    newShares = 0;
+                    newCapital = 0;
+                    newPMP = 0;
+                }
+                cashLabel = 'Efectivo neto recibido por la venta';
             }
 
+            const money = value => Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            const units = value => Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
             const resDiv = document.getElementById('sim-result');
             resDiv.classList.remove('hidden');
             resDiv.innerHTML = `
-                <div class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-1">Resultado Simulado Tras ${type}:</div>
-                <div class="grid grid-cols-3 gap-2 text-center">
-                    <div><span class="text-slate-400 text-[10px] block">Acciones</span><b>${newShares.toFixed(2)}</b></div>
-                    <div><span class="text-slate-400 text-[10px] block">Nuevo PMP</span><b class="text-blue-600">${newPMP.toFixed(2)} €</b></div>
-                    <div><span class="text-slate-400 text-[10px] block">Capital Vivo</span><b>${newCapital.toFixed(2)} €</b></div>
+                <div class="font-bold text-slate-900 border-b border-slate-200 pb-2 mb-2">Resultado simulado tras ${type.toLowerCase()}</div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center mb-3">
+                    <div><span class="text-slate-500 text-[10px] block">Unidades tras operación</span><b class="text-slate-900">${units(newShares)}</b></div>
+                    <div><span class="text-slate-500 text-[10px] block">Nuevo PMP</span><b class="text-blue-600">${money(newPMP)}</b></div>
+                    <div><span class="text-slate-500 text-[10px] block">Capital vivo restante</span><b class="text-slate-900">${money(newCapital)}</b></div>
                 </div>
+                <div class="rounded-lg bg-blue-50 border border-blue-100 p-3 space-y-1.5">
+                    <div class="flex justify-between gap-3 text-slate-700"><span>Importe bruto (${units(qty)} × ${money(price)})</span><b>${money(grossAmount)}</b></div>
+                    <div class="flex justify-between gap-3 text-slate-700"><span>Comisión</span><b>${money(commission)}</b></div>
+                    <div class="flex justify-between gap-3 border-t border-blue-200 pt-2 text-slate-900"><span class="font-bold">${cashLabel}</span><b class="text-base text-blue-700">${money(operationCash)}</b></div>
+                </div>
+                <p class="mt-2 text-[10px] text-slate-500">${type === 'Compra' ? 'La comisión se suma al coste de adquisición y afecta al nuevo PMP.' : 'La comisión se descuenta del efectivo recibido. El PMP de las unidades restantes no cambia.'} Simulación orientativa: no registra ni modifica ninguna operación.</p>
             `;
         }
 
