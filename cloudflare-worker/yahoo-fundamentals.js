@@ -650,7 +650,7 @@ function sanitizeDeepDiveAnalysis(analysis,validation,data){
  const ratio=validation?.checks?.find(x=>x.code==="balance_sheet_ratios_recalculated");
  if(Number.isFinite(ratio?.currentRatio)){
   const n=ratio.currentRatio.toFixed(2);
-  text=text.replace(/((?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)\s*[:：]?\s*)(?:\*\*)?\d+(?:[.,]\d+)?(?:\*\*)?/gi,"$1"+n);
+  text=text.replace(/((?:\*{1,2})?(?:current\s*ratio|ratio de liquidez corriente|liquidez corriente)(?:\*{1,2})?\s*[:：]?(?:\*{1,2})?\s*)(?:\*{1,2})?\d+(?:[.,]\d+)?(?:\*{1,2})?/gi,"$1"+n);
  }
  // Márgenes: calcularlos con los cuatro estados de la misma fila trimestral.
  const history=data?.historicalFinancials||{};
