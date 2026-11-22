@@ -2954,10 +2954,16 @@
             const input=document.getElementById('warren-chat-input'),button=document.getElementById('warren-send-button'),status=document.getElementById('warren-model-status');
             const question=String(input?.value||'').trim();if(!question)return;if(question.length>2500){showToast('La consulta es demasiado larga.','fa-triangle-exclamation');return;}
             warrenMessages.push({role:'user',content:question,at:new Date().toISOString()});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();if(input)input.value='';
-            warrenBusy=true;if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}if(status)status.textContent='WARREN está contrastando tu consulta con los datos…';
-            const contextStatus=document.getElementById('warren-context-status');if(contextStatus)contextStatus.textContent='Preparando cartera, salud, seguimiento e histórico…';
+            warrenBusy=true;if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}if(status)status.textContent='WARREN está investigando empresas, fundamentales, noticias y cartera…';
+            const contextStatus=document.getElementById('warren-context-status');if(contextStatus)contextStatus.textContent='Consultando fundamentales, SEC EDGAR, noticias y datos de cartera…';
             try{
                 const context=buildPortfolioAnalystPayload();
+                // Investiga los activos citados; si la pregunta es general, consulta las dos mayores posiciones.
+                const allAssets=[...(context.positions||[]),...(context.watchlist||[])],q=question.toLowerCase();
+                const matched=allAssets.filter(a=>{const ticker=String(a.ticker||a.symbol||'').toLowerCase(),name=String(a.name||'').toLowerCase();return (ticker&&q.includes(ticker))||(name.length>3&&q.includes(name));});
+                const researchTargets=(matched.length?matched:(context.positions||[]).slice().sort((a,b)=>(Number(b.marketValueEUR)||0)-(Number(a.marketValueEUR)||0)).slice(0,2)).slice(0,2);
+                context.externalResearch=await Promise.all(researchTargets.map(async asset=>{const symbol=String(asset.ticker||asset.symbol||'').trim();if(!symbol)return null;try{const r=await fetch(ASSET_NEWS_WORKER+'/research/company?symbol='+encodeURIComponent(symbol)+'&name='+encodeURIComponent(String(asset.name||'')));const d=await r.json().catch(()=>({}));return r.ok?d:{symbol,error:d.error||'Investigación no disponible',limitations:d.limitations||[]};}catch(e){return{symbol,error:String(e.message||e)};}}));
+                context.externalResearch=context.externalResearch.filter(Boolean);
                 // Mantén todas las posiciones, pero limita el detalle accesorio para respetar el límite del Worker.
                 context.positions=(context.positions||[]).map(p=>({...p,transactions:(p.transactions||[]).slice(-5)}));
                 context.recentPerformanceSnapshots=(context.recentPerformanceSnapshots||[]).slice(-12);
