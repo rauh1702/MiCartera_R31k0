@@ -621,6 +621,45 @@ body.warren-mobile-mode #warren-conversation-panel>.grid>aside>.warren-starters[
 body.warren-mobile-mode .warren-suggestion{background:#263740!important;border-color:#40515a!important;color:#e9edef!important;font-size:12px!important}
 body.warren-mobile-mode .warren-starters[open] .warren-suggestion{padding:10px!important}
 }</style>
+<style>
+@media (max-width: 767px) {
+ body.warren-mobile-mode #warren-chat-view.warren-mobile-fullscreen {position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:100dvh!important;padding:0!important;margin:0!important;overflow:hidden!important;background:#0b141a!important;z-index:99999!important}
+ body.warren-mobile-mode #warren-chat-view #warren-conversation-panel {display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important;background:#0b141a!important}
+ body.warren-mobile-mode #warren-conversation-panel > .flex:first-child {display:none!important}
+ body.warren-mobile-mode #warren-conversation-panel > .grid {display:flex!important;flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;gap:0!important}
+ body.warren-mobile-mode #warren-conversation-panel > .grid > div.min-w-0 {display:flex!important;flex-direction:column!important;flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;border-radius:0!important;background:#0b141a!important;box-shadow:none!important}
+ body.warren-mobile-mode #warren-conversation-panel > .grid > div.min-w-0 > .flex:first-child {display:none!important}
+ body.warren-mobile-mode #warren-messages.warren-messages {display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:12px 10px 16px!important;gap:0!important;background-color:#0b141a!important;background-image:radial-gradient(rgba(255,255,255,.035) .7px,transparent .7px)!important;background-size:16px 16px!important}
+ body.warren-mobile-mode #warren-messages .warren-message-row {display:flex!important;width:100%!important;gap:0!important;margin:4px 0 7px!important;align-items:flex-end!important}
+ body.warren-mobile-mode #warren-messages .warren-message-row.is-user {justify-content:flex-end!important}
+ body.warren-mobile-mode #warren-messages .warren-message-row.is-assistant {justify-content:flex-start!important}
+ body.warren-mobile-mode #warren-messages .warren-avatar {display:none!important}
+ body.warren-mobile-mode #warren-messages .warren-bubble {display:block!important;width:auto!important;max-width:86%!important;min-width:0!important;padding:8px 10px 7px!important;margin:0!important;border:0!important;border-radius:12px!important;font-size:14px!important;line-height:1.48!important;box-shadow:0 1px 1px rgba(0,0,0,.18)!important;backdrop-filter:none!important;color:#e9edef!important}
+ body.warren-mobile-mode #warren-messages .warren-bubble.user {background:#005c4b!important;color:#e9edef!important;border-radius:12px 12px 3px 12px!important}
+ body.warren-mobile-mode #warren-messages .warren-bubble.assistant {background:#202c33!important;color:#e9edef!important;border-radius:12px 12px 12px 3px!important}
+ body.warren-mobile-mode #warren-messages .warren-message-top {display:flex!important;justify-content:flex-end!important;gap:5px!important;margin:0 0 3px!important;padding:0!important;border:0!important;min-height:0!important}
+ body.warren-mobile-mode #warren-messages .warren-role, body.warren-mobile-mode #warren-messages .warren-message-model, body.warren-mobile-mode #warren-messages .warren-copy-button {display:none!important}
+ body.warren-mobile-mode #warren-messages .warren-message-time {font-size:9px!important;color:#b4c4c8!important}
+ body.warren-mobile-mode #warren-messages .warren-message-content {font-size:14px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+ body.warren-mobile-mode #warren-messages .warren-summary-panel {grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-bottom:8px!important}
+ body.warren-mobile-mode #warren-messages .warren-report-section {background:#18252c!important;border-color:#34434b!important}
+ body.warren-mobile-mode #warren-chat-form {flex:0 0 auto!important;position:relative!important;margin:0!important;padding:8px 9px calc(8px + env(safe-area-inset-bottom))!important;background:#202c33!important;border:0!important}
+ body.warren-mobile-mode #warren-chat-form > div:first-of-type {display:flex!important;align-items:flex-end!important;gap:7px!important;padding:5px 6px 5px 13px!important;border:0!important;border-radius:24px!important;background:#2a3942!important;box-shadow:none!important}
+ body.warren-mobile-mode #warren-chat-input {min-height:40px!important;max-height:110px!important;padding:8px 2px!important;font-size:15px!important;resize:none!important;color:#e9edef!important}
+ body.warren-mobile-mode #warren-chat-input::placeholder {color:#aebac1!important}
+ body.warren-mobile-mode #warren-send-button {width:40px!important;height:40px!important;flex:0 0 40px!important;margin:0!important;border-radius:50%!important;background:#00a884!important;color:#062b24!important;box-shadow:none!important}
+ body.warren-mobile-mode #warren-chat-form > div.mt-2 {display:none!important}
+ body.warren-mobile-mode #warren-conversation-panel > .grid > aside {display:block!important;position:fixed!important;z-index:100001!important;left:8px!important;right:8px!important;bottom:calc(64px + env(safe-area-inset-bottom))!important;padding:0!important;margin:0!important;pointer-events:none!important}
+ body.warren-mobile-mode #warren-conversation-panel > .grid > aside > div:not(.warren-starters) {display:none!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-starters {display:block!important;pointer-events:auto!important;width:max-content!important;max-width:100%!important;margin:0 auto!important;padding:0!important;border:0!important;background:transparent!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-starters > summary {display:block!important;width:max-content!important;margin:0 auto!important;padding:7px 12px!important;border:1px solid #40515a!important;border-radius:20px!important;background:#263740!important;color:#e9edef!important;font-size:11px!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-starters[open] {width:100%!important;max-height:40dvh!important;overflow-y:auto!important;padding:8px!important;border:1px solid #40515a!important;border-radius:14px!important;background:#1b292f!important;box-shadow:0 12px 35px rgba(0,0,0,.5)!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-starters[open] > summary {margin:0 auto 8px!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-suggestion {padding:9px 10px!important;background:#263740!important;border-color:#40515a!important;color:#e9edef!important}
+ body.warren-mobile-mode .warren-welcome {margin:16px auto!important}
+ body.warren-mobile-mode .warren-welcome p:not(.text-xl) {display:none!important}
+}
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -1116,7 +1155,7 @@ body.warren-mobile-mode .warren-starters[open] .warren-suggestion{padding:10px!i
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 bg-slate-950/90 px-4 py-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300"><i class="fa-solid fa-chart-line"></i></span><div><div class="flex items-center gap-2 text-sm font-black text-white">WARREN <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">ASISTENTE</span></div><p class="text-[10px] text-slate-500">Análisis independiente · MiCartera R31k0</p></div></div><div class="flex items-center gap-2"><p id="warren-model-status" class="max-w-[210px] text-right text-[10px] text-slate-400">Preparado para analizar tu cartera</p><button type="button" onclick="showWarrenHomeView()" class="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-[10px] font-bold text-slate-300 hover:border-amber-400/50 hover:text-amber-200"><i class="fa-solid fa-house mr-1"></i>Inicio</button></div></div>
                     <div id="warren-messages" class="warren-messages space-y-3 p-3 sm:p-5" aria-live="polite" aria-label="Mensajes de WARREN"></div>
                     <form id="warren-chat-form" onsubmit="sendWarrenMessage(event)" class="border-t border-slate-700 bg-slate-950/60 p-3 sm:p-4">
-                        <label for="warren-chat-input" class="sr-only">Escribe tu consulta a WARREN</label><div class="flex items-end gap-2 rounded-2xl border border-slate-600 bg-slate-800 p-2 focus-within:border-amber-400/70"><textarea id="warren-chat-input" rows="2" maxlength="2500" placeholder="Pregúntame lo que quieras sobre tu cartera, una empresa o una estrategia…" class="max-h-36 min-h-[48px] flex-1 resize-y bg-transparent px-2 py-2 text-sm text-white placeholder-slate-400 outline-none" onkeydown="handleWarrenInputKeydown(event)"></textarea><button id="warren-send-button" type="submit" class="mb-0.5 inline-flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-50" title="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button></div>
+                        <label for="warren-chat-input" class="sr-only">Escribe tu consulta a WARREN</label><div class="flex items-end gap-2 rounded-2xl border border-slate-600 bg-slate-800 p-2 focus-within:border-amber-400/70"><textarea id="warren-chat-input" rows="2" maxlength="2500" placeholder="Escribe un mensaje…" class="max-h-36 min-h-[48px] flex-1 resize-y bg-transparent px-2 py-2 text-sm text-white placeholder-slate-400 outline-none" onkeydown="handleWarrenInputKeydown(event)"></textarea><button id="warren-send-button" type="submit" class="mb-0.5 inline-flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-50" title="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button></div>
                         <div class="mt-2 flex flex-wrap items-center justify-between gap-2"><p class="text-[10px] text-slate-500">Intro para enviar · Mayús + Intro para nueva línea</p><p id="warren-context-status" class="text-[10px] text-slate-500">Contexto financiero se actualiza al enviar</p></div>
                     </form>
                 </div>
