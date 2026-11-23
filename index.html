@@ -433,7 +433,19 @@
             #cloud-sync-badge { order:2; }
             header > div > div:first-child > div:first-child p { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         }
-</style>
+
+        /* WARREN: identidad visual y trazabilidad de fuentes */
+        .warren-avatar.assistant-avatar{overflow:hidden;padding:0;background:#0f172a;border:1px solid rgba(251,191,36,.55)}
+        .warren-sources{margin-top:16px;border:1px solid rgba(245,158,11,.24);border-radius:13px;background:rgba(15,23,42,.58);overflow:hidden}
+        .warren-sources summary{cursor:pointer;list-style:none;padding:11px 13px;color:#fcd34d;font-size:11px;font-weight:800;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .warren-sources summary::-webkit-details-marker{display:none}.warren-sources summary:after{content:"+";font-size:17px;color:#fbbf24}.warren-sources[open] summary:after{content:"−"}
+        .warren-source-list{display:grid;gap:8px;padding:0 10px 11px}.warren-source-item{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid rgba(148,163,184,.14);border-radius:10px;background:rgba(2,6,23,.38)}
+        .warren-source-icon{flex:0 0 25px;width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:rgba(245,158,11,.12);color:#fbbf24;font-size:11px}
+        .warren-source-copy{min-width:0;flex:1}.warren-source-name{font-size:11px;font-weight:800;color:#e2e8f0;overflow-wrap:anywhere}.warren-source-detail{margin-top:3px;font-size:10px;line-height:1.5;color:#94a3b8;overflow-wrap:anywhere}
+        .warren-source-date{margin-top:4px;font-size:9px;color:#64748b}.warren-source-link{font-size:10px;color:#fcd34d;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+        .warren-source-limitations{padding:9px 10px;border:1px solid rgba(251,191,36,.16);border-radius:9px;color:#fbbf24;font-size:10px;line-height:1.5;background:rgba(120,53,15,.12)}
+
+    </style>
 <style id="r31-analysis-dark-theme">
 
     /* Tema oscuro coherente con Comparativa de mercado en Riesgo, Simulador y Rentabilidad */
@@ -577,7 +589,7 @@
                         <p class="text-xs text-slate-400">Dashboard de inversiones · Mercado en tiempo real · Fiscalidad FIFO</p>
                     </div>
                 </div>
-                <button type="button" id="warren-open-button" onclick="openWarrenChat()" class="shrink-0 inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-amber-500/20 hover:to-amber-400/10 px-3 py-2 text-sm font-black text-amber-200 shadow-lg shadow-amber-950/20 transition" title="Hablar con WARREN, tu analista de inversiones"><span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300"><i class="fa-solid fa-comments-dollar"></i></span><span>WARREN</span></button>
+                <button type="button" id="warren-open-button" onclick="openWarrenChat()" class="shrink-0 inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-amber-500/20 hover:to-amber-400/10 px-3 py-2 text-sm font-black text-amber-200 shadow-lg shadow-amber-950/20 transition" title="Hablar con WARREN, tu analista de inversiones"><img src="assets/warren-logo.webp" alt="" class="h-9 w-9 rounded-full border border-amber-300/50 object-cover shadow-md shadow-amber-950/30"><span>WARREN</span></button>
                 <div class="flex items-center gap-2 shrink-0">
                     <span id="cloud-sync-badge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-slate-800 text-slate-400 border-slate-700"><i class="fa-solid fa-cloud mr-1"></i>Nube</span>
                     <button type="button" onclick="logoutFirebase()" class="text-xs bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -3068,12 +3080,33 @@
             if(!Object.keys(found).length)return{summary:null,content:String(content||"")};
             return{summary:specs.map(([label])=>({label,value:found[label]||"No evaluado"})),content:remaining.join("\n").trim()};
         }
+        function renderWarrenSources(host,sources,limitations){
+            if((!Array.isArray(sources)||!sources.length)&&(!Array.isArray(limitations)||!limitations.length))return;
+            const details=document.createElement('details');details.className='warren-sources';
+            const summary=document.createElement('summary');summary.textContent='Fuentes y datos utilizados · '+(sources||[]).length;details.appendChild(summary);
+            const list=document.createElement('div');list.className='warren-source-list';
+            const icons={sec:'fa-landmark',filing:'fa-file-lines',yahoo:'fa-chart-line',news:'fa-newspaper',quote:'fa-arrow-trend-up',calculation:'fa-calculator'};
+            (sources||[]).forEach(source=>{
+                if(!source||typeof source!=='object')return;
+                const item=document.createElement('div');item.className='warren-source-item';
+                const icon=document.createElement('span');icon.className='warren-source-icon';icon.innerHTML='<i class="fa-solid '+(icons[source.kind]||'fa-database')+'"></i>';
+                const copy=document.createElement('div');copy.className='warren-source-copy';
+                const name=document.createElement('div');name.className='warren-source-name';name.textContent=String(source.name||'Fuente sin nombre').slice(0,180);
+                const detail=document.createElement('div');detail.className='warren-source-detail';detail.textContent=String(source.detail||'').slice(0,420);copy.append(name,detail);
+                if(source.date){const date=document.createElement('div');date.className='warren-source-date';const parsed=new Date(source.date);date.textContent='Fecha: '+(!Number.isNaN(parsed.getTime())?parsed.toLocaleString('es-ES'):String(source.date));copy.appendChild(date);}
+                if(typeof source.url==='string'){try{const u=new URL(source.url);if(u.protocol==='https:'){const link=document.createElement('a');link.className='warren-source-link';link.href=u.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Abrir fuente';copy.appendChild(link);}}catch(_){}}
+                item.append(icon,copy);list.appendChild(item);
+            });
+            if(list.childElementCount)details.appendChild(list);
+            if(Array.isArray(limitations)&&limitations.length){const box=document.createElement('div');box.className='warren-source-list';const note=document.createElement('div');note.className='warren-source-limitations';note.textContent='Limitaciones de investigación: '+limitations.map(x=>String(x)).join(' · ').slice(0,1000);box.appendChild(note);details.appendChild(box);}
+            if(details.childElementCount>1)host.appendChild(details);
+        }
         function renderWarrenMessages(){
             const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
             if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-10 max-w-xl text-center text-sm leading-6 text-slate-400';const icon=document.createElement('div');icon.className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-slate-800 text-2xl text-amber-300 shadow-lg shadow-amber-950/20';icon.innerHTML='<i class="fa-solid fa-comments-dollar"></i>';const title=document.createElement('p');title.className='text-xl font-black text-white';title.textContent='Buenas. Soy WARREN.';const desc=document.createElement('p');desc.className='mt-2';desc.textContent='Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.';welcome.append(icon,title,desc);host.appendChild(welcome);return;}
             warrenMessages.forEach((m,index)=>{
                 const row=document.createElement('div');row.className='warren-message-row '+(m.role==='user'?'is-user':'is-assistant');
-                const avatar=document.createElement('div');avatar.className='warren-avatar '+(m.role==='user'?'user-avatar':'assistant-avatar');avatar.innerHTML=m.role==='user'?'<i class="fa-solid fa-user"></i>':'<i class="fa-solid fa-chart-line"></i>';
+                const avatar=document.createElement('div');avatar.className='warren-avatar '+(m.role==='user'?'user-avatar':'assistant-avatar');avatar.innerHTML=m.role==='user'?'<i class="fa-solid fa-user"></i>':'<img src="assets/warren-logo.webp" alt="" class="h-full w-full rounded-[inherit] object-cover">';
                 const bubble=document.createElement('article');bubble.className='warren-bubble '+(m.role==='user'?'user':'assistant');
                 const top=document.createElement('div');top.className='warren-message-top';
                 const role=document.createElement('span');role.className='warren-role';role.textContent=m.role==='user'?'TÚ':'WARREN';
@@ -3082,12 +3115,12 @@
                 const time=document.createElement('span');time.className='warren-message-time';if(m.at){const d=new Date(m.at);if(!Number.isNaN(d.getTime()))time.textContent=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
                 const copy=document.createElement('button');copy.type='button';copy.className='warren-copy-button';copy.title='Copiar mensaje';copy.setAttribute('aria-label','Copiar mensaje');copy.innerHTML='<i class="fa-regular fa-copy"></i><span>Copiar</span>';copy.addEventListener('click',()=>copyWarrenMessage(index,copy));
                 tools.append(time,copy);top.append(role,tools);
-                const body=document.createElement('div');body.className='warren-message-content';if(m.role==='assistant'){const parsed=extractWarrenSummary(m.content);if(parsed.summary){const panel=document.createElement('div');panel.className='warren-summary-panel';parsed.summary.forEach(item=>{const card=document.createElement('div');card.className='warren-summary-item';const label=document.createElement('span');label.className='warren-summary-label';label.textContent=item.label;const value=document.createElement('span');value.className='warren-summary-value';value.textContent=item.value;const v=item.value.toLowerCase();value.dataset.tone=/favorable|sólid|bajo riesgo|calidad alta/.test(v)?'good':/desfavorable|alto riesgo|insuficiente/.test(v)?'bad':/mixt|moderad|medio|limitad|parcial/.test(v)?'mixed':'unknown';card.append(label,value);panel.appendChild(card);});body.appendChild(panel);}renderWarrenRichContent(body,parsed.content);}else body.textContent=m.content;
+                const body=document.createElement('div');body.className='warren-message-content';if(m.role==='assistant'){const parsed=extractWarrenSummary(m.content);if(parsed.summary){const panel=document.createElement('div');panel.className='warren-summary-panel';parsed.summary.forEach(item=>{const card=document.createElement('div');card.className='warren-summary-item';const label=document.createElement('span');label.className='warren-summary-label';label.textContent=item.label;const value=document.createElement('span');value.className='warren-summary-value';value.textContent=item.value;const v=item.value.toLowerCase();value.dataset.tone=/favorable|sólid|bajo riesgo|calidad alta/.test(v)?'good':/desfavorable|alto riesgo|insuficiente/.test(v)?'bad':/mixt|moderad|medio|limitad|parcial/.test(v)?'mixed':'unknown';card.append(label,value);panel.appendChild(card);});body.appendChild(panel);}renderWarrenRichContent(body,parsed.content);renderWarrenSources(body,m.sources,m.sourceLimitations);}else body.textContent=m.content;
                 bubble.append(top,body);row.append(avatar,bubble);host.appendChild(row);
             });
             if(warrenBusy){
                 const live=document.createElement('div');live.className='warren-live-row';live.setAttribute('role','status');live.setAttribute('aria-live','polite');
-                const avatar=document.createElement('div');avatar.className='warren-avatar assistant-avatar';avatar.innerHTML='<i class="fa-solid fa-chart-line"></i>';
+                const avatar=document.createElement('div');avatar.className='warren-avatar assistant-avatar';avatar.innerHTML='<img src="assets/warren-logo.webp" alt="" class="h-full w-full rounded-[inherit] object-cover">';
                 const bubble=document.createElement('div');bubble.className='warren-live-bubble';
                 const label=document.createElement('span');label.textContent='WARREN está trabajando';
                 const dots=document.createElement('span');dots.className='warren-live-dots';dots.innerHTML='<i></i><i></i><i></i>';dots.setAttribute('aria-hidden','true');
@@ -3172,7 +3205,7 @@
                 try{response=await fetch(ASSET_NEWS_WORKER+'/ai/warren-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:JSON.parse(contextJson),messages:conversation,_ai:getAIRequestConfig('warren')}),signal:aiController.signal});}
                 finally{clearTimeout(aiTimer);}
                 const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Servicio IA HTTP '+response.status);
-                warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString(),model:formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo':'')});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
+                warrenMessages.push({role:'assistant',content:String(data.answer||'No he recibido una respuesta completa.').trim(),at:data.generatedAt||new Date().toISOString(),model:formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo':''),sources:Array.isArray(data.sourcesUsed)?data.sourcesUsed:[],sourceLimitations:Array.isArray(data.researchLimitations)?data.researchLimitations:[]});warrenMessages=warrenMessages.slice(-40);saveWarrenChat();renderWarrenMessages();
                 if(status)status.textContent='Respondido · '+formatAIModelLabel(data)+(data.fallbackFrom?' · respaldo utilizado':'');if(contextStatus)contextStatus.textContent='Contexto actualizado: '+new Date(data.generatedAt||Date.now()).toLocaleTimeString('es-ES');
             }catch(error){warrenMessages.push({role:'assistant',content:'No he podido completar la respuesta: '+error.message+'\n\nTu pregunta sigue guardada. Puedes volver a enviarla cuando el servicio esté disponible.',at:new Date().toISOString()});saveWarrenChat();renderWarrenMessages();if(status)status.textContent='No se pudo completar la consulta.';if(contextStatus)contextStatus.textContent='No se pudo actualizar el contexto.';}
             finally{warrenBusy=false;renderWarrenMessages();if(button){button.disabled=false;button.innerHTML='<i class="fa-solid fa-paper-plane"></i>';}document.getElementById('warren-chat-input')?.focus();}
