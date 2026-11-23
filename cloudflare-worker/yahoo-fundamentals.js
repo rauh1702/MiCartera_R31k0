@@ -1746,7 +1746,24 @@ export default {
         const result = await runConfiguredPortfolioAI(env, "@cf/meta/llama-3.1-8b-instruct-fast", { messages:[{role:"system",content:system},...cleanMessages], max_tokens:1050 }, { ...aiConfig, provider:warrenProvider, model:"auto", section:"warren" });
         const answer = String(result?.response || result?.result?.response || "").trim().slice(0,11000);
         if (!answer) throw new Error("El modelo no devolvió una respuesta.");
-        return json({ answer, generatedAt:new Date().toISOString(), model:result.model, provider:result.provider, ...(result.fallbackFrom?{fallbackFrom:result.fallbackFrom}:{}) },200,origin);
+        const sourcesUsed=[];
+        for(const item of research){
+          if(item.sec){
+            sourcesUsed.push({kind:"sec",name:"SEC EDGAR · "+(item.sec.companyName||item.name||item.symbol),detail:"Company Facts y documentos regulatorios disponibles",url:"https://www.sec.gov/edgar/browse/?CIK="+String(item.sec.cik||"").replace(/\D/g,""),date:item.sec.filingReview?.reviewedAt||item.researchGeneratedAt||null});
+            for(const filing of (item.sec.filings||[]).slice(0,4)){
+              if(filing?.url&&/^https:\/\/www\.sec\.gov\//i.test(filing.url))sourcesUsed.push({kind:"filing",name:"SEC "+String(filing.form||"filing"),detail:"Presentado "+String(filing.date||"fecha no disponible")+(filing.reportDate?" · periodo "+filing.reportDate:""),url:filing.url,date:filing.date||null});
+            }
+          }
+          if(item.fundamentals)sourcesUsed.push({kind:"yahoo",name:"Yahoo Finance · "+item.symbol,detail:"Fundamentales y estados financieros; proveedor secundario",url:"https://finance.yahoo.com/quote/"+encodeURIComponent(item.symbol)+"/",date:item.researchGeneratedAt||null});
+          if((item.news||[]).length)sourcesUsed.push({kind:"news",name:"Yahoo Finance News · "+item.symbol,detail:"Noticias recibidas en la investigación externa",url:"https://finance.yahoo.com/quote/"+encodeURIComponent(item.symbol)+"/news/",date:item.researchGeneratedAt||null});
+        }
+        for(const p of positions){
+          if(p.priceSource)sourcesUsed.push({kind:"quote",name:"Cotización de "+String(p.ticker||p.name||"posición"),detail:"Precio "+(p.currentPrice??"no disponible")+" · proveedor "+String(p.priceSource)+(p.lastPriceUpdate?" · actualización "+p.lastPriceUpdate:""),url:null,date:p.lastPriceUpdate||null});
+        }
+        if(positions.length)sourcesUsed.push({kind:"calculation",name:"Cálculos internos de MiCartera R31k0",detail:"Pesos, capital invertido y resultados derivados de las operaciones y cotizaciones disponibles; no son una fuente externa.",url:null,date:context.generatedAt||context.updatedAt||null});
+        const uniqueSources=[...new Map(sourcesUsed.map(s=>[s.kind+"|"+s.name+"|"+(s.url||""),s])).values()].slice(0,12);
+        const limitations=research.flatMap(x=>(x.limitations||[]).slice(0,4)).slice(0,6);
+        return json({ answer, generatedAt:new Date().toISOString(), model:result.model, provider:result.provider, sourcesUsed:uniqueSources, researchLimitations:limitations, ...(result.fallbackFrom?{fallbackFrom:result.fallbackFrom}:{}) },200,origin);
       } catch (error) {
         return json({ error:String(error?.message||error).slice(0,700) },502,origin);
       }
