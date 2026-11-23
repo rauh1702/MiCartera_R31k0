@@ -567,6 +567,32 @@
     .warren-suggestion:hover{border-color:#d6a63b;background:#1e293b;color:#fff}
     #warren-chat-input{color-scheme:dark}
 </style>
+
+<style>
+@media(max-width:767px){
+ body.warren-mobile-mode{overflow:hidden!important}
+ body.warren-mobile-mode>header{display:none!important}
+ body.warren-mobile-mode #warren-chat-view.warren-mobile-fullscreen{display:block!important;position:fixed!important;inset:0!important;z-index:10000!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;margin:0!important;padding:0!important;background:#070d18!important;border:0!important}
+ body.warren-mobile-mode #warren-conversation-panel{display:flex!important;flex-direction:column!important;gap:0!important;width:100%;height:100%;min-height:0;overflow:hidden;padding:0!important}
+ body.warren-mobile-mode #warren-conversation-panel>.flex:first-child{flex:0 0 auto;padding:10px 12px!important;background:#0b1423;border-bottom:1px solid rgba(148,163,184,.18);gap:8px!important}
+ body.warren-mobile-mode #warren-conversation-panel>.flex:first-child .h-12{display:none!important}
+ body.warren-mobile-mode #warren-conversation-panel>.flex:first-child h2{font-size:18px!important}
+ body.warren-mobile-mode #warren-conversation-panel>.flex:first-child p{font-size:9px!important}
+ body.warren-mobile-mode #warren-conversation-panel>.flex:first-child button{padding:7px 9px!important;font-size:10px!important}
+ body.warren-mobile-mode #warren-conversation-panel>.grid{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;gap:0!important;min-height:0!important;overflow:hidden!important}
+ body.warren-mobile-mode #warren-conversation-panel>.grid>div{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+ body.warren-mobile-mode #warren-conversation-panel .warren-messages{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;padding:12px!important}
+ body.warren-mobile-mode #warren-chat-form{flex:0 0 auto!important;padding:10px!important;padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;background:#0b1423!important}
+ body.warren-mobile-mode #warren-chat-input{min-height:44px!important;max-height:110px!important}
+ body.warren-mobile-mode #warren-conversation-panel aside{display:flex!important;flex:0 0 auto!important;gap:6px!important;padding:6px 10px!important;background:#0b1423!important;border-top:1px solid rgba(148,163,184,.15)}
+ body.warren-mobile-mode #warren-conversation-panel aside>.rounded-2xl:first-child,
+ body.warren-mobile-mode #warren-conversation-panel aside>.rounded-xl{display:none!important}
+ body.warren-mobile-mode #warren-conversation-panel aside .warren-starters{padding:7px 10px!important;width:100%;border-radius:12px!important}
+ body.warren-mobile-mode #warren-conversation-panel aside .warren-starters[open]{max-height:34dvh;overflow-y:auto}
+ body.warren-mobile-mode #warren-conversation-panel aside .warren-suggestion{padding:8px 9px!important}
+}
+</style>
+
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -1068,7 +1094,7 @@
                 </div>
                 <aside class="space-y-3">
                     <div class="rounded-2xl border border-amber-400/20 bg-slate-900 p-4"><p class="text-[10px] font-black uppercase tracking-[.18em] text-amber-300">Criterio Warren</p><p class="mt-2 text-sm font-bold text-white">No estoy aquí para darte la razón.</p><p class="mt-1 text-xs leading-5 text-slate-400">Contrastaré tus ideas con los datos, separaré hechos de hipótesis y reconoceré cuando falte evidencia.</p></div>
-                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4"><p class="text-xs font-bold text-slate-200"><i class="fa-solid fa-lightbulb mr-1 text-amber-300"></i>Preguntas para empezar</p><div class="mt-3 space-y-2"><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Critica mi cartera sin suavizar los problemas.</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Dónde tengo mayor concentración y riesgo?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Qué debería mejorar en mi diversificación?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Revisa mis estrategias y dime cuáles no se sostienen.</button></div></div>
+                    <details class="rounded-2xl border border-slate-700 bg-slate-900 p-3 sm:p-4 warren-starters"><summary class="cursor-pointer list-none flex items-center justify-between gap-3 text-xs font-bold text-slate-200"><span><i class="fa-solid fa-lightbulb mr-2 text-amber-300"></i>Preguntas para empezar</span><i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i></summary><div class="mt-3 space-y-2"><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Critica mi cartera sin suavizar los problemas.</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Dónde tengo mayor concentración y riesgo?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">¿Qué debería mejorar en mi diversificación?</button><button type="button" onclick="askWarrenSuggestion(this)" class="warren-suggestion">Revisa mis estrategias y dime cuáles no se sostienen.</button></div></details>
                     <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3 text-[10px] leading-5 text-slate-500">Análisis informativo, no garantía de resultados ni sustituto de tu criterio. WARREN no ejecuta operaciones ni modifica tus datos. Comprueba las cifras y fuentes importantes.</div>
                 </aside>
             </div>
@@ -3134,6 +3160,7 @@
             host.scrollTop=host.scrollHeight;
         }
         function showWarrenBaseView(){
+            const mobileWarren=window.matchMedia('(max-width: 767px)').matches;document.body.classList.toggle('warren-mobile-mode',mobileWarren);document.getElementById('warren-chat-view')?.classList.toggle('warren-mobile-fullscreen',mobileWarren);
             ['warren-chat-view','dashboard-view','portfolio-health-view','scenario-simulator-view','watchlist-view','watch-detail-view','asset-news-view','daily-summary-view','strategies-view','performance-view','risk-analysis-view','financial-calendar-view','benchmark-view','investment-journal-view','company-comparator-view','monthly-report-view','portfolio-analyst-view','company-deep-dive-view'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
             document.getElementById('warren-chat-view')?.classList.remove('hidden');document.getElementById('headerToolbar')?.classList.add('hidden');document.querySelectorAll('#mainMenu .menu-submenu').forEach(el=>el.classList.remove('open'));window.scrollTo({top:0,behavior:'smooth'});
         }
@@ -3146,7 +3173,7 @@
             showWarrenBaseView();document.getElementById('warren-home-panel')?.classList.add('hidden');document.getElementById('warren-conversation-panel')?.classList.remove('hidden');renderWarrenMessages();setTimeout(()=>document.getElementById('warren-chat-input')?.focus(),120);
         }
         function showWarrenChatView(){showWarrenConversationView();}
-        function openWarrenChat(){loadWarrenChat();showWarrenHomeView();}
+        function openWarrenChat(){loadWarrenChat();if(window.matchMedia('(max-width: 767px)').matches)showWarrenConversationView();else showWarrenHomeView();}
         function startWarrenPrompt(prompt,send=true,prefill=''){
             loadWarrenChat();showWarrenConversationView();const input=document.getElementById('warren-chat-input');if(!input)return;
             input.value=prefill||prompt;if(send)sendWarrenMessage();else input.focus();
@@ -6859,7 +6886,7 @@ Comisión: ${purchases[c.dataIndex].comm.toFixed(2)} €` } } }, scales: { x: { 
             document.querySelectorAll('#mainMenu .menu-submenu').forEach(el => el.classList.remove('open'));
             renderDailySummary(); window.scrollTo({top:0,behavior:'smooth'});
         }
-        function showDashboardView() { document.getElementById('portfolio-health-view')?.classList.add('hidden');
+        function showDashboardView() { document.body.classList.remove('warren-mobile-mode');document.getElementById('warren-chat-view')?.classList.remove('warren-mobile-fullscreen');document.getElementById('portfolio-health-view')?.classList.add('hidden');
             document.getElementById('scenario-simulator-view')?.classList.add('hidden');
             document.getElementById('strategies-view').classList.add('hidden');
             document.getElementById('watchlist-view').classList.add('hidden');
