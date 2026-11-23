@@ -1017,8 +1017,13 @@
                     <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl"></div>
                     <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
                         <div class="max-w-2xl">
-                            <div class="inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[.2em] text-amber-200"><span class="h-2 w-2 rounded-full bg-emerald-400"></span> Analista independiente · MiCartera</div>
-                            <h2 class="mt-4 text-3xl sm:text-4xl font-black tracking-tight text-white">WARREN<span class="text-amber-300">.</span></h2>
+                            <div class="mb-4 flex items-center gap-4">
+                                <img src="assets/warren-logo.webp" alt="Logotipo de WARREN" class="h-20 w-20 shrink-0 rounded-2xl border border-amber-300/45 object-cover shadow-xl shadow-amber-950/40 ring-4 ring-amber-300/10">
+                                <div>
+                                    <div class="inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[.2em] text-amber-200"><span class="h-2 w-2 rounded-full bg-emerald-400"></span> Analista independiente · MiCartera</div>
+                                    <h2 class="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-white">WARREN<span class="text-amber-300">.</span></h2>
+                                </div>
+                            </div>
                             <p class="mt-2 max-w-xl text-sm sm:text-base leading-7 text-slate-300">Analiza tus inversiones, cuestiona tus decisiones y busca los riesgos que podrían estar pasando desapercibidos.</p>
                             <div class="mt-5 flex flex-wrap gap-2">
                                 <button type="button" onclick="showWarrenConversationView()" class="rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-slate-950 hover:bg-amber-300 transition"><i class="fa-solid fa-comments mr-2"></i>Abrir conversación</button>
@@ -3103,7 +3108,7 @@
         }
         function renderWarrenMessages(){
             const host=document.getElementById('warren-messages');if(!host)return;host.innerHTML='';
-            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-10 max-w-xl text-center text-sm leading-6 text-slate-400';const icon=document.createElement('div');icon.className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-slate-800 text-2xl text-amber-300 shadow-lg shadow-amber-950/20';icon.innerHTML='<i class="fa-solid fa-comments-dollar"></i>';const title=document.createElement('p');title.className='text-xl font-black text-white';title.textContent='Buenas. Soy WARREN.';const desc=document.createElement('p');desc.className='mt-2';desc.textContent='Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.';welcome.append(icon,title,desc);host.appendChild(welcome);return;}
+            if(!warrenMessages.length){const welcome=document.createElement('div');welcome.className='warren-welcome mx-auto my-10 max-w-xl text-center text-sm leading-6 text-slate-400';const logo=document.createElement('img');logo.src='assets/warren-logo.webp';logo.alt='Logotipo de WARREN';logo.className='mx-auto mb-4 h-20 w-20 rounded-2xl border border-amber-300/45 object-cover shadow-xl shadow-amber-950/40';const title=document.createElement('p');title.className='text-xl font-black text-white';title.textContent='Buenas. Soy WARREN.';const desc=document.createElement('p');desc.className='mt-2';desc.textContent='Tengo acceso al contexto financiero disponible en MiCartera. Pregúntame lo que quieras: contrastaré tus ideas con los datos y no te daré la razón por sistema.';welcome.append(logo,title,desc);host.appendChild(welcome);return;}
             warrenMessages.forEach((m,index)=>{
                 const row=document.createElement('div');row.className='warren-message-row '+(m.role==='user'?'is-user':'is-assistant');
                 const avatar=document.createElement('div');avatar.className='warren-avatar '+(m.role==='user'?'user-avatar':'assistant-avatar');avatar.innerHTML=m.role==='user'?'<i class="fa-solid fa-user"></i>':'<img src="assets/warren-logo.webp" alt="" class="h-full w-full rounded-[inherit] object-cover">';
