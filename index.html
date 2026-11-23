@@ -660,6 +660,34 @@ body.warren-mobile-mode .warren-starters[open] .warren-suggestion{padding:10px!i
  body.warren-mobile-mode .warren-welcome p:not(.text-xl) {display:none!important}
 }
 </style>
+<style>
+@media(max-width:767px){
+/* Cabecera compacta con identidad de WARREN */
+body.warren-mobile-mode #warren-conversation-panel>.flex:first-child{display:flex!important;flex:0 0 54px!important;min-height:54px!important;max-height:54px!important;align-items:center!important;padding:5px 12px!important;background:linear-gradient(105deg,#111d2c 0%,#172536 55%,#202b35 100%)!important;border-bottom:1px solid rgba(245,190,75,.25)!important;box-shadow:0 3px 14px rgba(0,0,0,.22)!important}
+body.warren-mobile-mode #warren-conversation-panel>.flex:first-child .h-12{display:block!important}
+body.warren-mobile-mode #warren-conversation-panel>.flex:first-child h2{font-size:14px!important;line-height:1.1!important}
+body.warren-mobile-mode #warren-conversation-panel>.flex:first-child p{font-size:9px!important;line-height:1.1!important;margin-top:2px!important}
+body.warren-mobile-mode #warren-conversation-panel>.flex:first-child button{padding:5px 8px!important;font-size:9px!important}
+/* Fondo ilustrado: cuadrícula, halos y curva ascendente */
+body.warren-mobile-mode #warren-messages.warren-messages{position:relative!important;isolation:isolate!important;background-color:#09131e!important;background-image:
+radial-gradient(ellipse at 12% 18%,rgba(30,91,119,.25),transparent 42%),
+radial-gradient(ellipse at 88% 78%,rgba(157,112,34,.17),transparent 40%),
+linear-gradient(rgba(111,151,178,.055) 1px,transparent 1px),
+linear-gradient(90deg,rgba(111,151,178,.055) 1px,transparent 1px),
+url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 700'%3E%3Cpath d='M-20 560 C45 525 62 575 112 490 S190 460 228 380 S300 365 340 275 S390 245 450 145' fill='none' stroke='%23d6a63b' stroke-opacity='.13' stroke-width='3'/%3E%3Cpath d='M-20 590 C45 555 62 605 112 520 S190 490 228 410 S300 395 340 305 S390 275 450 175' fill='none' stroke='%237bb5d0' stroke-opacity='.07' stroke-width='1'/%3E%3C/svg%3E")!important;background-size:auto,auto,28px 28px,28px 28px,100% 100%!important;background-position:center!important}
+body.warren-mobile-mode #warren-messages.warren-messages:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 20%,rgba(3,9,16,.25) 100%)}
+/* Mostrar únicamente el avatar de WARREN en sus respuestas */
+body.warren-mobile-mode #warren-messages .warren-message-row.is-assistant{justify-content:flex-start!important;gap:7px!important}
+body.warren-mobile-mode #warren-messages .warren-message-row.is-user{justify-content:flex-end!important}
+body.warren-mobile-mode #warren-messages .warren-message-row.is-assistant .warren-avatar.assistant-avatar{display:flex!important;flex:0 0 30px!important;width:30px!important;height:30px!important;border-radius:50%!important;margin:0 0 3px!important;align-self:flex-end!important;border:1px solid rgba(235,190,91,.7)!important;box-shadow:0 2px 10px rgba(0,0,0,.4)!important}
+body.warren-mobile-mode #warren-messages .warren-message-row.is-user .warren-avatar{display:none!important}
+body.warren-mobile-mode #warren-messages .warren-message-row.is-assistant .warren-bubble{max-width:calc(88% - 37px)!important}
+body.warren-mobile-mode #warren-messages .warren-message-row.is-user .warren-bubble{max-width:88%!important}
+/* Burbujas limpias sobre el fondo gráfico */
+body.warren-mobile-mode #warren-messages .warren-bubble.assistant{background:rgba(27,42,54,.96)!important;border:1px solid rgba(132,164,184,.18)!important;backdrop-filter:blur(5px)!important}
+body.warren-mobile-mode #warren-messages .warren-bubble.user{background:rgba(0,104,83,.97)!important;border:1px solid rgba(64,190,151,.2)!important}
+}
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -1147,8 +1175,8 @@ body.warren-mobile-mode .warren-starters[open] .warren-suggestion{padding:10px!i
             </div>
             <div id="warren-conversation-panel" class="hidden space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-3"><div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-400/40 bg-gradient-to-br from-slate-800 to-amber-950 text-amber-300 shadow-lg"><i class="fa-solid fa-comments-dollar text-2xl"></i></div><div><p class="text-[11px] font-black uppercase tracking-[.22em] text-amber-300">Analista independiente · MiCartera R31k0</p><h2 class="text-2xl sm:text-3xl font-black text-white">WARREN</h2><p class="text-xs text-slate-400">Contexto financiero actualizado en cada consulta</p></div></div>
-                <div class="flex flex-wrap gap-2"><button type="button" onclick="startNewWarrenChat()" class="rounded-xl border border-amber-400/30 bg-slate-800 px-3 py-2 text-xs font-bold text-amber-200"><i class="fa-solid fa-plus mr-1"></i>Nuevo chat</button><button type="button" onclick="showDashboardView()" class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-arrow-left mr-1"></i>Volver</button></div>
+                <div class="flex items-center gap-2"><img src="assets/warren-logo.webp" alt="WARREN" class="h-9 w-9 rounded-full border border-amber-300/60 object-cover shadow-md"><div><h2 class="text-base font-black tracking-wide text-white">WARREN</h2><p class="text-[10px] text-emerald-300"><span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1"></span>En línea · Tu analista</p></div></div>
+                <div class="flex flex-wrap gap-2"><button type="button" onclick="startNewWarrenChat()" class="rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1.5 text-[10px] font-bold text-slate-200"><i class="fa-solid fa-plus mr-1"></i>Nuevo</button><button type="button" onclick="showDashboardView()" class="rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1.5 text-[10px] font-bold text-slate-200"><i class="fa-solid fa-arrow-left mr-1"></i>Salir</button></div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4">
                 <div class="min-w-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-xl">
